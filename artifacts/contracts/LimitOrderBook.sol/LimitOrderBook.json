@@ -1,0 +1,10 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "LimitOrderBook",
+  "sourceName": "contracts/LimitOrderBook.sol",
+  "abi": [],
+  "bytecode": "0x6080604052348015600f57600080fd5b50603f80601d6000396000f3fe6080604052600080fdfea26469706673582212207786b055544b8d815ba1092ca0812e0b937a38d0f64a4bb369c6833db4be513764736f6c63430006090033",
+  "deployedBytecode": "0x6080604052600080fdfea26469706673582212207786b055544b8d815ba1092ca0812e0b937a38d0f64a4bb369c6833db4be513764736f6c63430006090033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

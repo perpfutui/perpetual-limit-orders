@@ -1,0 +1,30 @@
+{
+  "name": "perpetual-limit-orders",
+  "version": "1.0.0",
+  "description": "Implementing limit order functionality onto perpetual protocol",
+  "main": "index.js",
+  "scripts": {
+    "test": "npx hardhat test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/perpfutui/perpetual-limit-orders.git"
+  },
+  "author": "abdulla",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/perpfutui/perpetual-limit-orders/issues"
+  },
+  "homepage": "https://github.com/perpfutui/perpetual-limit-orders#readme",
+  "devDependencies": {
+    "@nomiclabs/hardhat-ethers": "^2.0.1",
+    "@nomiclabs/hardhat-waffle": "^2.0.1",
+    "chai": "^4.2.0",
+    "ethereum-waffle": "^3.2.2",
+    "ethers": "^5.0.28",
+    "hardhat": "^2.0.8"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^3.4.0"
+  }
+}

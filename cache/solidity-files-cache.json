@@ -2,8 +2,8 @@
   "_format": "hh-sol-cache-2",
   "files": {
     "/Users/abdullaalkamil/Coding/PERP/contracts/LimitOrderBook.sol": {
-      "lastModificationDate": 1612377854200,
-      "contentHash": "b1c8dbdc3c8c764d43b4e88963642179",
+      "lastModificationDate": 1612386776971,
+      "contentHash": "6c8709d985b7a97e8581dc7529742964",
       "sourceName": "contracts/LimitOrderBook.sol",
       "solcConfig": {
         "version": "0.6.9",
@@ -27,7 +27,9 @@
           }
         }
       },
-      "imports": [],
+      "imports": [
+        "hardhat/console.sol"
+      ],
       "versionPragmas": [
         "0.6.9"
       ],
@@ -36,8 +38,8 @@
       ]
     },
     "/Users/abdullaalkamil/Coding/PERP/contracts/ProxyContract.sol": {
-      "lastModificationDate": 1612377990550,
-      "contentHash": "348c5fdbf26e42a66738b666a2af5d02",
+      "lastModificationDate": 1612381462470,
+      "contentHash": "be585b3c77eb3cbfe05a8eecbdf368ee",
       "sourceName": "contracts/ProxyContract.sol",
       "solcConfig": {
         "version": "0.6.9",
@@ -68,7 +70,8 @@
         "0.6.9"
       ],
       "artifacts": [
-        "ProxyContract"
+        "ProxyContract",
+        "ProxyFactory"
       ]
     },
     "/Users/abdullaalkamil/Coding/PERP/node_modules/@openzeppelin/contracts/access/Ownable.sol": {
@@ -139,6 +142,40 @@
       ],
       "artifacts": [
         "Context"
+      ]
+    },
+    "/Users/abdullaalkamil/Coding/PERP/node_modules/hardhat/console.sol": {
+      "lastModificationDate": 1612375761289,
+      "contentHash": "cc4777addd464ea56fa35b1c45df0591",
+      "sourceName": "hardhat/console.sol",
+      "solcConfig": {
+        "version": "0.6.9",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        ">=0.4.22 <0.9.0"
+      ],
+      "artifacts": [
+        "console"
       ]
     }
   }

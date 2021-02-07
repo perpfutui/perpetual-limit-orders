@@ -1,6 +1,7 @@
 pragma solidity 0.6.9;
 
 import "hardhat/console.sol";
+import "./ProxyContract.sol";
 
 contract LimitOrderBook {
 
@@ -28,14 +29,15 @@ contract LimitOrderBook {
       _expiry,
       _leverage,
       true,
-      _asset
+      _asset,
+      msg.sender
       ));
     emit OrderCreated(msg.sender, _limit, _size, _expiry, _leverage, _asset);
   }
 
-  function getLimitOrder(uint id) public view returns (int, int, int, int, bool, address) {
+  function getLimitOrder(uint id) public view returns (int, int, int, int, bool, address, address) {
     LimitOrder memory order = orders[id];
-    return (order.LimitPrice, order.PositionSize, order.Expiry, order.Leverage, order.StillValid, order.Asset );
+    return (order.LimitPrice, order.PositionSize, order.Expiry, order.Leverage, order.StillValid, order.Asset, order.Trader );
   }
 
 }

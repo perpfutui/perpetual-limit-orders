@@ -61,6 +61,28 @@ describe("Perpetual Limit Orders:", function() {
       expect(output[3]).to.eq(leverage)
       expect(output[4]).to.eq(true)
       expect(output[5]).to.eq(address)
+      expect(output[6]).to.eq(owner.address)
+    })
+
+  })
+
+  describe("Testing call and delegatecall", function() {
+
+    it("Getting proxy contract", async function() {
+      expect((await checkpx.owner())).to.equal(owner.address)
+    })
+
+    it("Deploying test contract", async function() {
+      let TEST = await ethers.getContractFactory('Test')
+      test = await TEST.deploy()
+    })
+
+    it("Testing call", async function() {
+      await checkpx.executeCall(test.address, '0x27b7cf8548656c6c6f20576f726c6421207468697320697320612063616c6c2829000000')
+    })
+
+    it("Testing delegate call", async function() {
+      await checkpx.executeDelegateCall(test.address, '0x27b7cf8548656c6c6f20576f726c642120746869732069732064656c656761746563616c')
     })
 
   })

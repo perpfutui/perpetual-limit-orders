@@ -13,8 +13,11 @@ contract LimitOrderBook {
     int Leverage;
     bool StillValid;
     address Asset;
+    address Trader;
   }
   LimitOrder[] public orders;
+
+  ProxyFactory private factory;
 
   constructor() public {}
 

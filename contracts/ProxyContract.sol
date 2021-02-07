@@ -4,6 +4,24 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract ProxyContract is Ownable {
 
+  // TODO: establish whether it is better to do these functions within inline assembly
+  function executeCall(
+    address target,
+    bytes calldata callData
+  ) external onlyOwner() returns (bytes memory result) {
+    bool success;
+    (success, result) = target.call(callData);
+    require(success, 'Error executing call');
+  }
+
+  function executeDelegateCall(
+    address target,
+    bytes calldata callData
+  ) external onlyOwner() returns (bytes memory result) {
+    bool success;
+    (success, result) = target.delegatecall(callData);
+    require(success, 'Error executing delegatecall');
+  }
 }
 
 contract ProxyFactory {

@@ -61,8 +61,10 @@ contract LimitOrderBook is Ownable{
 
   event OrderCreated(address indexed trader, int limit, int size, int expiry, int leverage, address asset);
 
+  enum OrderType {MARKET, LIMIT, STOPLOSS, STOPLIMIT}
+
   struct LimitOrder {
-    //OrderType Type; //
+    OrderType Type; //
     int LimitPrice; //
     int PositionSize;
     int Expiry; // Block timestamp better than block number
@@ -79,6 +81,7 @@ contract LimitOrderBook is Ownable{
 
   function addLimitOrder(int _limit, int _size, int _expiry, int _leverage, address _asset) public {
     orders.push(LimitOrder(
+      OrderType.MARKET,
       _limit,
       _size,
       _expiry,
@@ -100,14 +103,15 @@ contract LimitOrderBook is Ownable{
   }
 
   function execute(uint id) public onlyValidOrder(id) {
+    require(orders[id].StillValid, 'No longer valid');
     console.log("LOB: execute ", id);
     address _smartwallet = factory.getSmartWallet(orders[id].Trader);
     console.log("Proxy address", _smartwallet);
-    SmartWallet(_smartwallet).executeOrder(id);
-  }
-
-  function getTrailingStopPrice() {
-
+    bool success = SmartWallet(_smartwallet).executeOrder(id);
+    if(success) {
+      console.log("Successfully called");
+      orders[id].StillValid = false;
+    }
   }
 
   modifier onlyValidOrder(uint id) {

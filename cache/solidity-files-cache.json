@@ -2,8 +2,8 @@
   "_format": "hh-sol-cache-2",
   "files": {
     "/Users/abdullaalkamil/Coding/PERP/contracts/LimitOrderBook.sol": {
-      "lastModificationDate": 1612813860867,
-      "contentHash": "b8c3df91f197bafe0466a399583290d7",
+      "lastModificationDate": 1612990160601,
+      "contentHash": "d0653df0db440f59a0ae8d8ac9b23fb9",
       "sourceName": "contracts/LimitOrderBook.sol",
       "solcConfig": {
         "version": "0.6.9",
@@ -144,8 +144,8 @@
       ]
     },
     "/Users/abdullaalkamil/Coding/PERP/contracts/SmartWallet.sol": {
-      "lastModificationDate": 1612813897336,
-      "contentHash": "ea2b43b7046039adf69ef99fac4cd7bf",
+      "lastModificationDate": 1613083442236,
+      "contentHash": "79c5183efb4b727bb3752e2635a6ac8f",
       "sourceName": "contracts/SmartWallet.sol",
       "solcConfig": {
         "version": "0.6.9",
@@ -171,15 +171,49 @@
       },
       "imports": [
         "@openzeppelin/contracts/access/Ownable.sol",
-        "hardhat/console.sol"
+        "hardhat/console.sol",
+        "@openzeppelin/contracts/token/ERC20/IERC20.sol"
       ],
       "versionPragmas": [
         "0.6.9"
       ],
       "artifacts": [
         "SmartWallet",
-        "SmartWalletFactory",
-        "Test"
+        "SmartWalletFactory"
+      ]
+    },
+    "/Users/abdullaalkamil/Coding/PERP/node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol": {
+      "lastModificationDate": 1612377914864,
+      "contentHash": "e0a41531d159d3a32f84b7a3ecf9fabb",
+      "sourceName": "@openzeppelin/contracts/token/ERC20/IERC20.sol",
+      "solcConfig": {
+        "version": "0.6.9",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        ">=0.6.0 <0.8.0"
+      ],
+      "artifacts": [
+        "IERC20"
       ]
     }
   }

@@ -103,6 +103,10 @@ describe("Perpetual Limit Orders:", function() {
       await lob.execute(0)
     })
 
+    it("Should fail to execute order 0 second time", async function() {
+      await expect(lob.execute(0)).to.be.revertedWith('No longer valid')
+    })
+
 
   })
 

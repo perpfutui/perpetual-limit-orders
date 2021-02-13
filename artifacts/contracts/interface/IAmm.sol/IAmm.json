@@ -1,0 +1,781 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "IAmm",
+  "sourceName": "contracts/interface/IAmm.sol",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "int256",
+              "name": "d",
+              "type": "int256"
+            }
+          ],
+          "internalType": "struct SignedDecimal.signedDecimal",
+          "name": "_baseAssetAmount",
+          "type": "tuple"
+        },
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "d",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct Decimal.decimal",
+          "name": "_fromQuoteReserve",
+          "type": "tuple"
+        },
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "d",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct Decimal.decimal",
+          "name": "_fromBaseReserve",
+          "type": "tuple"
+        }
+      ],
+      "name": "calcBaseAssetAfterLiquidityMigration",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "int256",
+              "name": "d",
+              "type": "int256"
+            }
+          ],
+          "internalType": "struct SignedDecimal.signedDecimal",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "d",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct Decimal.decimal",
+          "name": "_quoteAssetAmount",
+          "type": "tuple"
+        }
+      ],
+      "name": "calcFee",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "d",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct Decimal.decimal",
+          "name": "",
+          "type": "tuple"
+        },
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "d",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct Decimal.decimal",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getBaseAssetDeltaThisFundingPeriod",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "int256",
+              "name": "d",
+              "type": "int256"
+            }
+          ],
+          "internalType": "struct SignedDecimal.signedDecimal",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getCumulativeNotional",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "int256",
+              "name": "d",
+              "type": "int256"
+            }
+          ],
+          "internalType": "struct SignedDecimal.signedDecimal",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "enum IAmm.Dir",
+          "name": "_dir",
+          "type": "uint8"
+        },
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "d",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct Decimal.decimal",
+          "name": "_quoteAssetAmount",
+          "type": "tuple"
+        }
+      ],
+      "name": "getInputPrice",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "d",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct Decimal.decimal",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "enum IAmm.Dir",
+          "name": "_dir",
+          "type": "uint8"
+        },
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "d",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct Decimal.decimal",
+          "name": "_quoteAssetAmount",
+          "type": "tuple"
+        },
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "d",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct Decimal.decimal",
+          "name": "_quoteAssetPoolAmount",
+          "type": "tuple"
+        },
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "d",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct Decimal.decimal",
+          "name": "_baseAssetPoolAmount",
+          "type": "tuple"
+        }
+      ],
+      "name": "getInputPriceWithReserves",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "d",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct Decimal.decimal",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "enum IAmm.Dir",
+          "name": "_dir",
+          "type": "uint8"
+        },
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "d",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct Decimal.decimal",
+          "name": "_quoteAssetAmount",
+          "type": "tuple"
+        }
+      ],
+      "name": "getInputTwap",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "d",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct Decimal.decimal",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "i",
+          "type": "uint256"
+        }
+      ],
+      "name": "getLiquidityChangedSnapshots",
+      "outputs": [
+        {
+          "components": [
+            {
+              "components": [
+                {
+                  "internalType": "int256",
+                  "name": "d",
+                  "type": "int256"
+                }
+              ],
+              "internalType": "struct SignedDecimal.signedDecimal",
+              "name": "cumulativeNotional",
+              "type": "tuple"
+            },
+            {
+              "components": [
+                {
+                  "internalType": "uint256",
+                  "name": "d",
+                  "type": "uint256"
+                }
+              ],
+              "internalType": "struct Decimal.decimal",
+              "name": "quoteAssetReserve",
+              "type": "tuple"
+            },
+            {
+              "components": [
+                {
+                  "internalType": "uint256",
+                  "name": "d",
+                  "type": "uint256"
+                }
+              ],
+              "internalType": "struct Decimal.decimal",
+              "name": "baseAssetReserve",
+              "type": "tuple"
+            },
+            {
+              "components": [
+                {
+                  "internalType": "int256",
+                  "name": "d",
+                  "type": "int256"
+                }
+              ],
+              "internalType": "struct SignedDecimal.signedDecimal",
+              "name": "totalPositionSize",
+              "type": "tuple"
+            }
+          ],
+          "internalType": "struct IAmm.LiquidityChangedSnapshot",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getLiquidityHistoryLength",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getMaxHoldingBaseAsset",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "d",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct Decimal.decimal",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getOpenInterestNotionalCap",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "d",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct Decimal.decimal",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "enum IAmm.Dir",
+          "name": "_dir",
+          "type": "uint8"
+        },
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "d",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct Decimal.decimal",
+          "name": "_baseAssetAmount",
+          "type": "tuple"
+        }
+      ],
+      "name": "getOutputPrice",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "d",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct Decimal.decimal",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "enum IAmm.Dir",
+          "name": "_dir",
+          "type": "uint8"
+        },
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "d",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct Decimal.decimal",
+          "name": "_baseAssetAmount",
+          "type": "tuple"
+        },
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "d",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct Decimal.decimal",
+          "name": "_quoteAssetPoolAmount",
+          "type": "tuple"
+        },
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "d",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct Decimal.decimal",
+          "name": "_baseAssetPoolAmount",
+          "type": "tuple"
+        }
+      ],
+      "name": "getOutputPriceWithReserves",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "d",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct Decimal.decimal",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "enum IAmm.Dir",
+          "name": "_dir",
+          "type": "uint8"
+        },
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "d",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct Decimal.decimal",
+          "name": "_baseAssetAmount",
+          "type": "tuple"
+        }
+      ],
+      "name": "getOutputTwap",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "d",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct Decimal.decimal",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getSettlementPrice",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "d",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct Decimal.decimal",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getSpotPrice",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "d",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct Decimal.decimal",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "d",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct Decimal.decimal",
+          "name": "_liquidityMultiplier",
+          "type": "tuple"
+        },
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "d",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct Decimal.decimal",
+          "name": "_priceLimitRatio",
+          "type": "tuple"
+        }
+      ],
+      "name": "migrateLiquidity",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "open",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "quoteAsset",
+      "outputs": [
+        {
+          "internalType": "contract IERC20",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "settleFunding",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "int256",
+              "name": "d",
+              "type": "int256"
+            }
+          ],
+          "internalType": "struct SignedDecimal.signedDecimal",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "shutdown",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "enum IAmm.Dir",
+          "name": "_dir",
+          "type": "uint8"
+        },
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "d",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct Decimal.decimal",
+          "name": "_quoteAssetAmount",
+          "type": "tuple"
+        },
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "d",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct Decimal.decimal",
+          "name": "_baseAssetAmountLimit",
+          "type": "tuple"
+        }
+      ],
+      "name": "swapInput",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "d",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct Decimal.decimal",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "enum IAmm.Dir",
+          "name": "_dir",
+          "type": "uint8"
+        },
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "d",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct Decimal.decimal",
+          "name": "_baseAssetAmount",
+          "type": "tuple"
+        },
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "d",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct Decimal.decimal",
+          "name": "_quoteAssetAmountLimit",
+          "type": "tuple"
+        },
+        {
+          "internalType": "bool",
+          "name": "_skipFluctuationCheck",
+          "type": "bool"
+        }
+      ],
+      "name": "swapOutput",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "d",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct Decimal.decimal",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

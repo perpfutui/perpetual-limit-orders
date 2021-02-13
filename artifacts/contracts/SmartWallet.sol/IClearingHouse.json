@@ -1,0 +1,65 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "IClearingHouse",
+  "sourceName": "contracts/SmartWallet.sol",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "contract IAmm",
+          "name": "_amm",
+          "type": "address"
+        },
+        {
+          "internalType": "enum IClearingHouse.Side",
+          "name": "_side",
+          "type": "uint8"
+        },
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "d",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct Decimal.decimal",
+          "name": "_quoteAssetAmount",
+          "type": "tuple"
+        },
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "d",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct Decimal.decimal",
+          "name": "_leverage",
+          "type": "tuple"
+        },
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "d",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct Decimal.decimal",
+          "name": "_baseAssetAmountLimit",
+          "type": "tuple"
+        }
+      ],
+      "name": "openPosition",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

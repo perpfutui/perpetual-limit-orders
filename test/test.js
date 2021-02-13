@@ -11,11 +11,15 @@ describe("Perpetual Limit Orders:", function() {
     it("Limit Order Book deployed", async function() {
       let LOB = await ethers.getContractFactory("LimitOrderBook");
       lob = await LOB.deploy()
+      await lob.deployed()
+      console.log('Limit Order Book', lob.address)
     })
 
     it("Proxy factory deployed", async function() {
       let PF = await ethers.getContractFactory("SmartWalletFactory");
       pf = await PF.deploy(lob.address)
+      await pf.deployed()
+      console.log('Proxy Contract Factory', pf.address)
     })
 
     it("Setting factory address for LOB", async function() {
@@ -48,54 +52,28 @@ describe("Perpetual Limit Orders:", function() {
 
   describe("Testing limit order functions", function() {
 
-    var limit_price = 0
-    var position_size = 0
-    var address = '0xe028CB3E566059A0a0D43b90eF011eA1399E29c8'
+    var limit_price = ethers.utils.parseUnits('50000',18)
+    var position_size = ethers.utils.parseUnits('1',12) //0.000001 BTC (0.04) USDC
+    var collateral = ethers.utils.parseUnits('40', 15) //0.04 USDC
+    var address = '0x0f346e19F01471C02485DF1758cfd3d624E399B4'
     var expiry = 0
     var leverage = 10
 
     it("Creating limit order", async function() {
-      await lob.addLimitOrder(limit_price, position_size, expiry, leverage, address)
+      await lob.addLimitOrder(address, {d: limit_price}, {d: position_size}, {d:collateral})
     })
 
     it("Confirming parameters of limit order stored within struct", async function() {
-      var output = await lob.getLimitOrder(0)
-      expect(output[0]).to.eq(limit_price)
-      expect(output[1]).to.eq(position_size)
-      expect(output[2]).to.eq(expiry)
-      expect(output[3]).to.eq(leverage)
-      expect(output[4]).to.eq(true)
-      expect(output[5]).to.eq(address)
-      expect(output[6]).to.eq(owner.address)
+      var output = await lob.getLimitOrderPrices(0)
+      expect(output[0].d).to.equal(limit_price)
     })
-
-  })
-
-  describe("Testing call and delegatecall", function() {
-
-    it("Getting proxy contract", async function() {
-      expect((await checkpx.owner())).to.equal(owner.address)
-    })
-
-    it("Deploying test contract", async function() {
-      let TEST = await ethers.getContractFactory('Test')
-      test = await TEST.deploy()
-    })
-
-    it("Testing call", async function() {
-      await checkpx.executeCall(test.address, '0x27b7cf8548656c6c6f20576f726c6421207468697320697320612063616c6c2829000000')
-    })
-
-    //it("Testing delegate call", async function() {
-    //  await checkpx.executeDelegateCall(test.address, '0x27b7cf8548656c6c6f20576f726c642120746869732069732064656c656761746563616c')
-    //})
 
   })
 
   describe("Testing execution of limit orders", function() {
 
     it("Is limit order created?", async function() {
-      var output = await lob.getLimitOrder(0)
+      var output = await lob.getLimitOrderPrices(0)
       expect(output).to.not.be.null
     })
 

@@ -1,8 +1,11 @@
 pragma solidity 0.6.9;
+pragma experimental ABIEncoderV2;
 
 import "hardhat/console.sol";
 import "./SmartWallet.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import { Decimal } from "./utils/Decimal.sol";
+import { SignedDecimal } from "./utils/SignedDecimal.sol";
 
 /*
 Types of Order:
@@ -59,19 +62,28 @@ stop-limit sell - sell when price below X but you can calculate slippage from LP
 
 contract LimitOrderBook is Ownable{
 
-  event OrderCreated(address indexed trader, int limit, int size, int expiry, int leverage, address asset);
+  event OrderCreated(address indexed trader, uint order_id);
 
-  enum OrderType {MARKET, LIMIT, STOPLOSS, STOPLIMIT}
+  enum OrderType {MARKET, LIMIT, STOPMARKET, STOPLIMIT}
+  enum Side { BUY, SELL }
+
+  using Decimal for Decimal.decimal;
+  using SignedDecimal for SignedDecimal.signedDecimal;
 
   struct LimitOrder {
-    OrderType Type; //
-    int LimitPrice; //
-    int PositionSize;
-    int Expiry; // Block timestamp better than block number
-    int Leverage;
-    bool StillValid;
-    address Asset;
-    address Trader;
+    address asset;
+    address trader;
+    OrderType orderType;
+    bool reduceOnly;
+    bool stillValid;
+    uint256 expiry;
+    Decimal.decimal limitPrice;
+    Decimal.decimal stopPrice;
+    SignedDecimal.signedDecimal orderSize;
+    Decimal.decimal collateral;
+    Decimal.decimal leverage;
+    Decimal.decimal slippage;
+    Decimal.decimal tipFee;
   }
   LimitOrder[] public orders;
 
@@ -79,38 +91,89 @@ contract LimitOrderBook is Ownable{
 
   constructor() public {}
 
-  function addLimitOrder(int _limit, int _size, int _expiry, int _leverage, address _asset) public {
-    orders.push(LimitOrder(
-      OrderType.MARKET,
-      _limit,
-      _size,
-      _expiry,
-      _leverage,
-      true,
-      _asset,
-      msg.sender
-      ));
-    emit OrderCreated(msg.sender, _limit, _size, _expiry, _leverage, _asset);
+  function addLimitOrder(
+    address _asset,
+    Decimal.decimal memory _limitPrice,
+    SignedDecimal.signedDecimal memory _positionSize,
+    Decimal.decimal memory _collateral
+  ) public {
+    orders.push(LimitOrder({
+      asset: _asset,
+      trader: msg.sender,
+      orderType: OrderType.LIMIT,
+      limitPrice: _limitPrice,
+      stopPrice: Decimal.zero(),
+      orderSize: _positionSize,
+      collateral: _collateral,
+      leverage: Decimal.zero(),
+      slippage: Decimal.zero(),
+      tipFee: Decimal.zero(),
+      reduceOnly: false,
+      stillValid: true,
+      expiry: 0
+      }));
+    emit OrderCreated(msg.sender,orders.length-1);
   }
 
   function setFactory(address _addr) public onlyOwner{
     factory = SmartWalletFactory(_addr);
   }
 
-  function getLimitOrder(uint id) public view onlyValidOrder(id) returns (int, int, int, int, bool, address, address) {
-    LimitOrder memory order = orders[id];
-    return (order.LimitPrice, order.PositionSize, order.Expiry, order.Leverage, order.StillValid, order.Asset, order.Trader );
+  function getLimitOrder(uint id) public view onlyValidOrder(id) returns (LimitOrder memory) {
+    return (orders[id]);
   }
 
+
+  function getLimitOrderPrices(
+    uint id
+  ) public view onlyValidOrder(id)
+    returns(
+      Decimal.decimal memory,
+      Decimal.decimal memory,
+      SignedDecimal.signedDecimal memory,
+      Decimal.decimal memory,
+      Decimal.decimal memory,
+      Decimal.decimal memory,
+      Decimal.decimal memory) {
+    LimitOrder memory order = orders[id];
+    return (order.limitPrice,
+      order.stopPrice,
+      order.orderSize,
+      order.collateral,
+      order.leverage,
+      order.slippage,
+      order.tipFee);
+  }
+
+  function getLimitOrderParams(
+    uint id
+  ) public view onlyValidOrder(id)
+    returns(
+      address,
+      address,
+      OrderType,
+      bool,
+      bool,
+      uint256) {
+    LimitOrder memory order = orders[id];
+    return (order.asset,
+      order.trader,
+      order.orderType,
+      order.reduceOnly,
+      order.stillValid,
+      order.expiry);
+    }
+
+
   function execute(uint id) public onlyValidOrder(id) {
-    require(orders[id].StillValid, 'No longer valid');
-    console.log("LOB: execute ", id);
-    address _smartwallet = factory.getSmartWallet(orders[id].Trader);
-    console.log("Proxy address", _smartwallet);
+    require(orders[id].stillValid, 'No longer valid');
+    console.log("LOB: Somebody executing order: ", id);
+    address _smartwallet = factory.getSmartWallet(orders[id].trader);
+    console.log("-SmartWallet address: ", _smartwallet);
     bool success = SmartWallet(_smartwallet).executeOrder(id);
     if(success) {
-      console.log("Successfully called");
-      orders[id].StillValid = false;
+      console.log("-Successfully called");
+      orders[id].stillValid = false;
     }
   }
 

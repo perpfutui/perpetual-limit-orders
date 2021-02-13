@@ -17,6 +17,12 @@ async function main() {
 
   const swf = await SmartWalletFactory.deploy(lob.address)
   console.log("Smart wallet factory:", swf.address);
+
+  await swf.deployed()
+
+  //var setfac = await LimitOrderBook.setFactory(swf.address)
+  //var sfl = await setfac.wait()
+  //console.log(sfl.transactionHash)
 }
 
 main()

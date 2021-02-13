@@ -2,15 +2,15 @@
   "_format": "hh-sol-cache-2",
   "files": {
     "/Users/abdullaalkamil/Coding/PERP/contracts/LimitOrderBook.sol": {
-      "lastModificationDate": 1612990160601,
-      "contentHash": "d0653df0db440f59a0ae8d8ac9b23fb9",
+      "lastModificationDate": 1613222904379,
+      "contentHash": "2bd9a56a5948a7180138d5ea65b4ddf7",
       "sourceName": "contracts/LimitOrderBook.sol",
       "solcConfig": {
         "version": "0.6.9",
         "settings": {
           "optimizer": {
-            "enabled": false,
-            "runs": 200
+            "enabled": true,
+            "runs": 2000
           },
           "outputSelection": {
             "*": {
@@ -30,7 +30,9 @@
       "imports": [
         "hardhat/console.sol",
         "./SmartWallet.sol",
-        "@openzeppelin/contracts/access/Ownable.sol"
+        "@openzeppelin/contracts/access/Ownable.sol",
+        "./utils/Decimal.sol",
+        "./utils/SignedDecimal.sol"
       ],
       "versionPragmas": [
         "0.6.9"
@@ -47,8 +49,8 @@
         "version": "0.6.9",
         "settings": {
           "optimizer": {
-            "enabled": false,
-            "runs": 200
+            "enabled": true,
+            "runs": 2000
           },
           "outputSelection": {
             "*": {
@@ -83,8 +85,8 @@
         "version": "0.6.9",
         "settings": {
           "optimizer": {
-            "enabled": false,
-            "runs": 200
+            "enabled": true,
+            "runs": 2000
           },
           "outputSelection": {
             "*": {
@@ -117,8 +119,8 @@
         "version": "0.6.9",
         "settings": {
           "optimizer": {
-            "enabled": false,
-            "runs": 200
+            "enabled": true,
+            "runs": 2000
           },
           "outputSelection": {
             "*": {
@@ -144,15 +146,15 @@
       ]
     },
     "/Users/abdullaalkamil/Coding/PERP/contracts/SmartWallet.sol": {
-      "lastModificationDate": 1613083442236,
-      "contentHash": "79c5183efb4b727bb3752e2635a6ac8f",
+      "lastModificationDate": 1613227324594,
+      "contentHash": "4e09f7e0efb89ec13aa3966df0a9b530",
       "sourceName": "contracts/SmartWallet.sol",
       "solcConfig": {
         "version": "0.6.9",
         "settings": {
           "optimizer": {
-            "enabled": false,
-            "runs": 200
+            "enabled": true,
+            "runs": 2000
           },
           "outputSelection": {
             "*": {
@@ -172,12 +174,17 @@
       "imports": [
         "@openzeppelin/contracts/access/Ownable.sol",
         "hardhat/console.sol",
-        "@openzeppelin/contracts/token/ERC20/IERC20.sol"
+        "@openzeppelin/contracts/token/ERC20/IERC20.sol",
+        "./LimitOrderBook.sol",
+        "./utils/Decimal.sol",
+        "./utils/SignedDecimal.sol",
+        "./interface/IAmm.sol"
       ],
       "versionPragmas": [
         "0.6.9"
       ],
       "artifacts": [
+        "IClearingHouse",
         "SmartWallet",
         "SmartWalletFactory"
       ]
@@ -190,8 +197,8 @@
         "version": "0.6.9",
         "settings": {
           "optimizer": {
-            "enabled": false,
-            "runs": 200
+            "enabled": true,
+            "runs": 2000
           },
           "outputSelection": {
             "*": {
@@ -214,6 +221,293 @@
       ],
       "artifacts": [
         "IERC20"
+      ]
+    },
+    "/Users/abdullaalkamil/Coding/PERP/node_modules/@openzeppelin/contracts/math/SafeMath.sol": {
+      "lastModificationDate": 1612377914868,
+      "contentHash": "e03e12206057e809eb76c5f681170c32",
+      "sourceName": "@openzeppelin/contracts/math/SafeMath.sol",
+      "solcConfig": {
+        "version": "0.6.9",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 2000
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        ">=0.6.0 <0.8.0"
+      ],
+      "artifacts": [
+        "SafeMath"
+      ]
+    },
+    "/Users/abdullaalkamil/Coding/PERP/node_modules/@openzeppelin/contracts/utils/Create2.sol": {
+      "lastModificationDate": 1612377914858,
+      "contentHash": "17a4b4fc2d10b81889d9d34036656a34",
+      "sourceName": "@openzeppelin/contracts/utils/Create2.sol",
+      "solcConfig": {
+        "version": "0.6.9",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 1000
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        ">=0.6.0 <0.8.0"
+      ],
+      "artifacts": [
+        "Create2"
+      ]
+    },
+    "/Users/abdullaalkamil/Coding/PERP/contracts/utils/Decimal.sol": {
+      "lastModificationDate": 1613215902780,
+      "contentHash": "9e6837caed6e7287fda4e30560514827",
+      "sourceName": "contracts/utils/Decimal.sol",
+      "solcConfig": {
+        "version": "0.6.9",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 2000
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "@openzeppelin/contracts/math/SafeMath.sol",
+        "./DecimalMath.sol"
+      ],
+      "versionPragmas": [
+        "0.6.9"
+      ],
+      "artifacts": [
+        "Decimal"
+      ]
+    },
+    "/Users/abdullaalkamil/Coding/PERP/contracts/utils/SignedDecimal.sol": {
+      "lastModificationDate": 1613215902757,
+      "contentHash": "52840eed55da9b8149cdbfe121021dbe",
+      "sourceName": "contracts/utils/SignedDecimal.sol",
+      "solcConfig": {
+        "version": "0.6.9",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 2000
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "@openzeppelin/contracts/math/SignedSafeMath.sol",
+        "./SignedDecimalMath.sol",
+        "./Decimal.sol"
+      ],
+      "versionPragmas": [
+        "0.6.9"
+      ],
+      "artifacts": [
+        "SignedDecimal"
+      ]
+    },
+    "/Users/abdullaalkamil/Coding/PERP/contracts/utils/DecimalMath.sol": {
+      "lastModificationDate": 1613215902760,
+      "contentHash": "c3de72102784d321c66fedee232f588a",
+      "sourceName": "contracts/utils/DecimalMath.sol",
+      "solcConfig": {
+        "version": "0.6.9",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 2000
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "@openzeppelin/contracts/math/SafeMath.sol"
+      ],
+      "versionPragmas": [
+        "0.6.9"
+      ],
+      "artifacts": [
+        "DecimalMath"
+      ]
+    },
+    "/Users/abdullaalkamil/Coding/PERP/node_modules/@openzeppelin/contracts/math/SignedSafeMath.sol": {
+      "lastModificationDate": 1612377914868,
+      "contentHash": "159169e078460f380436878421b73431",
+      "sourceName": "@openzeppelin/contracts/math/SignedSafeMath.sol",
+      "solcConfig": {
+        "version": "0.6.9",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 2000
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        ">=0.6.0 <0.8.0"
+      ],
+      "artifacts": [
+        "SignedSafeMath"
+      ]
+    },
+    "/Users/abdullaalkamil/Coding/PERP/contracts/utils/SignedDecimalMath.sol": {
+      "lastModificationDate": 1613215902751,
+      "contentHash": "61c6a2a7561d82225a67fa64bffa9d9f",
+      "sourceName": "contracts/utils/SignedDecimalMath.sol",
+      "solcConfig": {
+        "version": "0.6.9",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 2000
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "@openzeppelin/contracts/math/SignedSafeMath.sol"
+      ],
+      "versionPragmas": [
+        "0.6.9"
+      ],
+      "artifacts": [
+        "SignedDecimalMath"
+      ]
+    },
+    "/Users/abdullaalkamil/Coding/PERP/contracts/interface/IAmm.sol": {
+      "lastModificationDate": 1613219854870,
+      "contentHash": "03ac732b697a3c2eea1cb07d027e971d",
+      "sourceName": "contracts/interface/IAmm.sol",
+      "solcConfig": {
+        "version": "0.6.9",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 2000
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "@openzeppelin/contracts/token/ERC20/IERC20.sol",
+        "../utils/Decimal.sol",
+        "../utils/SignedDecimal.sol"
+      ],
+      "versionPragmas": [
+        "0.6.9"
+      ],
+      "artifacts": [
+        "IAmm"
       ]
     }
   }

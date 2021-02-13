@@ -33,8 +33,8 @@ contract SmartWallet is Ownable {
   function approveAll() public {
     IERC20(USDC).approve(ClearingHouse, type(uint256).max);
   }
-/*
-  //Shamelessly taken from https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/utils/Address.sol
+
+  //Taken from https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/utils/Address.sol
   function isContract(address account) internal view returns (bool) {
       // This method relies on extcodesize, which returns 0 for contracts in
       // construction, since the code is only stored at the end of the
@@ -62,7 +62,7 @@ contract SmartWallet is Ownable {
     }
     return result;
   }
-*/
+
   function setOrderBook(
     address _addr
   ) public {
@@ -100,45 +100,38 @@ contract SmartWallet is Ownable {
     return false;
   }
 
+  function minD(Decimal.decimal memory a, Decimal.decimal memory b) public pure
+  returns (Decimal.decimal memory){
+    return (a.cmp(b) == 1) ? b : a;
+  }
+
   function _executeLimitOrder(
     uint order_id
   ) internal returns (bool) {
     (Decimal.decimal memory _limitPrice,,
       SignedDecimal.signedDecimal memory _positionSize,
       Decimal.decimal memory _collateral,
-      Decimal.decimal memory _leverage,,) = LOB.getLimitOrderPrices(order_id);
-    (address _asset,,,,,) = LOB.getLimitOrderParams(order_id);
+      Decimal.decimal memory _leverage,
+      Decimal.decimal memory _slippage,) = LOB.getLimitOrderPrices(order_id);
+    (address _asset,,,bool _reduceOnly,,) = LOB.getLimitOrderParams(order_id);
     bool isLong = !_positionSize.isNegative();
-    console.log('--ORDER DETAILS--');
-    console.log('--Asset:', _asset);
-    console.log(isLong ? '--Order type: Buy' : '--Order type: Sell');
-    console.log('--Amount:', _positionSize.abs().toUint());
-    console.log('--Limit Price:', _limitPrice.toUint());
-    console.log('---Checking if conditions are valid');
     //Decimal.decimal memory _markPrice = Decimal.decimal(44000000000000000000000);
     Decimal.decimal memory _markPrice = IAmm(_asset).getSpotPrice();
-    console.log('---Current price:', _markPrice.toUint());
     bool priceCheck = (_limitPrice.cmp(_markPrice)) == (isLong ? int128(1) : -1);
     if(priceCheck) {
-      console.log('---Limit order is able to be executed, placing order...');
-      console.log('----openPosition()');
-      console.log('----', _asset);
-      console.log('----', isLong ? uint(IClearingHouse.Side.BUY) : uint(IClearingHouse.Side.SELL));
       Decimal.decimal memory _size = _positionSize.abs();
       //Decimal.decimal memory _quote = Decimal.decimal(44000000000000000000000).mulD(_positionSize.abs());
       Decimal.decimal memory _quote = (IAmm(_asset).getOutputPrice(isLong ? IAmm.Dir.REMOVE_FROM_AMM : IAmm.Dir.ADD_TO_AMM, _size));
-      console.log('----', _collateral.toUint());
-      console.log('----', _quote.divD(_collateral).toUint()); //THIS LINE IS CAUSING PROBLEMS
-      console.log('----', _size.toUint());
+      _slippage = (_slippage.toUint()==0) ? _slippage : _slippage.subD(Decimal.decimal(1));
+      _leverage = minD(_quote.divD(_collateral),_leverage);
       IClearingHouse(ClearingHouse).openPosition(
         IAmm(_asset),
         isLong ? IClearingHouse.Side.BUY : IClearingHouse.Side.SELL,
         _collateral,
-        _quote.divD(_collateral),
-        _size.subD(Decimal.decimal(1)) //TODO: establish slippage parameter
+        _leverage, //or max leverage
+        _slippage
         );
     } else {
-      console.log('---Unable to execute order: incorrect price');
       return false;
     }
     return true;

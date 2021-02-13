@@ -95,7 +95,9 @@ contract LimitOrderBook is Ownable{
     address _asset,
     Decimal.decimal memory _limitPrice,
     SignedDecimal.signedDecimal memory _positionSize,
-    Decimal.decimal memory _collateral
+    Decimal.decimal memory _collateral,
+    Decimal.decimal memory _leverage,
+    Decimal.decimal memory _slippage
   ) public {
     orders.push(LimitOrder({
       asset: _asset,
@@ -104,9 +106,9 @@ contract LimitOrderBook is Ownable{
       limitPrice: _limitPrice,
       stopPrice: Decimal.zero(),
       orderSize: _positionSize,
-      collateral: _collateral,
-      leverage: Decimal.zero(),
-      slippage: Decimal.zero(),
+      collateral: _collateral, //will always use this amount
+      leverage: _leverage, //the maximum acceptable leverage, may be less than this
+      slippage: _slippage, //refers to the minimum amount that user will accept
       tipFee: Decimal.zero(),
       reduceOnly: false,
       stillValid: true,
@@ -174,7 +176,6 @@ contract LimitOrderBook is Ownable{
     if(success) {
       console.log("-Successfully called");
       orders[id].stillValid = false;
-      
     }
   }
 

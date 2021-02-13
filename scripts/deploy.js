@@ -20,9 +20,13 @@ async function main() {
 
   await swf.deployed()
 
-  //var setfac = await LimitOrderBook.setFactory(swf.address)
-  //var sfl = await setfac.wait()
-  //console.log(sfl.transactionHash)
+  var setfac = await lob.setFactory(swf.address)
+  var sfl = await setfac.wait()
+  console.log('Setting factory at tx: '+sfl.transactionHash)
+
+  var spawn = await swf.spawn()
+  var spl = await spawn.wait()
+  console.log('Spawning proxy at tx: '+spl.transactionHash)
 }
 
 main()

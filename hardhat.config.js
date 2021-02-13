@@ -21,7 +21,7 @@ module.exports = {
   },
   networks: {
     xdai: {
-      url: 'https://rpc.xdaichain.com/',
+      url: 'https://dai.poa.network/',
       accounts: [`0x${PRIVATE_KEY}`]
     }
   }

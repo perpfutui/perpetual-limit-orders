@@ -174,6 +174,7 @@ contract LimitOrderBook is Ownable{
     if(success) {
       console.log("-Successfully called");
       orders[id].stillValid = false;
+      
     }
   }
 

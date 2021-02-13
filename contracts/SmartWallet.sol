@@ -124,18 +124,18 @@ contract SmartWallet is Ownable {
       console.log('----openPosition()');
       console.log('----', _asset);
       console.log('----', isLong ? uint(IClearingHouse.Side.BUY) : uint(IClearingHouse.Side.SELL));
+      Decimal.decimal memory _size = _positionSize.abs();
       //Decimal.decimal memory _quote = Decimal.decimal(44000000000000000000000).mulD(_positionSize.abs());
-      Decimal.decimal memory _quote = IAmm(_asset).getOutputPrice(isLong ? IAmm.Dir.REMOVE_FROM_AMM : IAmm.Dir.ADD_TO_AMM, _positionSize.abs())
-        .mulD(_positionSize.abs());
+      Decimal.decimal memory _quote = (IAmm(_asset).getOutputPrice(isLong ? IAmm.Dir.REMOVE_FROM_AMM : IAmm.Dir.ADD_TO_AMM, _size));
       console.log('----', _collateral.toUint());
-      console.log('----', _quote.divD(_collateral).toUint());
-      console.log('----', _positionSize.abs().toUint());
+      console.log('----', _quote.divD(_collateral).toUint()); //THIS LINE IS CAUSING PROBLEMS
+      console.log('----', _size.toUint());
       IClearingHouse(ClearingHouse).openPosition(
         IAmm(_asset),
         isLong ? IClearingHouse.Side.BUY : IClearingHouse.Side.SELL,
         _collateral,
         _quote.divD(_collateral),
-        Decimal.zero()
+        _size.subD(Decimal.decimal(1)) //TODO: establish slippage parameter
         );
     } else {
       console.log('---Unable to execute order: incorrect price');
@@ -144,8 +144,33 @@ contract SmartWallet is Ownable {
     return true;
   }
 
-}
+}//OUTPUT:
+/*
+----,0
+----,30000000000000000  0.03 (collateral)
+----,852445086472433    0.000852445086472433 (leverage)
+----,1000000000000000   0.001 (position size)
 
+//1000000000000 -> LIMIT? (position size as per contract)
+//1000000 -> BASE AMOUNT- (as per trade)
+
+----,30000000000000000 collat 0.03
+----,858126332586130133 lev 0.85
+----,1000000000000000 size 0.001
+
+SwapInput(
+0,
+25743789977583903, quote asset
+1000000000000000 base asset limit
+
+0xC611734aa12d4c940bdDAC7CF395842Cb8B38AB8
+,
+0x5d9593586b4B5edBd23E7Eba8d88FD8F09D83EBd
+,30000
+
+)
+
+*/
 contract SmartWalletFactory {
   event Created(address indexed owner, address indexed smartWallet);
   mapping (address => address) public getSmartWallet;

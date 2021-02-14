@@ -42,6 +42,8 @@ contract SmartWallet is Ownable {
   using Decimal for Decimal.decimal;
   using SignedDecimal for SignedDecimal.signedDecimal;
 
+  event OpenPosition(address asset, uint256 dir, uint256 collateral, uint256 leverage, uint256 slippage);
+
   function approveAll() public {
     IERC20(USDC).approve(ClearingHouse, type(uint256).max);
     IERC20(USDC).approve(address(factory), type(uint256).max);
@@ -129,21 +131,25 @@ contract SmartWallet is Ownable {
     uint order_id
   ) internal returns (bool) {
     (Decimal.decimal memory _limitPrice,,
-      SignedDecimal.signedDecimal memory _positionSize,
+      SignedDecimal.signedDecimal memory _orderSize,
       Decimal.decimal memory _collateral,
       Decimal.decimal memory _leverage,
       Decimal.decimal memory _slippage,) = LOB.getLimitOrderPrices(order_id);
     (address _asset,,,bool _reduceOnly,,) = LOB.getLimitOrderParams(order_id);
 
+    Decimal.decimal memory _slippageMultiplier = Decimal.one();
+    SignedDecimal.signedDecimal memory unadjustedOrderSize = _orderSize;
+
     if(_reduceOnly) {
       IClearingHouse.Position memory _currentPosition = IClearingHouse(ClearingHouse)
         .getPosition(IAmm(_asset), address(this));
       SignedDecimal.signedDecimal memory _currentSize = _currentPosition.size;
-      if(_positionSize.isNegative() != _currentSize.isNegative()) {
-        _positionSize = _positionSize.isNegative() ?
-        SignedDecimal.zero().subD(minSD(_currentSize, _positionSize)) :
-        minSD(_currentSize, _positionSize);
-        if(_positionSize.abs().toUint() == 0) {
+      if(_orderSize.isNegative() != _currentSize.isNegative()) {
+        _orderSize = _orderSize.isNegative() ?
+        SignedDecimal.zero().subD(minSD(_currentSize, _orderSize)) :
+        minSD(_currentSize, _orderSize);
+        _slippageMultiplier = _orderSize.divD(unadjustedOrderSize).abs();
+        if(_orderSize.abs().toUint() == 0) {
           return false;
         }
       } else {
@@ -151,15 +157,18 @@ contract SmartWallet is Ownable {
       }
     }
 
-    bool isLong = !_positionSize.isNegative();
+    bool isLong = !_orderSize.isNegative();
     Decimal.decimal memory _markPrice = IAmm(_asset).getSpotPrice();
     bool priceCheck = (_limitPrice.cmp(_markPrice)) == (isLong ? int128(1) : -1);
     if(priceCheck) {
-      Decimal.decimal memory _size = _positionSize.abs();
+      Decimal.decimal memory _size = _orderSize.abs();
       Decimal.decimal memory _quote = (IAmm(_asset)
         .getOutputPrice(isLong ? IAmm.Dir.REMOVE_FROM_AMM : IAmm.Dir.ADD_TO_AMM, _size));
+      _slippage = _slippage.mulD(_slippageMultiplier);
       _slippage = (_slippage.toUint()==0) ? _slippage : _slippage.subD(Decimal.decimal(1));
       _leverage = minD(_quote.divD(_collateral),_leverage);
+      emit OpenPosition(_asset, isLong ? uint(IClearingHouse.Side.BUY) : uint(IClearingHouse.Side.SELL),
+        _collateral.toUint(), _leverage.toUint(), _slippage.toUint());
       IClearingHouse(ClearingHouse).openPosition(
         IAmm(_asset),
         isLong ? IClearingHouse.Side.BUY : IClearingHouse.Side.SELL,

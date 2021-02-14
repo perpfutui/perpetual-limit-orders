@@ -124,7 +124,9 @@ contract SmartWallet is Ownable {
   function minSD(SignedDecimal.signedDecimal memory a,
     SignedDecimal.signedDecimal memory b) public pure
   returns (SignedDecimal.signedDecimal memory){
-    return (a.abs().cmp(b.abs()) == 1) ? b : a;
+    return (a.abs().cmp(b.abs()) == 1) ?
+    SignedDecimal.signedDecimal(int256(b.abs().d)) :
+    SignedDecimal.signedDecimal(int256(a.abs().d));
   }
 
   function _executeLimitOrder(
@@ -145,19 +147,22 @@ contract SmartWallet is Ownable {
         .getPosition(IAmm(_asset), address(this));
       SignedDecimal.signedDecimal memory _currentSize = _currentPosition.size;
       if(_orderSize.isNegative() != _currentSize.isNegative()) {
-        _orderSize = _orderSize.isNegative() ?
-        SignedDecimal.zero().subD(minSD(_currentSize, _orderSize)) :
-        minSD(_currentSize, _orderSize);
+
+        if(_orderSize.isNegative()) { //if you are long and reducing your position
+          _orderSize = SignedDecimal.zero().subD(minSD(_orderSize, _currentSize));
+        } else {
+          _orderSize = minSD(_orderSize, _currentSize);
+        }
         _slippageMultiplier = _orderSize.divD(unadjustedOrderSize).abs();
         if(_orderSize.abs().toUint() == 0) {
-          return false;
+          revert('invalid reduceOnly #1');
         }
       } else {
-        return false;
+        revert('invalid reduceOnly #2');
       }
     }
 
-    bool isLong = !_orderSize.isNegative();
+    bool isLong = _orderSize.isNegative() ? false : true;
     Decimal.decimal memory _markPrice = IAmm(_asset).getSpotPrice();
     bool priceCheck = (_limitPrice.cmp(_markPrice)) == (isLong ? int128(1) : -1);
     if(priceCheck) {
@@ -165,7 +170,8 @@ contract SmartWallet is Ownable {
       Decimal.decimal memory _quote = (IAmm(_asset)
         .getOutputPrice(isLong ? IAmm.Dir.REMOVE_FROM_AMM : IAmm.Dir.ADD_TO_AMM, _size));
       _slippage = _slippage.mulD(_slippageMultiplier);
-      _slippage = (_slippage.toUint()==0) ? _slippage : _slippage.subD(Decimal.decimal(1));
+      _slippage = (_slippage.toUint()==0) ? _slippage :
+        ( isLong ? _slippage.subD(Decimal.decimal(1)) : _slippage.addD(Decimal.decimal(1)));
       _leverage = minD(_quote.divD(_collateral),_leverage);
       emit OpenPosition(_asset, isLong ? uint(IClearingHouse.Side.BUY) : uint(IClearingHouse.Side.SELL),
         _collateral.toUint(), _leverage.toUint(), _slippage.toUint());
@@ -177,7 +183,7 @@ contract SmartWallet is Ownable {
         _slippage
         );
     } else {
-      return false;
+      revert('Price has not hit limit price');
     }
     return true;
   }

@@ -29,6 +29,11 @@ interface IClearingHouse {
         Decimal.decimal calldata _baseAssetAmountLimit
     ) external;
 
+    function closePosition(
+      IAmm _amm,
+      Decimal.decimal calldata _quoteAssetAmountLimit
+    ) external;
+
     function getPosition(IAmm _amm, address _trader) external view returns (Position memory);
 }
 
@@ -139,8 +144,9 @@ contract SmartWallet is Ownable {
       Decimal.decimal memory _slippage,) = LOB.getLimitOrderPrices(order_id);
     (address _asset,,,bool _reduceOnly,,) = LOB.getLimitOrderParams(order_id);
 
-    Decimal.decimal memory _slippageMultiplier = Decimal.one();
     SignedDecimal.signedDecimal memory unadjustedOrderSize = _orderSize;
+
+    bool closePosition = false;
 
     if(_reduceOnly) {
       IClearingHouse.Position memory _currentPosition = IClearingHouse(ClearingHouse)
@@ -149,11 +155,14 @@ contract SmartWallet is Ownable {
       if(_orderSize.isNegative() != _currentSize.isNegative()) {
 
         if(_orderSize.isNegative()) { //if you are long and reducing your position
-          _orderSize = SignedDecimal.zero().subD(minSD(_orderSize, _currentSize));
+          if(_orderSize.abs().cmp(_currentSize.abs()) == 1) { //you are trying to sell more than your current position
+            closePosition = true;
+          }
         } else {
-          _orderSize = minSD(_orderSize, _currentSize);
+          if(_currentSize.abs().cmp(_orderSize.abs()) == 1) { //you are trying to buy more than your current short
+            closePosition = true;
+          }
         }
-        _slippageMultiplier = _orderSize.divD(unadjustedOrderSize).abs();
         if(_orderSize.abs().toUint() == 0) {
           revert('invalid reduceOnly #1');
         }
@@ -169,19 +178,25 @@ contract SmartWallet is Ownable {
       Decimal.decimal memory _size = _orderSize.abs();
       Decimal.decimal memory _quote = (IAmm(_asset)
         .getOutputPrice(isLong ? IAmm.Dir.REMOVE_FROM_AMM : IAmm.Dir.ADD_TO_AMM, _size));
-      _slippage = _slippage.mulD(_slippageMultiplier);
       _slippage = (_slippage.toUint()==0) ? _slippage :
         ( isLong ? _slippage.subD(Decimal.decimal(1)) : _slippage.addD(Decimal.decimal(1)));
       _leverage = minD(_quote.divD(_collateral),_leverage);
       emit OpenPosition(_asset, isLong ? uint(IClearingHouse.Side.BUY) : uint(IClearingHouse.Side.SELL),
         _collateral.toUint(), _leverage.toUint(), _slippage.toUint());
-      IClearingHouse(ClearingHouse).openPosition(
-        IAmm(_asset),
-        isLong ? IClearingHouse.Side.BUY : IClearingHouse.Side.SELL,
-        _collateral,
-        _leverage, //or max leverage
-        _slippage
-        );
+      if(closePosition) {
+        IClearingHouse(ClearingHouse).closePosition(
+          IAmm(_asset),
+          Decimal.decimal(0) //how to calculate quoteAssetLimit
+          );
+      } else {
+        IClearingHouse(ClearingHouse).openPosition(
+          IAmm(_asset),
+          isLong ? IClearingHouse.Side.BUY : IClearingHouse.Side.SELL,
+          _collateral,
+          _leverage, //or max leverage
+          _slippage
+          );
+      }
     } else {
       revert('Price has not hit limit price');
     }

@@ -19,8 +19,8 @@ async function main() {
   const provider = new ethers.providers.JsonRpcProvider(xDaiUrl)
   const wallet = new ethers.Wallet('3e730129b3867804afd27b530749d49113164a349b05879f536b6d4fe9018a9f').connect(provider)
 
-  const LOB_address = '0xAA322361c2e7e7C9Ef91dFf4b6778B81Ac27D4bC'
-  const SWF_address = '0xC36F6fE0B790fb9908920388352662C9124E62a3'
+  const LOB_address = '0x1F393DFB17699eB529ceBDfBEd8E29E0Db8ff798'
+  const SWF_address = '0xec8aB4f87c2E3b83f0e68F90b542E344CD6CF1C1'
 
   const CH_address = '0x5d9593586b4B5edBd23E7Eba8d88FD8F09D83EBd'
   const BTC_AMM = '0x0f346e19F01471C02485DF1758cfd3d624E399B4'
@@ -43,22 +43,22 @@ async function main() {
 
   const SW = new ethers.Contract(proxy_address, SW_abi, wallet)
 
-
+/*
 var createLimitOrder = await LOB.addLimitOrder(
     SNX_AMM,
     {d: ethers.utils.parseUnits('20', 18)},   //LIMIT PRICE, 30
-    {d: ethers.utils.parseUnits('-4', 14)},      //POS SIZE, 0.001
+    {d: ethers.utils.parseUnits('-10', 14)},      //POS SIZE, 0.001
     {d: ethers.utils.parseUnits('30', 15)},     //COLLATERAL 0.0030
     {d: ethers.utils.parseUnits('1', 18)}, //max leverage
-    {d: ethers.utils.parseUnits('4', 14)}, //slippage
+    {d: ethers.utils.parseUnits('10', 14)}, //slippage
     {d: "0"},   // tip Fee
     true,      //reduce only
     0           //expiry
   )
   var CLO = await createLimitOrder.wait()
   console.log(CLO.transactionHash)
-
-var ex = await LOB.execute(4, {gasLimit:2000000})
+*/
+var ex = await LOB.execute(2, {gasLimit:2000000})
 console.log(await ex.wait())
 
 

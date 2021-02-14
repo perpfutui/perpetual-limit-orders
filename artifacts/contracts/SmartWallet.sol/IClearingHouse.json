@@ -11,6 +11,31 @@
           "type": "address"
         },
         {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "d",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct Decimal.decimal",
+          "name": "_quoteAssetAmountLimit",
+          "type": "tuple"
+        }
+      ],
+      "name": "closePosition",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "contract IAmm",
+          "name": "_amm",
+          "type": "address"
+        },
+        {
           "internalType": "address",
           "name": "_trader",
           "type": "address"

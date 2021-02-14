@@ -35,7 +35,6 @@ async function main() {
 //await SWF.spawn()
 //await LOB.setFactory(SWF_address)
 
-
   var proxy_address = await SWF.getSmartWallet(owner)
   const proxy = new ethers.Contract(proxy_address, SW_abi, wallet)
   console.log('Proxy: ',proxy_address)
@@ -44,23 +43,33 @@ async function main() {
 
 /*
 var createLimitOrder = await LOB.addLimitOrder(
-    SNX_AMM,
-    {d: ethers.utils.parseUnits('30', 18)},   //LIMIT PRICE, 30
-    {d: ethers.utils.parseUnits('1', 15)},      //POS SIZE, 0.001
+    BTC_AMM,
+    {d: ethers.utils.parseUnits('30000', 18)},   //LIMIT PRICE, 30
+    {d: ethers.utils.parseUnits('1', 12)},      //POS SIZE, 0.001
     {d: ethers.utils.parseUnits('30', 15)},     //COLLATERAL 0.0040
     {d: ethers.utils.parseUnits('1', 18)}, //max leverage
-    {d: ethers.utils.parseUnits('1', 15)} //slippage
+    {d: ethers.utils.parseUnits('1', 15)}, //slippage
+    {d: "0"},   // tip Fee
+    false,      //reduce only
+    0           //expiry
   )
   var CLO = await createLimitOrder.wait()
   console.log(CLO.transactionHash)
-
-console.log(await LOB.getLimitOrderPrices(0))
-console.log(await LOB.getLimitOrderParams(0))
 */
+// console.log(await LOB.getLimitOrderPrices(1))
+// console.log(await LOB.getLimitOrderParams(1))
 
-var ex = await LOB.execute(0, {gasLimit: 1000000})
-console.log(await ex.wait())
 
+//var ex = await LOB.execute(0, {gasLimit: 1000000})
+//console.log(await ex.wait())
+
+
+const ERC20encode = new ethers.utils.Interface([{"type":"function","stateMutability":"view","payable":false,"outputs":[{"type":"bool","name":""}],"name":"mintingFinished","inputs":[],"constant":true},{"type":"function","stateMutability":"view","payable":false,"outputs":[{"type":"string","name":""}],"name":"name","inputs":[],"constant":true},{"type":"function","stateMutability":"nonpayable","payable":false,"outputs":[{"type":"bool","name":""}],"name":"approve","inputs":[{"type":"address","name":"_spender"},{"type":"uint256","name":"_value"}],"constant":false},{"type":"function","stateMutability":"nonpayable","payable":false,"outputs":[],"name":"setBridgeContract","inputs":[{"type":"address","name":"_bridgeContract"}],"constant":false},{"type":"function","stateMutability":"view","payable":false,"outputs":[{"type":"uint256","name":""}],"name":"totalSupply","inputs":[],"constant":true},{"type":"function","stateMutability":"nonpayable","payable":false,"outputs":[{"type":"bool","name":""}],"name":"transferFrom","inputs":[{"type":"address","name":"_sender"},{"type":"address","name":"_recipient"},{"type":"uint256","name":"_amount"}],"constant":false},{"type":"function","stateMutability":"view","payable":false,"outputs":[{"type":"bytes32","name":""}],"name":"PERMIT_TYPEHASH","inputs":[],"constant":true},{"type":"function","stateMutability":"view","payable":false,"outputs":[{"type":"uint8","name":""}],"name":"decimals","inputs":[],"constant":true},{"type":"function","stateMutability":"view","payable":false,"outputs":[{"type":"bytes32","name":""}],"name":"DOMAIN_SEPARATOR","inputs":[],"constant":true},{"type":"function","stateMutability":"nonpayable","payable":false,"outputs":[{"type":"bool","name":""}],"name":"increaseAllowance","inputs":[{"type":"address","name":"spender"},{"type":"uint256","name":"addedValue"}],"constant":false},{"type":"function","stateMutability":"nonpayable","payable":false,"outputs":[{"type":"bool","name":""}],"name":"transferAndCall","inputs":[{"type":"address","name":"_to"},{"type":"uint256","name":"_value"},{"type":"bytes","name":"_data"}],"constant":false},{"type":"function","stateMutability":"nonpayable","payable":false,"outputs":[{"type":"bool","name":""}],"name":"mint","inputs":[{"type":"address","name":"_to"},{"type":"uint256","name":"_amount"}],"constant":false},{"type":"function","stateMutability":"nonpayable","payable":false,"outputs":[],"name":"burn","inputs":[{"type":"uint256","name":"_value"}],"constant":false},{"type":"function","stateMutability":"view","payable":false,"outputs":[{"type":"string","name":""}],"name":"version","inputs":[],"constant":true},{"type":"function","stateMutability":"nonpayable","payable":false,"outputs":[{"type":"bool","name":""}],"name":"decreaseApproval","inputs":[{"type":"address","name":"_spender"},{"type":"uint256","name":"_subtractedValue"}],"constant":false},{"type":"function","stateMutability":"nonpayable","payable":false,"outputs":[],"name":"claimTokens","inputs":[{"type":"address","name":"_token"},{"type":"address","name":"_to"}],"constant":false},{"type":"function","stateMutability":"view","payable":false,"outputs":[{"type":"uint256","name":""}],"name":"balanceOf","inputs":[{"type":"address","name":"_owner"}],"constant":true},{"type":"function","stateMutability":"nonpayable","payable":false,"outputs":[],"name":"renounceOwnership","inputs":[],"constant":false},{"type":"function","stateMutability":"view","payable":false,"outputs":[{"type":"bool","name":""}],"name":"isBridge","inputs":[{"type":"address","name":"_address"}],"constant":true},{"type":"function","stateMutability":"nonpayable","payable":false,"outputs":[{"type":"bool","name":""}],"name":"finishMinting","inputs":[],"constant":false},{"type":"function","stateMutability":"view","payable":false,"outputs":[{"type":"uint256","name":""}],"name":"nonces","inputs":[{"type":"address","name":""}],"constant":true},{"type":"function","stateMutability":"pure","payable":false,"outputs":[{"type":"uint64","name":"major"},{"type":"uint64","name":"minor"},{"type":"uint64","name":"patch"}],"name":"getTokenInterfacesVersion","inputs":[],"constant":true},{"type":"function","stateMutability":"view","payable":false,"outputs":[{"type":"address","name":""}],"name":"owner","inputs":[],"constant":true},{"type":"function","stateMutability":"nonpayable","payable":false,"outputs":[],"name":"permit","inputs":[{"type":"address","name":"_holder"},{"type":"address","name":"_spender"},{"type":"uint256","name":"_nonce"},{"type":"uint256","name":"_expiry"},{"type":"bool","name":"_allowed"},{"type":"uint8","name":"_v"},{"type":"bytes32","name":"_r"},{"type":"bytes32","name":"_s"}],"constant":false},{"type":"function","stateMutability":"view","payable":false,"outputs":[{"type":"string","name":""}],"name":"symbol","inputs":[],"constant":true},{"type":"function","stateMutability":"nonpayable","payable":false,"outputs":[{"type":"bool","name":""}],"name":"decreaseAllowance","inputs":[{"type":"address","name":"spender"},{"type":"uint256","name":"subtractedValue"}],"constant":false},{"type":"function","stateMutability":"nonpayable","payable":false,"outputs":[{"type":"bool","name":""}],"name":"transfer","inputs":[{"type":"address","name":"_to"},{"type":"uint256","name":"_value"}],"constant":false},{"type":"function","stateMutability":"nonpayable","payable":false,"outputs":[],"name":"push","inputs":[{"type":"address","name":"_to"},{"type":"uint256","name":"_amount"}],"constant":false},{"type":"function","stateMutability":"nonpayable","payable":false,"outputs":[],"name":"move","inputs":[{"type":"address","name":"_from"},{"type":"address","name":"_to"},{"type":"uint256","name":"_amount"}],"constant":false},{"type":"function","stateMutability":"view","payable":false,"outputs":[{"type":"address","name":""}],"name":"bridgeContract","inputs":[],"constant":true},{"type":"function","stateMutability":"nonpayable","payable":false,"outputs":[{"type":"bool","name":""}],"name":"increaseApproval","inputs":[{"type":"address","name":"_spender"},{"type":"uint256","name":"_addedValue"}],"constant":false},{"type":"function","stateMutability":"view","payable":false,"outputs":[{"type":"uint256","name":""}],"name":"allowance","inputs":[{"type":"address","name":"_owner"},{"type":"address","name":"_spender"}],"constant":true},{"type":"function","stateMutability":"nonpayable","payable":false,"outputs":[],"name":"pull","inputs":[{"type":"address","name":"_from"},{"type":"uint256","name":"_amount"}],"constant":false},{"type":"function","stateMutability":"nonpayable","payable":false,"outputs":[],"name":"transferOwnership","inputs":[{"type":"address","name":"_newOwner"}],"constant":false},{"type":"function","stateMutability":"view","payable":false,"outputs":[{"type":"uint256","name":""}],"name":"expirations","inputs":[{"type":"address","name":""},{"type":"address","name":""}],"constant":true},{"type":"constructor","stateMutability":"nonpayable","payable":false,"inputs":[{"type":"string","name":"_name"},{"type":"string","name":"_symbol"},{"type":"uint8","name":"_decimals"},{"type":"uint256","name":"_chainId"}]},{"type":"event","name":"ContractFallbackCallFailed","inputs":[{"type":"address","name":"from","indexed":false},{"type":"address","name":"to","indexed":false},{"type":"uint256","name":"value","indexed":false}],"anonymous":false},{"type":"event","name":"Mint","inputs":[{"type":"address","name":"to","indexed":true},{"type":"uint256","name":"amount","indexed":false}],"anonymous":false},{"type":"event","name":"MintFinished","inputs":[],"anonymous":false},{"type":"event","name":"OwnershipRenounced","inputs":[{"type":"address","name":"previousOwner","indexed":true}],"anonymous":false},{"type":"event","name":"OwnershipTransferred","inputs":[{"type":"address","name":"previousOwner","indexed":true},{"type":"address","name":"newOwner","indexed":true}],"anonymous":false},{"type":"event","name":"Burn","inputs":[{"type":"address","name":"burner","indexed":true},{"type":"uint256","name":"value","indexed":false}],"anonymous":false},{"type":"event","name":"Transfer","inputs":[{"type":"address","name":"from","indexed":true},{"type":"address","name":"to","indexed":true},{"type":"uint256","name":"value","indexed":false},{"type":"bytes","name":"data","indexed":false}],"anonymous":false},{"type":"event","name":"Approval","inputs":[{"type":"address","name":"owner","indexed":true},{"type":"address","name":"spender","indexed":true},{"type":"uint256","name":"value","indexed":false}],"anonymous":false},{"type":"event","name":"Transfer","inputs":[{"type":"address","name":"from","indexed":true},{"type":"address","name":"to","indexed":true},{"type":"uint256","name":"value","indexed":false}],"anonymous":false}])
+/*
+var func = ERC20encode.encodeFunctionData ('transfer(address,uint256)',['0xe028CB3E566059A0a0D43b90eF011eA1399E29c8',19975])
+var tx = await proxy.executeCall('0xDDAfbb505ad214D7b80b1f830fcCc89B60fb7A83', func)
+var logs = await tx.wait()
+*/
 
 /*
 console.log(
@@ -96,6 +105,34 @@ console.log(ethers.utils.formatUnits(price.d))
 price = await BTC.getOutputPrice(1, {d: ethers.utils.parseUnits('1',18)})
 console.log(ethers.utils.formatUnits(price.d))
 */
+var trader = owner;
+
+
+console.log('Getting active orders for user '+trader)
+var filter = LOB.filters.OrderCreated(trader)
+let events = await LOB.queryFilter(filter)
+
+var assetname = [], ordertype = []
+assetname[SNX_AMM]='SNX'
+assetname[BTC_AMM]='BTC'
+ordertype[0] = 'Market'
+ordertype[1] = 'Limit'
+ordertype[2] = 'Stop Market'
+ordertype[3] = 'Stop Limit'
+
+events.forEach(async event => {
+  var output = await LOB.getLimitOrder(event.args.order_id)
+  if(output.stillValid){
+    console.log('**************')
+    console.log('Displaying info for order#', event.args.order_id.toNumber())
+    console.log('Asset:',assetname[output.asset])
+    console.log('Order type:',ordertype[output.orderType],ethers.utils.formatUnits(output.orderSize.d)>0?'Buy':'Sell')
+    console.log('Limit price:',ethers.utils.formatUnits(output.limitPrice.d))
+    console.log('Order size:', ethers.utils.formatUnits(output.orderSize.d))
+    console.log('**************')
+  }
+})
+
   var position = await CH.getPosition(
     SNX_AMM,
     proxy_address
@@ -112,10 +149,20 @@ console.log(ethers.utils.formatUnits(price.d))
   var position2 = await CH.getPositionNotionalAndUnrealizedPnl(
     SNX_AMM, proxy_address, 0
   )
+
+
+  console.log('')
+  console.log('**************')
+  console.log('Active positions:')
+
   console.log('Position size: %s SNX ', truncate(ethers.utils.formatUnits(position.size.d),15))
   console.log('Margin: ', truncate(ethers.utils.formatUnits(position.margin.d),2))
   console.log('Open Notional: ', truncate(ethers.utils.formatUnits(position.openNotional.d),2))
   console.log('Unrealised PnL: ', truncate(ethers.utils.formatUnits(position2.unrealizedPnl.d),2))
+
+  console.log('')
+  console.log('')
+  console.log('')
 
 }
 

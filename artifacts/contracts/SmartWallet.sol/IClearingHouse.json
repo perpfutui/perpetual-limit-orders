@@ -11,6 +11,90 @@
           "type": "address"
         },
         {
+          "internalType": "address",
+          "name": "_trader",
+          "type": "address"
+        }
+      ],
+      "name": "getPosition",
+      "outputs": [
+        {
+          "components": [
+            {
+              "components": [
+                {
+                  "internalType": "int256",
+                  "name": "d",
+                  "type": "int256"
+                }
+              ],
+              "internalType": "struct SignedDecimal.signedDecimal",
+              "name": "size",
+              "type": "tuple"
+            },
+            {
+              "components": [
+                {
+                  "internalType": "uint256",
+                  "name": "d",
+                  "type": "uint256"
+                }
+              ],
+              "internalType": "struct Decimal.decimal",
+              "name": "margin",
+              "type": "tuple"
+            },
+            {
+              "components": [
+                {
+                  "internalType": "uint256",
+                  "name": "d",
+                  "type": "uint256"
+                }
+              ],
+              "internalType": "struct Decimal.decimal",
+              "name": "openNotional",
+              "type": "tuple"
+            },
+            {
+              "components": [
+                {
+                  "internalType": "int256",
+                  "name": "d",
+                  "type": "int256"
+                }
+              ],
+              "internalType": "struct SignedDecimal.signedDecimal",
+              "name": "lastUpdatedCumulativePremiumFraction",
+              "type": "tuple"
+            },
+            {
+              "internalType": "uint256",
+              "name": "liquidityHistoryIndex",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "blockNumber",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct IClearingHouse.Position",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "contract IAmm",
+          "name": "_amm",
+          "type": "address"
+        },
+        {
           "internalType": "enum IClearingHouse.Side",
           "name": "_side",
           "type": "uint8"

@@ -11,6 +11,16 @@ import { IAmm } from "./interface/IAmm.sol";
 
 interface IClearingHouse {
     enum Side { BUY, SELL }
+
+    struct Position {
+        SignedDecimal.signedDecimal size;
+        Decimal.decimal margin;
+        Decimal.decimal openNotional;
+        SignedDecimal.signedDecimal lastUpdatedCumulativePremiumFraction;
+        uint256 liquidityHistoryIndex;
+        uint256 blockNumber;
+    }
+
     function openPosition(
         IAmm _amm,
         Side _side,
@@ -18,6 +28,8 @@ interface IClearingHouse {
         Decimal.decimal calldata _leverage,
         Decimal.decimal calldata _baseAssetAmountLimit
     ) external;
+
+    function getPosition(IAmm _amm, address _trader) external view returns (Position memory);
 }
 
 contract SmartWallet is Ownable {
@@ -32,6 +44,7 @@ contract SmartWallet is Ownable {
 
   function approveAll() public {
     IERC20(USDC).approve(ClearingHouse, type(uint256).max);
+    IERC20(USDC).approve(address(factory), type(uint256).max);
   }
 
   //Taken from https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/utils/Address.sol
@@ -51,6 +64,7 @@ contract SmartWallet is Ownable {
     bytes calldata callData
   ) external onlyOwner() returns (bytes memory) {
     require(isContract(target), 'call to non-contract');
+    //require(factory.isWhitelisted(target), 'Invalid target contract');
     (bool success, bytes memory result) = target.call(callData);
     if (success == false) {
       assembly {
@@ -105,6 +119,12 @@ contract SmartWallet is Ownable {
     return (a.cmp(b) == 1) ? b : a;
   }
 
+  function minSD(SignedDecimal.signedDecimal memory a,
+    SignedDecimal.signedDecimal memory b) public pure
+  returns (SignedDecimal.signedDecimal memory){
+    return (a.abs().cmp(b.abs()) == 1) ? b : a;
+  }
+
   function _executeLimitOrder(
     uint order_id
   ) internal returns (bool) {
@@ -114,14 +134,30 @@ contract SmartWallet is Ownable {
       Decimal.decimal memory _leverage,
       Decimal.decimal memory _slippage,) = LOB.getLimitOrderPrices(order_id);
     (address _asset,,,bool _reduceOnly,,) = LOB.getLimitOrderParams(order_id);
+
+    if(_reduceOnly) {
+      IClearingHouse.Position memory _currentPosition = IClearingHouse(ClearingHouse)
+        .getPosition(IAmm(_asset), address(this));
+      SignedDecimal.signedDecimal memory _currentSize = _currentPosition.size;
+      if(_positionSize.isNegative() != _currentSize.isNegative()) {
+        _positionSize = _positionSize.isNegative() ?
+        SignedDecimal.zero().subD(minSD(_currentSize, _positionSize)) :
+        minSD(_currentSize, _positionSize);
+        if(_positionSize.abs().toUint() == 0) {
+          return false;
+        }
+      } else {
+        return false;
+      }
+    }
+
     bool isLong = !_positionSize.isNegative();
-    //Decimal.decimal memory _markPrice = Decimal.decimal(44000000000000000000000);
     Decimal.decimal memory _markPrice = IAmm(_asset).getSpotPrice();
     bool priceCheck = (_limitPrice.cmp(_markPrice)) == (isLong ? int128(1) : -1);
     if(priceCheck) {
       Decimal.decimal memory _size = _positionSize.abs();
-      //Decimal.decimal memory _quote = Decimal.decimal(44000000000000000000000).mulD(_positionSize.abs());
-      Decimal.decimal memory _quote = (IAmm(_asset).getOutputPrice(isLong ? IAmm.Dir.REMOVE_FROM_AMM : IAmm.Dir.ADD_TO_AMM, _size));
+      Decimal.decimal memory _quote = (IAmm(_asset)
+        .getOutputPrice(isLong ? IAmm.Dir.REMOVE_FROM_AMM : IAmm.Dir.ADD_TO_AMM, _size));
       _slippage = (_slippage.toUint()==0) ? _slippage : _slippage.subD(Decimal.decimal(1));
       _leverage = minD(_quote.divD(_collateral),_leverage);
       IClearingHouse(ClearingHouse).openPosition(
@@ -137,33 +173,8 @@ contract SmartWallet is Ownable {
     return true;
   }
 
-}//OUTPUT:
-/*
-----,0
-----,30000000000000000  0.03 (collateral)
-----,852445086472433    0.000852445086472433 (leverage)
-----,1000000000000000   0.001 (position size)
+}
 
-//1000000000000 -> LIMIT? (position size as per contract)
-//1000000 -> BASE AMOUNT- (as per trade)
-
-----,30000000000000000 collat 0.03
-----,858126332586130133 lev 0.85
-----,1000000000000000 size 0.001
-
-SwapInput(
-0,
-25743789977583903, quote asset
-1000000000000000 base asset limit
-
-0xC611734aa12d4c940bdDAC7CF395842Cb8B38AB8
-,
-0x5d9593586b4B5edBd23E7Eba8d88FD8F09D83EBd
-,30000
-
-)
-
-*/
 contract SmartWalletFactory {
   event Created(address indexed owner, address indexed smartWallet);
   mapping (address => address) public getSmartWallet;
@@ -184,9 +195,9 @@ contract SmartWalletFactory {
     }
 
     emit Created(msg.sender, address(smartWallet));
+    SmartWallet(smartWallet).setOrderBook(LimitOrderBook);
     SmartWallet(smartWallet).approveAll();
     SmartWallet(smartWallet).transferOwnership(msg.sender);
-    SmartWallet(smartWallet).setOrderBook(LimitOrderBook);
     SmartWallet(smartWallet).setFactory(this);
     getSmartWallet[msg.sender] = smartWallet;
   }

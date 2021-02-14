@@ -6,6 +6,8 @@ import "./SmartWallet.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import { Decimal } from "./utils/Decimal.sol";
 import { SignedDecimal } from "./utils/SignedDecimal.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { DecimalERC20 } from "./utils/DecimalERC20.sol";
 
 /*
 Types of Order:
@@ -60,7 +62,7 @@ stop-limit sell - sell when price below X but you can calculate slippage from LP
 */
 
 
-contract LimitOrderBook is Ownable{
+contract LimitOrderBook is Ownable, DecimalERC20{
 
   event OrderCreated(address indexed trader, uint order_id);
 
@@ -89,6 +91,8 @@ contract LimitOrderBook is Ownable{
 
   SmartWalletFactory public factory;
 
+  address constant USDC = 0xDDAfbb505ad214D7b80b1f830fcCc89B60fb7A83;
+
   constructor() public {}
 
   function addLimitOrder(
@@ -97,8 +101,12 @@ contract LimitOrderBook is Ownable{
     SignedDecimal.signedDecimal memory _positionSize,
     Decimal.decimal memory _collateral,
     Decimal.decimal memory _leverage,
-    Decimal.decimal memory _slippage
+    Decimal.decimal memory _slippage,
+    Decimal.decimal memory _tipFee,
+    bool _reduceOnly,
+    uint256 _expiry
   ) public {
+    require(((_expiry == 0 ) || (block.timestamp<_expiry)), 'Event will expire in past');
     orders.push(LimitOrder({
       asset: _asset,
       trader: msg.sender,
@@ -109,10 +117,10 @@ contract LimitOrderBook is Ownable{
       collateral: _collateral, //will always use this amount
       leverage: _leverage, //the maximum acceptable leverage, may be less than this
       slippage: _slippage, //refers to the minimum amount that user will accept
-      tipFee: Decimal.zero(),
-      reduceOnly: false,
+      tipFee: _tipFee,
+      reduceOnly: _reduceOnly,
       stillValid: true,
-      expiry: 0
+      expiry: _expiry
       }));
     emit OrderCreated(msg.sender,orders.length-1);
   }
@@ -124,7 +132,6 @@ contract LimitOrderBook is Ownable{
   function getLimitOrder(uint id) public view onlyValidOrder(id) returns (LimitOrder memory) {
     return (orders[id]);
   }
-
 
   function getLimitOrderPrices(
     uint id
@@ -166,15 +173,13 @@ contract LimitOrderBook is Ownable{
       order.expiry);
     }
 
-
   function execute(uint id) public onlyValidOrder(id) {
     require(orders[id].stillValid, 'No longer valid');
-    console.log("LOB: Somebody executing order: ", id);
     address _smartwallet = factory.getSmartWallet(orders[id].trader);
-    console.log("-SmartWallet address: ", _smartwallet);
     bool success = SmartWallet(_smartwallet).executeOrder(id);
     if(success) {
       console.log("-Successfully called");
+      _transferFrom(IERC20(USDC), _smartwallet, msg.sender, orders[id].tipFee);
       orders[id].stillValid = false;
     }
   }

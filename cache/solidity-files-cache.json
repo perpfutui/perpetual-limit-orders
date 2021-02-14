@@ -2,8 +2,8 @@
   "_format": "hh-sol-cache-2",
   "files": {
     "/Users/abdullaalkamil/Coding/PERP/contracts/LimitOrderBook.sol": {
-      "lastModificationDate": 1613249865235,
-      "contentHash": "7464b12430bc9bdcadbb49bd723277ba",
+      "lastModificationDate": 1613311465306,
+      "contentHash": "56dfdd86d114540475883cf75aa3734d",
       "sourceName": "contracts/LimitOrderBook.sol",
       "solcConfig": {
         "version": "0.6.9",
@@ -32,7 +32,9 @@
         "./SmartWallet.sol",
         "@openzeppelin/contracts/access/Ownable.sol",
         "./utils/Decimal.sol",
-        "./utils/SignedDecimal.sol"
+        "./utils/SignedDecimal.sol",
+        "@openzeppelin/contracts/token/ERC20/IERC20.sol",
+        "./utils/DecimalERC20.sol"
       ],
       "versionPragmas": [
         "0.6.9"
@@ -146,8 +148,8 @@
       ]
     },
     "/Users/abdullaalkamil/Coding/PERP/contracts/SmartWallet.sol": {
-      "lastModificationDate": 1613250124124,
-      "contentHash": "7abbfaa0ca0bf18ec123d78db7694564",
+      "lastModificationDate": 1613304569339,
+      "contentHash": "45d84ab61da3297a1229a6c3ffd73402",
       "sourceName": "contracts/SmartWallet.sol",
       "solcConfig": {
         "version": "0.6.9",
@@ -508,6 +510,44 @@
       ],
       "artifacts": [
         "IAmm"
+      ]
+    },
+    "/Users/abdullaalkamil/Coding/PERP/contracts/utils/DecimalERC20.sol": {
+      "lastModificationDate": 1613311319970,
+      "contentHash": "82b6613a560b8f6ffbde2f74b723301a",
+      "sourceName": "contracts/utils/DecimalERC20.sol",
+      "solcConfig": {
+        "version": "0.6.9",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 2000
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "@openzeppelin/contracts/token/ERC20/IERC20.sol",
+        "@openzeppelin/contracts/math/SafeMath.sol",
+        "./Decimal.sol"
+      ],
+      "versionPragmas": [
+        "0.6.9"
+      ],
+      "artifacts": [
+        "DecimalERC20"
       ]
     }
   }

@@ -104,10 +104,6 @@ contract SmartWallet is Ownable {
   ) public returns (bool) {
     require(msg.sender == address(LOB), 'Only execute from the order book');
     console.log('--SW: Order #', order_id);
-    // DO ALL THE NECESSARY CHEKS
-    // INTERACT WITH CLEARING HOUSE
-    // ????
-    // PROFIT
     (, address _trader,
       LimitOrderBook.OrderType _orderType,
       ,bool _stillValid, uint _expiry) =
@@ -117,6 +113,10 @@ contract SmartWallet is Ownable {
     require(_stillValid, 'Order no longer valid');
     if(_orderType == LimitOrderBook.OrderType.LIMIT) {
       return _executeLimitOrder(order_id);
+    } else if(_orderType == LimitOrderBook.OrderType.STOPMARKET) {
+      return _executeStopOrder(order_id);
+    } else if(_orderType == LimitOrderBook.OrderType.STOPLIMIT) {
+      return _executeStopLimitOrder(order_id);
     }
     return false;
   }
@@ -126,12 +126,29 @@ contract SmartWallet is Ownable {
     return (a.cmp(b) == 1) ? b : a;
   }
 
-  function minSD(SignedDecimal.signedDecimal memory a,
-    SignedDecimal.signedDecimal memory b) public pure
-  returns (SignedDecimal.signedDecimal memory){
-    return (a.abs().cmp(b.abs()) == 1) ?
-    SignedDecimal.signedDecimal(int256(b.abs().d)) :
-    SignedDecimal.signedDecimal(int256(a.abs().d));
+  function _shouldCloseReduceOnly(
+    IAmm _asset,
+    SignedDecimal.signedDecimal memory _orderSize
+  ) internal view returns (bool) {
+    IClearingHouse.Position memory _currentPosition = IClearingHouse(ClearingHouse)
+      .getPosition(IAmm(_asset), address(this));
+    SignedDecimal.signedDecimal memory _currentSize = _currentPosition.size;
+    if(_orderSize.isNegative() != _currentSize.isNegative()) {
+      if(_orderSize.isNegative()) {
+        if(_orderSize.abs().cmp(_currentSize.abs()) == 1) {
+          return true;
+        }
+      } else {
+        if(_currentSize.abs().cmp(_orderSize.abs()) == 1) {
+          return true;
+        }
+      }
+      if(_orderSize.abs().toUint() == 0) {
+        revert('invalid reduceOnly #1');
+      }
+    } else {
+      revert('invalid reduceOnly #2');
+    }
   }
 
   function _executeLimitOrder(
@@ -144,31 +161,9 @@ contract SmartWallet is Ownable {
       Decimal.decimal memory _slippage,) = LOB.getLimitOrderPrices(order_id);
     (address _asset,,,bool _reduceOnly,,) = LOB.getLimitOrderParams(order_id);
 
-    SignedDecimal.signedDecimal memory unadjustedOrderSize = _orderSize;
-
     bool closePosition = false;
-
     if(_reduceOnly) {
-      IClearingHouse.Position memory _currentPosition = IClearingHouse(ClearingHouse)
-        .getPosition(IAmm(_asset), address(this));
-      SignedDecimal.signedDecimal memory _currentSize = _currentPosition.size;
-      if(_orderSize.isNegative() != _currentSize.isNegative()) {
-
-        if(_orderSize.isNegative()) { //if you are long and reducing your position
-          if(_orderSize.abs().cmp(_currentSize.abs()) == 1) { //you are trying to sell more than your current position
-            closePosition = true;
-          }
-        } else {
-          if(_currentSize.abs().cmp(_orderSize.abs()) == 1) { //you are trying to buy more than your current short
-            closePosition = true;
-          }
-        }
-        if(_orderSize.abs().toUint() == 0) {
-          revert('invalid reduceOnly #1');
-        }
-      } else {
-        revert('invalid reduceOnly #2');
-      }
+      closePosition = _shouldCloseReduceOnly(IAmm(_asset), _orderSize);
     }
 
     bool isLong = _orderSize.isNegative() ? false : true;
@@ -199,6 +194,102 @@ contract SmartWallet is Ownable {
       }
     } else {
       revert('Price has not hit limit price');
+    }
+    return true;
+  }
+
+  function _executeStopOrder(
+    uint order_id
+  ) internal returns (bool) {
+    (,Decimal.decimal memory _stopPrice,
+      SignedDecimal.signedDecimal memory _orderSize,
+      Decimal.decimal memory _collateral,
+      Decimal.decimal memory _leverage,
+      Decimal.decimal memory _slippage,) = LOB.getLimitOrderPrices(order_id);
+    (address _asset,,,bool _reduceOnly,,) = LOB.getLimitOrderParams(order_id);
+
+    bool closePosition = false;
+    if(_reduceOnly) {
+      closePosition = _shouldCloseReduceOnly(IAmm(_asset), _orderSize);
+    }
+
+    bool isLong = _orderSize.isNegative() ? false : true;
+    Decimal.decimal memory _markPrice = IAmm(_asset).getSpotPrice();
+    bool priceCheck = (_markPrice.cmp(_stopPrice)) == (isLong ? int128(1) : -1);
+    if(priceCheck) {
+      Decimal.decimal memory _size = _orderSize.abs();
+      Decimal.decimal memory _quote = (IAmm(_asset)
+        .getOutputPrice(isLong ? IAmm.Dir.REMOVE_FROM_AMM : IAmm.Dir.ADD_TO_AMM, _size));
+      _slippage = (_slippage.toUint()==0) ? _slippage :
+        ( isLong ? _slippage.subD(Decimal.decimal(1)) : _slippage.addD(Decimal.decimal(1)));
+      _leverage = minD(_quote.divD(_collateral),_leverage);
+      emit OpenPosition(_asset, isLong ? uint(IClearingHouse.Side.BUY) : uint(IClearingHouse.Side.SELL),
+        _collateral.toUint(), _leverage.toUint(), _slippage.toUint());
+      if(closePosition) {
+        IClearingHouse(ClearingHouse).closePosition(
+          IAmm(_asset),
+          Decimal.decimal(0) //how to calculate quoteAssetLimit
+          );
+      } else {
+        IClearingHouse(ClearingHouse).openPosition(
+          IAmm(_asset),
+          isLong ? IClearingHouse.Side.BUY : IClearingHouse.Side.SELL,
+          _collateral,
+          _leverage, //or max leverage
+          _slippage
+          );
+      }
+    } else {
+      revert('Price has not hit stop price');
+    }
+    return true;
+  }
+
+  function _executeStopLimitOrder(
+    uint order_id
+  ) internal returns (bool) {
+    (Decimal.decimal memory _limitPrice,
+      Decimal.decimal memory _stopPrice,
+      SignedDecimal.signedDecimal memory _orderSize,
+      Decimal.decimal memory _collateral,
+      Decimal.decimal memory _leverage,
+      Decimal.decimal memory _slippage,) = LOB.getLimitOrderPrices(order_id);
+    (address _asset,,,bool _reduceOnly,,) = LOB.getLimitOrderParams(order_id);
+
+    bool closePosition = false;
+    if(_reduceOnly) {
+      closePosition = _shouldCloseReduceOnly(IAmm(_asset), _orderSize);
+    }
+
+    bool isLong = _orderSize.isNegative() ? false : true;
+    Decimal.decimal memory _markPrice = IAmm(_asset).getSpotPrice();
+    bool priceCheck = (_limitPrice.cmp(_markPrice)) == (isLong ? int128(1) : -1) &&
+      (_markPrice.cmp(_stopPrice)) == (isLong ? int128(1) : -1);
+    if(priceCheck) {
+      Decimal.decimal memory _size = _orderSize.abs();
+      Decimal.decimal memory _quote = (IAmm(_asset)
+        .getOutputPrice(isLong ? IAmm.Dir.REMOVE_FROM_AMM : IAmm.Dir.ADD_TO_AMM, _size));
+      _slippage = (_slippage.toUint()==0) ? _slippage :
+        ( isLong ? _slippage.subD(Decimal.decimal(1)) : _slippage.addD(Decimal.decimal(1)));
+      _leverage = minD(_quote.divD(_collateral),_leverage);
+      emit OpenPosition(_asset, isLong ? uint(IClearingHouse.Side.BUY) : uint(IClearingHouse.Side.SELL),
+        _collateral.toUint(), _leverage.toUint(), _slippage.toUint());
+      if(closePosition) {
+        IClearingHouse(ClearingHouse).closePosition(
+          IAmm(_asset),
+          Decimal.decimal(0) //how to calculate quoteAssetLimit
+          );
+      } else {
+        IClearingHouse(ClearingHouse).openPosition(
+          IAmm(_asset),
+          isLong ? IClearingHouse.Side.BUY : IClearingHouse.Side.SELL,
+          _collateral,
+          _leverage, //or max leverage
+          _slippage
+          );
+      }
+    } else {
+      revert('Price has not hit stoplimit price');
     }
     return true;
   }

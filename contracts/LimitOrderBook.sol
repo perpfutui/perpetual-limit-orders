@@ -125,6 +125,67 @@ contract LimitOrderBook is Ownable, DecimalERC20{
     emit OrderCreated(msg.sender,orders.length-1);
   }
 
+  function addStopOrder(
+    address _asset,
+    Decimal.decimal memory _stopPrice,
+    SignedDecimal.signedDecimal memory _positionSize,
+    Decimal.decimal memory _collateral,
+    Decimal.decimal memory _leverage,
+    Decimal.decimal memory _slippage,
+    Decimal.decimal memory _tipFee,
+    bool _reduceOnly,
+    uint256 _expiry
+  ) public {
+    require(((_expiry == 0 ) || (block.timestamp<_expiry)), 'Event will expire in past');
+    orders.push(LimitOrder({
+      asset: _asset,
+      trader: msg.sender,
+      orderType: OrderType.STOPMARKET,
+      limitPrice: Decimal.zero(),
+      stopPrice: _stopPrice,
+      orderSize: _positionSize,
+      collateral: _collateral, //will always use this amount
+      leverage: _leverage, //the maximum acceptable leverage, may be less than this
+      slippage: _slippage, //refers to the minimum amount that user will accept
+      tipFee: _tipFee,
+      reduceOnly: _reduceOnly,
+      stillValid: true,
+      expiry: _expiry
+      }));
+    emit OrderCreated(msg.sender,orders.length-1);
+  }
+
+  function addStopLimitOrder(
+    address _asset,
+    Decimal.decimal memory _limitPrice,
+    Decimal.decimal memory _stopPrice,
+    SignedDecimal.signedDecimal memory _positionSize,
+    Decimal.decimal memory _collateral,
+    Decimal.decimal memory _leverage,
+    Decimal.decimal memory _slippage,
+    Decimal.decimal memory _tipFee,
+    bool _reduceOnly,
+    uint256 _expiry
+  ) public {
+    require(((_expiry == 0 ) || (block.timestamp<_expiry)), 'Event will expire in past');
+    orders.push(LimitOrder({
+      asset: _asset,
+      trader: msg.sender,
+      orderType: OrderType.STOPLIMIT,
+      limitPrice: _limitPrice,
+      stopPrice: _stopPrice,
+      orderSize: _positionSize,
+      collateral: _collateral, //will always use this amount
+      leverage: _leverage, //the maximum acceptable leverage, may be less than this
+      slippage: _slippage, //refers to the minimum amount that user will accept
+      tipFee: _tipFee,
+      reduceOnly: _reduceOnly,
+      stillValid: true,
+      expiry: _expiry
+      }));
+    emit OrderCreated(msg.sender,orders.length-1);
+  }
+
   function setFactory(address _addr) public onlyOwner{
     factory = SmartWalletFactory(_addr);
   }
@@ -180,6 +241,7 @@ contract LimitOrderBook is Ownable, DecimalERC20{
     if(success) {
       console.log("-Successfully called");
       _transferFrom(IERC20(USDC), _smartwallet, msg.sender, orders[id].tipFee);
+      //need to make sure fees work
       orders[id].stillValid = false;
     }
   }

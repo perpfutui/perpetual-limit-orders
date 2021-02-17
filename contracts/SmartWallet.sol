@@ -51,7 +51,7 @@ contract SmartWallet is Ownable {
 
   function approveAll() public {
     IERC20(USDC).approve(ClearingHouse, type(uint256).max);
-    IERC20(USDC).approve(address(factory), type(uint256).max);
+    IERC20(USDC).approve(address(LOB), type(uint256).max);
   }
 
   //Taken from https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/utils/Address.sol
@@ -111,6 +111,7 @@ contract SmartWallet is Ownable {
     require(factory.getSmartWallet(_trader) == address(this), 'Incorrect smart wallet');
     require(((_expiry == 0 ) || (block.timestamp<_expiry)), 'Order expired');
     require(_stillValid, 'Order no longer valid');
+    //TODO: review if these checks are actually required
     if(_orderType == LimitOrderBook.OrderType.LIMIT) {
       return _executeLimitOrder(order_id);
     } else if(_orderType == LimitOrderBook.OrderType.STOPMARKET) {
@@ -182,6 +183,7 @@ contract SmartWallet is Ownable {
         IClearingHouse(ClearingHouse).closePosition(
           IAmm(_asset),
           Decimal.decimal(0) //how to calculate quoteAssetLimit
+          //should be position size * limit price
           );
       } else {
         IClearingHouse(ClearingHouse).openPosition(
@@ -229,6 +231,8 @@ contract SmartWallet is Ownable {
         IClearingHouse(ClearingHouse).closePosition(
           IAmm(_asset),
           Decimal.decimal(0) //how to calculate quoteAssetLimit
+          //cannot have a proper slippage parameter here...
+          //calculate slippage from 15 minute TWAP
           );
       } else {
         IClearingHouse(ClearingHouse).openPosition(
@@ -278,6 +282,7 @@ contract SmartWallet is Ownable {
         IClearingHouse(ClearingHouse).closePosition(
           IAmm(_asset),
           Decimal.decimal(0) //how to calculate quoteAssetLimit
+          //should be position size * limit price
           );
       } else {
         IClearingHouse(ClearingHouse).openPosition(

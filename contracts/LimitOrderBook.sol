@@ -107,6 +107,7 @@ contract LimitOrderBook is Ownable, DecimalERC20{
     uint256 _expiry
   ) public {
     require(((_expiry == 0 ) || (block.timestamp<_expiry)), 'Event will expire in past');
+    emit OrderCreated(msg.sender,orders.length);
     orders.push(LimitOrder({
       asset: _asset,
       trader: msg.sender,
@@ -122,7 +123,6 @@ contract LimitOrderBook is Ownable, DecimalERC20{
       stillValid: true,
       expiry: _expiry
       }));
-    emit OrderCreated(msg.sender,orders.length-1);
   }
 
   function addStopOrder(
@@ -137,6 +137,7 @@ contract LimitOrderBook is Ownable, DecimalERC20{
     uint256 _expiry
   ) public {
     require(((_expiry == 0 ) || (block.timestamp<_expiry)), 'Event will expire in past');
+    emit OrderCreated(msg.sender,orders.length);
     orders.push(LimitOrder({
       asset: _asset,
       trader: msg.sender,
@@ -152,7 +153,6 @@ contract LimitOrderBook is Ownable, DecimalERC20{
       stillValid: true,
       expiry: _expiry
       }));
-    emit OrderCreated(msg.sender,orders.length-1);
   }
 
   function addStopLimitOrder(
@@ -168,6 +168,7 @@ contract LimitOrderBook is Ownable, DecimalERC20{
     uint256 _expiry
   ) public {
     require(((_expiry == 0 ) || (block.timestamp<_expiry)), 'Event will expire in past');
+    emit OrderCreated(msg.sender,orders.length);
     orders.push(LimitOrder({
       asset: _asset,
       trader: msg.sender,
@@ -183,8 +184,14 @@ contract LimitOrderBook is Ownable, DecimalERC20{
       stillValid: true,
       expiry: _expiry
       }));
-    emit OrderCreated(msg.sender,orders.length-1);
   }
+
+  //function modifyOrder()
+    //cannot change asset/trader/ordertype, stillValid
+    //can change: limitprice, stopprice, ordersize, COLLATERAL
+    //leverage, slippage, tipfee, reduceonly, expiry
+
+  //function deleteOrder()
 
   function setFactory(address _addr) public onlyOwner{
     factory = SmartWalletFactory(_addr);
@@ -243,7 +250,12 @@ contract LimitOrderBook is Ownable, DecimalERC20{
       _transferFrom(IERC20(USDC), _smartwallet, msg.sender, orders[id].tipFee);
       //need to make sure fees work
       orders[id].stillValid = false;
+      //delete orders[id]
     }
+  }
+
+  function getNextOrderId() public view returns (uint){
+    return orders.length;
   }
 
   modifier onlyValidOrder(uint id) {

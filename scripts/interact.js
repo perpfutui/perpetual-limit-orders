@@ -1,4 +1,7 @@
 var fs = require('fs')
+const fetch = require("cross-fetch")
+
+const owner = '0xCaD18E65F91471C533ee86b76BCe463978f593AA'
 
 async function main() {
 
@@ -10,68 +13,79 @@ async function main() {
   ]
   const AMM_abi = [
     {"type":"event","name":"CapChanged","inputs":[{"type":"uint256","name":"maxHoldingBaseAsset","internalType":"uint256","indexed":false},{"type":"uint256","name":"openInterestNotionalCap","internalType":"uint256","indexed":false}],"anonymous":false},{"type":"event","name":"FundingRateUpdated","inputs":[{"type":"int256","name":"rate","internalType":"int256","indexed":false},{"type":"uint256","name":"underlyingPrice","internalType":"uint256","indexed":false}],"anonymous":false},{"type":"event","name":"LiquidityChanged","inputs":[{"type":"uint256","name":"quoteReserve","internalType":"uint256","indexed":false},{"type":"uint256","name":"baseReserve","internalType":"uint256","indexed":false},{"type":"int256","name":"cumulativeNotional","internalType":"int256","indexed":false}],"anonymous":false},{"type":"event","name":"OwnershipTransferred","inputs":[{"type":"address","name":"previousOwner","internalType":"address","indexed":true},{"type":"address","name":"newOwner","internalType":"address","indexed":true}],"anonymous":false},{"type":"event","name":"ReserveSnapshotted","inputs":[{"type":"uint256","name":"quoteAssetReserve","internalType":"uint256","indexed":false},{"type":"uint256","name":"baseAssetReserve","internalType":"uint256","indexed":false},{"type":"uint256","name":"timestamp","internalType":"uint256","indexed":false}],"anonymous":false},{"type":"event","name":"Shutdown","inputs":[{"type":"uint256","name":"settlementPrice","internalType":"uint256","indexed":false}],"anonymous":false},{"type":"event","name":"SwapInput","inputs":[{"type":"uint8","name":"dir","internalType":"enum IAmm.Dir","indexed":false},{"type":"uint256","name":"quoteAssetAmount","internalType":"uint256","indexed":false},{"type":"uint256","name":"baseAssetAmount","internalType":"uint256","indexed":false}],"anonymous":false},{"type":"event","name":"SwapOutput","inputs":[{"type":"uint8","name":"dir","internalType":"enum IAmm.Dir","indexed":false},{"type":"uint256","name":"quoteAssetAmount","internalType":"uint256","indexed":false},{"type":"uint256","name":"baseAssetAmount","internalType":"uint256","indexed":false}],"anonymous":false},{"type":"function","stateMutability":"view","outputs":[{"type":"uint256","name":"d","internalType":"uint256"}],"name":"baseAssetReserve","inputs":[]},{"type":"function","stateMutability":"view","outputs":[{"type":"tuple","name":"","internalType":"struct SignedDecimal.signedDecimal","components":[{"type":"int256","name":"d","internalType":"int256"}]}],"name":"calcBaseAssetAfterLiquidityMigration","inputs":[{"type":"tuple","name":"_baseAssetAmount","internalType":"struct SignedDecimal.signedDecimal","components":[{"type":"int256","name":"d","internalType":"int256"}]},{"type":"tuple","name":"_fromQuoteReserve","internalType":"struct Decimal.decimal","components":[{"type":"uint256","name":"d","internalType":"uint256"}]},{"type":"tuple","name":"_fromBaseReserve","internalType":"struct Decimal.decimal","components":[{"type":"uint256","name":"d","internalType":"uint256"}]}]},{"type":"function","stateMutability":"view","outputs":[{"type":"tuple","name":"","internalType":"struct Decimal.decimal","components":[{"type":"uint256","name":"d","internalType":"uint256"}]},{"type":"tuple","name":"","internalType":"struct Decimal.decimal","components":[{"type":"uint256","name":"d","internalType":"uint256"}]}],"name":"calcFee","inputs":[{"type":"tuple","name":"_quoteAssetAmount","internalType":"struct Decimal.decimal","components":[{"type":"uint256","name":"d","internalType":"uint256"}]}]},{"type":"function","stateMutability":"view","outputs":[{"type":"address","name":"","internalType":"address"}],"name":"candidate","inputs":[]},{"type":"function","stateMutability":"view","outputs":[{"type":"uint256","name":"d","internalType":"uint256"}],"name":"fluctuationLimitRatio","inputs":[]},{"type":"function","stateMutability":"view","outputs":[{"type":"uint256","name":"","internalType":"uint256"}],"name":"fundingBufferPeriod","inputs":[]},{"type":"function","stateMutability":"view","outputs":[{"type":"uint256","name":"","internalType":"uint256"}],"name":"fundingPeriod","inputs":[]},{"type":"function","stateMutability":"view","outputs":[{"type":"int256","name":"d","internalType":"int256"}],"name":"fundingRate","inputs":[]},{"type":"function","stateMutability":"view","outputs":[{"type":"tuple","name":"","internalType":"struct SignedDecimal.signedDecimal","components":[{"type":"int256","name":"d","internalType":"int256"}]}],"name":"getBaseAssetDelta","inputs":[]},{"type":"function","stateMutability":"view","outputs":[{"type":"tuple","name":"","internalType":"struct SignedDecimal.signedDecimal","components":[{"type":"int256","name":"d","internalType":"int256"}]}],"name":"getBaseAssetDeltaThisFundingPeriod","inputs":[]},{"type":"function","stateMutability":"view","outputs":[{"type":"tuple","name":"","internalType":"struct SignedDecimal.signedDecimal","components":[{"type":"int256","name":"d","internalType":"int256"}]}],"name":"getCumulativeNotional","inputs":[]},{"type":"function","stateMutability":"view","outputs":[{"type":"tuple","name":"","internalType":"struct Decimal.decimal","components":[{"type":"uint256","name":"d","internalType":"uint256"}]}],"name":"getInputPrice","inputs":[{"type":"uint8","name":"_dir","internalType":"enum IAmm.Dir"},{"type":"tuple","name":"_quoteAssetAmount","internalType":"struct Decimal.decimal","components":[{"type":"uint256","name":"d","internalType":"uint256"}]}]},{"type":"function","stateMutability":"pure","outputs":[{"type":"tuple","name":"","internalType":"struct Decimal.decimal","components":[{"type":"uint256","name":"d","internalType":"uint256"}]}],"name":"getInputPriceWithReserves","inputs":[{"type":"uint8","name":"_dir","internalType":"enum IAmm.Dir"},{"type":"tuple","name":"_quoteAssetAmount","internalType":"struct Decimal.decimal","components":[{"type":"uint256","name":"d","internalType":"uint256"}]},{"type":"tuple","name":"_quoteAssetPoolAmount","internalType":"struct Decimal.decimal","components":[{"type":"uint256","name":"d","internalType":"uint256"}]},{"type":"tuple","name":"_baseAssetPoolAmount","internalType":"struct Decimal.decimal","components":[{"type":"uint256","name":"d","internalType":"uint256"}]}]},{"type":"function","stateMutability":"view","outputs":[{"type":"tuple","name":"","internalType":"struct Decimal.decimal","components":[{"type":"uint256","name":"d","internalType":"uint256"}]}],"name":"getInputTwap","inputs":[{"type":"uint8","name":"_dir","internalType":"enum IAmm.Dir"},{"type":"tuple","name":"_quoteAssetAmount","internalType":"struct Decimal.decimal","components":[{"type":"uint256","name":"d","internalType":"uint256"}]}]},{"type":"function","stateMutability":"view","outputs":[{"type":"tuple","name":"","internalType":"struct IAmm.LiquidityChangedSnapshot","components":[{"type":"tuple","name":"cumulativeNotional","internalType":"struct SignedDecimal.signedDecimal","components":[{"type":"int256","name":"d","internalType":"int256"}]},{"type":"tuple","name":"quoteAssetReserve","internalType":"struct Decimal.decimal","components":[{"type":"uint256","name":"d","internalType":"uint256"}]},{"type":"tuple","name":"baseAssetReserve","internalType":"struct Decimal.decimal","components":[{"type":"uint256","name":"d","internalType":"uint256"}]},{"type":"tuple","name":"totalPositionSize","internalType":"struct SignedDecimal.signedDecimal","components":[{"type":"int256","name":"d","internalType":"int256"}]}]}],"name":"getLatestLiquidityChangedSnapshots","inputs":[]},{"type":"function","stateMutability":"view","outputs":[{"type":"tuple","name":"","internalType":"struct IAmm.LiquidityChangedSnapshot","components":[{"type":"tuple","name":"cumulativeNotional","internalType":"struct SignedDecimal.signedDecimal","components":[{"type":"int256","name":"d","internalType":"int256"}]},{"type":"tuple","name":"quoteAssetReserve","internalType":"struct Decimal.decimal","components":[{"type":"uint256","name":"d","internalType":"uint256"}]},{"type":"tuple","name":"baseAssetReserve","internalType":"struct Decimal.decimal","components":[{"type":"uint256","name":"d","internalType":"uint256"}]},{"type":"tuple","name":"totalPositionSize","internalType":"struct SignedDecimal.signedDecimal","components":[{"type":"int256","name":"d","internalType":"int256"}]}]}],"name":"getLiquidityChangedSnapshots","inputs":[{"type":"uint256","name":"i","internalType":"uint256"}]},{"type":"function","stateMutability":"view","outputs":[{"type":"uint256","name":"","internalType":"uint256"}],"name":"getLiquidityHistoryLength","inputs":[]},{"type":"function","stateMutability":"view","outputs":[{"type":"tuple","name":"","internalType":"struct Decimal.decimal","components":[{"type":"uint256","name":"d","internalType":"uint256"}]}],"name":"getMaxHoldingBaseAsset","inputs":[]},{"type":"function","stateMutability":"view","outputs":[{"type":"tuple","name":"","internalType":"struct Decimal.decimal","components":[{"type":"uint256","name":"d","internalType":"uint256"}]}],"name":"getOpenInterestNotionalCap","inputs":[]},{"type":"function","stateMutability":"view","outputs":[{"type":"tuple","name":"","internalType":"struct Decimal.decimal","components":[{"type":"uint256","name":"d","internalType":"uint256"}]}],"name":"getOutputPrice","inputs":[{"type":"uint8","name":"_dir","internalType":"enum IAmm.Dir"},{"type":"tuple","name":"_baseAssetAmount","internalType":"struct Decimal.decimal","components":[{"type":"uint256","name":"d","internalType":"uint256"}]}]},{"type":"function","stateMutability":"pure","outputs":[{"type":"tuple","name":"","internalType":"struct Decimal.decimal","components":[{"type":"uint256","name":"d","internalType":"uint256"}]}],"name":"getOutputPriceWithReserves","inputs":[{"type":"uint8","name":"_dir","internalType":"enum IAmm.Dir"},{"type":"tuple","name":"_baseAssetAmount","internalType":"struct Decimal.decimal","components":[{"type":"uint256","name":"d","internalType":"uint256"}]},{"type":"tuple","name":"_quoteAssetPoolAmount","internalType":"struct Decimal.decimal","components":[{"type":"uint256","name":"d","internalType":"uint256"}]},{"type":"tuple","name":"_baseAssetPoolAmount","internalType":"struct Decimal.decimal","components":[{"type":"uint256","name":"d","internalType":"uint256"}]}]},{"type":"function","stateMutability":"view","outputs":[{"type":"tuple","name":"","internalType":"struct Decimal.decimal","components":[{"type":"uint256","name":"d","internalType":"uint256"}]}],"name":"getOutputTwap","inputs":[{"type":"uint8","name":"_dir","internalType":"enum IAmm.Dir"},{"type":"tuple","name":"_baseAssetAmount","internalType":"struct Decimal.decimal","components":[{"type":"uint256","name":"d","internalType":"uint256"}]}]},{"type":"function","stateMutability":"view","outputs":[{"type":"tuple","name":"","internalType":"struct Decimal.decimal","components":[{"type":"uint256","name":"d","internalType":"uint256"}]},{"type":"tuple","name":"","internalType":"struct Decimal.decimal","components":[{"type":"uint256","name":"d","internalType":"uint256"}]}],"name":"getReserve","inputs":[]},{"type":"function","stateMutability":"view","outputs":[{"type":"tuple","name":"","internalType":"struct Decimal.decimal","components":[{"type":"uint256","name":"d","internalType":"uint256"}]}],"name":"getSettlementPrice","inputs":[]},{"type":"function","stateMutability":"view","outputs":[{"type":"uint256","name":"","internalType":"uint256"}],"name":"getSnapshotLen","inputs":[]},{"type":"function","stateMutability":"view","outputs":[{"type":"tuple","name":"","internalType":"struct Decimal.decimal","components":[{"type":"uint256","name":"d","internalType":"uint256"}]}],"name":"getSpotPrice","inputs":[]},{"type":"function","stateMutability":"view","outputs":[{"type":"tuple","name":"","internalType":"struct Decimal.decimal","components":[{"type":"uint256","name":"d","internalType":"uint256"}]}],"name":"getTwapPrice","inputs":[{"type":"uint256","name":"_intervalInSeconds","internalType":"uint256"}]},{"type":"function","stateMutability":"view","outputs":[{"type":"tuple","name":"","internalType":"struct Decimal.decimal","components":[{"type":"uint256","name":"d","internalType":"uint256"}]}],"name":"getUnderlyingPrice","inputs":[]},{"type":"function","stateMutability":"view","outputs":[{"type":"tuple","name":"","internalType":"struct Decimal.decimal","components":[{"type":"uint256","name":"d","internalType":"uint256"}]}],"name":"getUnderlyingTwapPrice","inputs":[{"type":"uint256","name":"_intervalInSeconds","internalType":"uint256"}]},{"type":"function","stateMutability":"view","outputs":[{"type":"address","name":"","internalType":"address"}],"name":"globalShutdown","inputs":[]},{"type":"function","stateMutability":"nonpayable","outputs":[],"name":"initialize","inputs":[{"type":"uint256","name":"_quoteAssetReserve","internalType":"uint256"},{"type":"uint256","name":"_baseAssetReserve","internalType":"uint256"},{"type":"uint256","name":"_tradeLimitRatio","internalType":"uint256"},{"type":"uint256","name":"_fundingPeriod","internalType":"uint256"},{"type":"address","name":"_priceFeed","internalType":"contract IPriceFeed"},{"type":"bytes32","name":"_priceFeedKey","internalType":"bytes32"},{"type":"address","name":"_quoteAsset","internalType":"address"},{"type":"uint256","name":"_fluctuationLimitRatio","internalType":"uint256"},{"type":"uint256","name":"_tollRatio","internalType":"uint256"},{"type":"uint256","name":"_spreadRatio","internalType":"uint256"}]},{"type":"function","stateMutability":"view","outputs":[{"type":"uint256","name":"","internalType":"uint256"}],"name":"nextFundingTime","inputs":[]},{"type":"function","stateMutability":"view","outputs":[{"type":"bool","name":"","internalType":"bool"}],"name":"open","inputs":[]},{"type":"function","stateMutability":"view","outputs":[{"type":"address","name":"","internalType":"address"}],"name":"owner","inputs":[]},{"type":"function","stateMutability":"view","outputs":[{"type":"address","name":"","internalType":"contract IPriceFeed"}],"name":"priceFeed","inputs":[]},{"type":"function","stateMutability":"view","outputs":[{"type":"bytes32","name":"","internalType":"bytes32"}],"name":"priceFeedKey","inputs":[]},{"type":"function","stateMutability":"view","outputs":[{"type":"address","name":"","internalType":"contract IERC20"}],"name":"quoteAsset","inputs":[]},{"type":"function","stateMutability":"view","outputs":[{"type":"uint256","name":"d","internalType":"uint256"}],"name":"quoteAssetReserve","inputs":[]},{"type":"function","stateMutability":"nonpayable","outputs":[],"name":"renounceOwnership","inputs":[]},{"type":"function","stateMutability":"view","outputs":[{"type":"tuple","name":"quoteAssetReserve","internalType":"struct Decimal.decimal","components":[{"type":"uint256","name":"d","internalType":"uint256"}]},{"type":"tuple","name":"baseAssetReserve","internalType":"struct Decimal.decimal","components":[{"type":"uint256","name":"d","internalType":"uint256"}]},{"type":"uint256","name":"timestamp","internalType":"uint256"},{"type":"uint256","name":"blockNumber","internalType":"uint256"}],"name":"reserveSnapshots","inputs":[{"type":"uint256","name":"","internalType":"uint256"}]},{"type":"function","stateMutability":"nonpayable","outputs":[],"name":"setCap","inputs":[{"type":"tuple","name":"_maxHoldingBaseAsset","internalType":"struct Decimal.decimal","components":[{"type":"uint256","name":"d","internalType":"uint256"}]},{"type":"tuple","name":"_openInterestNotionalCap","internalType":"struct Decimal.decimal","components":[{"type":"uint256","name":"d","internalType":"uint256"}]}]},{"type":"function","stateMutability":"nonpayable","outputs":[],"name":"setCounterParty","inputs":[{"type":"address","name":"_counterParty","internalType":"address"}]},{"type":"function","stateMutability":"nonpayable","outputs":[],"name":"setFluctuationLimitRatio","inputs":[{"type":"tuple","name":"_fluctuationLimitRatio","internalType":"struct Decimal.decimal","components":[{"type":"uint256","name":"d","internalType":"uint256"}]}]},{"type":"function","stateMutability":"nonpayable","outputs":[],"name":"setGlobalShutdown","inputs":[{"type":"address","name":"_globalShutdown","internalType":"address"}]},{"type":"function","stateMutability":"nonpayable","outputs":[],"name":"setOpen","inputs":[{"type":"bool","name":"_open","internalType":"bool"}]},{"type":"function","stateMutability":"nonpayable","outputs":[],"name":"setOwner","inputs":[{"type":"address","name":"newOwner","internalType":"address"}]},{"type":"function","stateMutability":"nonpayable","outputs":[],"name":"setSpotPriceTwapInterval","inputs":[{"type":"uint256","name":"_interval","internalType":"uint256"}]},{"type":"function","stateMutability":"nonpayable","outputs":[],"name":"setSpreadRatio","inputs":[{"type":"tuple","name":"_spreadRatio","internalType":"struct Decimal.decimal","components":[{"type":"uint256","name":"d","internalType":"uint256"}]}]},{"type":"function","stateMutability":"nonpayable","outputs":[],"name":"setTollRatio","inputs":[{"type":"tuple","name":"_tollRatio","internalType":"struct Decimal.decimal","components":[{"type":"uint256","name":"d","internalType":"uint256"}]}]},{"type":"function","stateMutability":"nonpayable","outputs":[{"type":"tuple","name":"","internalType":"struct SignedDecimal.signedDecimal","components":[{"type":"int256","name":"d","internalType":"int256"}]}],"name":"settleFunding","inputs":[]},{"type":"function","stateMutability":"nonpayable","outputs":[],"name":"shutdown","inputs":[]},{"type":"function","stateMutability":"view","outputs":[{"type":"uint256","name":"","internalType":"uint256"}],"name":"spotPriceTwapInterval","inputs":[]},{"type":"function","stateMutability":"view","outputs":[{"type":"uint256","name":"d","internalType":"uint256"}],"name":"spreadRatio","inputs":[]},{"type":"function","stateMutability":"nonpayable","outputs":[{"type":"tuple","name":"","internalType":"struct Decimal.decimal","components":[{"type":"uint256","name":"d","internalType":"uint256"}]}],"name":"swapInput","inputs":[{"type":"uint8","name":"_dir","internalType":"enum IAmm.Dir"},{"type":"tuple","name":"_quoteAssetAmount","internalType":"struct Decimal.decimal","components":[{"type":"uint256","name":"d","internalType":"uint256"}]},{"type":"tuple","name":"_baseAssetAmountLimit","internalType":"struct Decimal.decimal","components":[{"type":"uint256","name":"d","internalType":"uint256"}]}]},{"type":"function","stateMutability":"nonpayable","outputs":[{"type":"tuple","name":"","internalType":"struct Decimal.decimal","components":[{"type":"uint256","name":"d","internalType":"uint256"}]}],"name":"swapOutput","inputs":[{"type":"uint8","name":"_dir","internalType":"enum IAmm.Dir"},{"type":"tuple","name":"_baseAssetAmount","internalType":"struct Decimal.decimal","components":[{"type":"uint256","name":"d","internalType":"uint256"}]},{"type":"tuple","name":"_quoteAssetAmountLimit","internalType":"struct Decimal.decimal","components":[{"type":"uint256","name":"d","internalType":"uint256"}]},{"type":"bool","name":"_skipFluctuationCheck","internalType":"bool"}]},{"type":"function","stateMutability":"view","outputs":[{"type":"uint256","name":"d","internalType":"uint256"}],"name":"tollAmount","inputs":[]},{"type":"function","stateMutability":"view","outputs":[{"type":"uint256","name":"d","internalType":"uint256"}],"name":"tollRatio","inputs":[]},{"type":"function","stateMutability":"view","outputs":[{"type":"int256","name":"d","internalType":"int256"}],"name":"totalPositionSize","inputs":[]},{"type":"function","stateMutability":"view","outputs":[{"type":"uint256","name":"d","internalType":"uint256"}],"name":"tradeLimitRatio","inputs":[]},{"type":"function","stateMutability":"nonpayable","outputs":[],"name":"updateOwner","inputs":[]}]
-  const ERC20encode = new ethers.utils.Interface([
-      {"type":"function","stateMutability":"view","payable":false,"outputs":[{"type":"bool","name":""}],"name":"mintingFinished","inputs":[],"constant":true},{"type":"function","stateMutability":"view","payable":false,"outputs":[{"type":"string","name":""}],"name":"name","inputs":[],"constant":true},{"type":"function","stateMutability":"nonpayable","payable":false,"outputs":[{"type":"bool","name":""}],"name":"approve","inputs":[{"type":"address","name":"_spender"},{"type":"uint256","name":"_value"}],"constant":false},{"type":"function","stateMutability":"nonpayable","payable":false,"outputs":[],"name":"setBridgeContract","inputs":[{"type":"address","name":"_bridgeContract"}],"constant":false},{"type":"function","stateMutability":"view","payable":false,"outputs":[{"type":"uint256","name":""}],"name":"totalSupply","inputs":[],"constant":true},{"type":"function","stateMutability":"nonpayable","payable":false,"outputs":[{"type":"bool","name":""}],"name":"transferFrom","inputs":[{"type":"address","name":"_sender"},{"type":"address","name":"_recipient"},{"type":"uint256","name":"_amount"}],"constant":false},{"type":"function","stateMutability":"view","payable":false,"outputs":[{"type":"bytes32","name":""}],"name":"PERMIT_TYPEHASH","inputs":[],"constant":true},{"type":"function","stateMutability":"view","payable":false,"outputs":[{"type":"uint8","name":""}],"name":"decimals","inputs":[],"constant":true},{"type":"function","stateMutability":"view","payable":false,"outputs":[{"type":"bytes32","name":""}],"name":"DOMAIN_SEPARATOR","inputs":[],"constant":true},{"type":"function","stateMutability":"nonpayable","payable":false,"outputs":[{"type":"bool","name":""}],"name":"increaseAllowance","inputs":[{"type":"address","name":"spender"},{"type":"uint256","name":"addedValue"}],"constant":false},{"type":"function","stateMutability":"nonpayable","payable":false,"outputs":[{"type":"bool","name":""}],"name":"transferAndCall","inputs":[{"type":"address","name":"_to"},{"type":"uint256","name":"_value"},{"type":"bytes","name":"_data"}],"constant":false},{"type":"function","stateMutability":"nonpayable","payable":false,"outputs":[{"type":"bool","name":""}],"name":"mint","inputs":[{"type":"address","name":"_to"},{"type":"uint256","name":"_amount"}],"constant":false},{"type":"function","stateMutability":"nonpayable","payable":false,"outputs":[],"name":"burn","inputs":[{"type":"uint256","name":"_value"}],"constant":false},{"type":"function","stateMutability":"view","payable":false,"outputs":[{"type":"string","name":""}],"name":"version","inputs":[],"constant":true},{"type":"function","stateMutability":"nonpayable","payable":false,"outputs":[{"type":"bool","name":""}],"name":"decreaseApproval","inputs":[{"type":"address","name":"_spender"},{"type":"uint256","name":"_subtractedValue"}],"constant":false},{"type":"function","stateMutability":"nonpayable","payable":false,"outputs":[],"name":"claimTokens","inputs":[{"type":"address","name":"_token"},{"type":"address","name":"_to"}],"constant":false},{"type":"function","stateMutability":"view","payable":false,"outputs":[{"type":"uint256","name":""}],"name":"balanceOf","inputs":[{"type":"address","name":"_owner"}],"constant":true},{"type":"function","stateMutability":"nonpayable","payable":false,"outputs":[],"name":"renounceOwnership","inputs":[],"constant":false},{"type":"function","stateMutability":"view","payable":false,"outputs":[{"type":"bool","name":""}],"name":"isBridge","inputs":[{"type":"address","name":"_address"}],"constant":true},{"type":"function","stateMutability":"nonpayable","payable":false,"outputs":[{"type":"bool","name":""}],"name":"finishMinting","inputs":[],"constant":false},{"type":"function","stateMutability":"view","payable":false,"outputs":[{"type":"uint256","name":""}],"name":"nonces","inputs":[{"type":"address","name":""}],"constant":true},{"type":"function","stateMutability":"pure","payable":false,"outputs":[{"type":"uint64","name":"major"},{"type":"uint64","name":"minor"},{"type":"uint64","name":"patch"}],"name":"getTokenInterfacesVersion","inputs":[],"constant":true},{"type":"function","stateMutability":"view","payable":false,"outputs":[{"type":"address","name":""}],"name":"owner","inputs":[],"constant":true},{"type":"function","stateMutability":"nonpayable","payable":false,"outputs":[],"name":"permit","inputs":[{"type":"address","name":"_holder"},{"type":"address","name":"_spender"},{"type":"uint256","name":"_nonce"},{"type":"uint256","name":"_expiry"},{"type":"bool","name":"_allowed"},{"type":"uint8","name":"_v"},{"type":"bytes32","name":"_r"},{"type":"bytes32","name":"_s"}],"constant":false},{"type":"function","stateMutability":"view","payable":false,"outputs":[{"type":"string","name":""}],"name":"symbol","inputs":[],"constant":true},{"type":"function","stateMutability":"nonpayable","payable":false,"outputs":[{"type":"bool","name":""}],"name":"decreaseAllowance","inputs":[{"type":"address","name":"spender"},{"type":"uint256","name":"subtractedValue"}],"constant":false},{"type":"function","stateMutability":"nonpayable","payable":false,"outputs":[{"type":"bool","name":""}],"name":"transfer","inputs":[{"type":"address","name":"_to"},{"type":"uint256","name":"_value"}],"constant":false},{"type":"function","stateMutability":"nonpayable","payable":false,"outputs":[],"name":"push","inputs":[{"type":"address","name":"_to"},{"type":"uint256","name":"_amount"}],"constant":false},{"type":"function","stateMutability":"nonpayable","payable":false,"outputs":[],"name":"move","inputs":[{"type":"address","name":"_from"},{"type":"address","name":"_to"},{"type":"uint256","name":"_amount"}],"constant":false},{"type":"function","stateMutability":"view","payable":false,"outputs":[{"type":"address","name":""}],"name":"bridgeContract","inputs":[],"constant":true},{"type":"function","stateMutability":"nonpayable","payable":false,"outputs":[{"type":"bool","name":""}],"name":"increaseApproval","inputs":[{"type":"address","name":"_spender"},{"type":"uint256","name":"_addedValue"}],"constant":false},{"type":"function","stateMutability":"view","payable":false,"outputs":[{"type":"uint256","name":""}],"name":"allowance","inputs":[{"type":"address","name":"_owner"},{"type":"address","name":"_spender"}],"constant":true},{"type":"function","stateMutability":"nonpayable","payable":false,"outputs":[],"name":"pull","inputs":[{"type":"address","name":"_from"},{"type":"uint256","name":"_amount"}],"constant":false},{"type":"function","stateMutability":"nonpayable","payable":false,"outputs":[],"name":"transferOwnership","inputs":[{"type":"address","name":"_newOwner"}],"constant":false},{"type":"function","stateMutability":"view","payable":false,"outputs":[{"type":"uint256","name":""}],"name":"expirations","inputs":[{"type":"address","name":""},{"type":"address","name":""}],"constant":true},{"type":"constructor","stateMutability":"nonpayable","payable":false,"inputs":[{"type":"string","name":"_name"},{"type":"string","name":"_symbol"},{"type":"uint8","name":"_decimals"},{"type":"uint256","name":"_chainId"}]},{"type":"event","name":"ContractFallbackCallFailed","inputs":[{"type":"address","name":"from","indexed":false},{"type":"address","name":"to","indexed":false},{"type":"uint256","name":"value","indexed":false}],"anonymous":false},{"type":"event","name":"Mint","inputs":[{"type":"address","name":"to","indexed":true},{"type":"uint256","name":"amount","indexed":false}],"anonymous":false},{"type":"event","name":"MintFinished","inputs":[],"anonymous":false},{"type":"event","name":"OwnershipRenounced","inputs":[{"type":"address","name":"previousOwner","indexed":true}],"anonymous":false},{"type":"event","name":"OwnershipTransferred","inputs":[{"type":"address","name":"previousOwner","indexed":true},{"type":"address","name":"newOwner","indexed":true}],"anonymous":false},{"type":"event","name":"Burn","inputs":[{"type":"address","name":"burner","indexed":true},{"type":"uint256","name":"value","indexed":false}],"anonymous":false},{"type":"event","name":"Transfer","inputs":[{"type":"address","name":"from","indexed":true},{"type":"address","name":"to","indexed":true},{"type":"uint256","name":"value","indexed":false},{"type":"bytes","name":"data","indexed":false}],"anonymous":false},{"type":"event","name":"Approval","inputs":[{"type":"address","name":"owner","indexed":true},{"type":"address","name":"spender","indexed":true},{"type":"uint256","name":"value","indexed":false}],"anonymous":false},{"type":"event","name":"Transfer","inputs":[{"type":"address","name":"from","indexed":true},{"type":"address","name":"to","indexed":true},{"type":"uint256","name":"value","indexed":false}],"anonymous":false}])
+  const ERC20_ABI = [
+      {"type":"function","stateMutability":"view","payable":false,"outputs":[{"type":"bool","name":""}],"name":"mintingFinished","inputs":[],"constant":true},{"type":"function","stateMutability":"view","payable":false,"outputs":[{"type":"string","name":""}],"name":"name","inputs":[],"constant":true},{"type":"function","stateMutability":"nonpayable","payable":false,"outputs":[{"type":"bool","name":""}],"name":"approve","inputs":[{"type":"address","name":"_spender"},{"type":"uint256","name":"_value"}],"constant":false},{"type":"function","stateMutability":"nonpayable","payable":false,"outputs":[],"name":"setBridgeContract","inputs":[{"type":"address","name":"_bridgeContract"}],"constant":false},{"type":"function","stateMutability":"view","payable":false,"outputs":[{"type":"uint256","name":""}],"name":"totalSupply","inputs":[],"constant":true},{"type":"function","stateMutability":"nonpayable","payable":false,"outputs":[{"type":"bool","name":""}],"name":"transferFrom","inputs":[{"type":"address","name":"_sender"},{"type":"address","name":"_recipient"},{"type":"uint256","name":"_amount"}],"constant":false},{"type":"function","stateMutability":"view","payable":false,"outputs":[{"type":"bytes32","name":""}],"name":"PERMIT_TYPEHASH","inputs":[],"constant":true},{"type":"function","stateMutability":"view","payable":false,"outputs":[{"type":"uint8","name":""}],"name":"decimals","inputs":[],"constant":true},{"type":"function","stateMutability":"view","payable":false,"outputs":[{"type":"bytes32","name":""}],"name":"DOMAIN_SEPARATOR","inputs":[],"constant":true},{"type":"function","stateMutability":"nonpayable","payable":false,"outputs":[{"type":"bool","name":""}],"name":"increaseAllowance","inputs":[{"type":"address","name":"spender"},{"type":"uint256","name":"addedValue"}],"constant":false},{"type":"function","stateMutability":"nonpayable","payable":false,"outputs":[{"type":"bool","name":""}],"name":"transferAndCall","inputs":[{"type":"address","name":"_to"},{"type":"uint256","name":"_value"},{"type":"bytes","name":"_data"}],"constant":false},{"type":"function","stateMutability":"nonpayable","payable":false,"outputs":[{"type":"bool","name":""}],"name":"mint","inputs":[{"type":"address","name":"_to"},{"type":"uint256","name":"_amount"}],"constant":false},{"type":"function","stateMutability":"nonpayable","payable":false,"outputs":[],"name":"burn","inputs":[{"type":"uint256","name":"_value"}],"constant":false},{"type":"function","stateMutability":"view","payable":false,"outputs":[{"type":"string","name":""}],"name":"version","inputs":[],"constant":true},{"type":"function","stateMutability":"nonpayable","payable":false,"outputs":[{"type":"bool","name":""}],"name":"decreaseApproval","inputs":[{"type":"address","name":"_spender"},{"type":"uint256","name":"_subtractedValue"}],"constant":false},{"type":"function","stateMutability":"nonpayable","payable":false,"outputs":[],"name":"claimTokens","inputs":[{"type":"address","name":"_token"},{"type":"address","name":"_to"}],"constant":false},{"type":"function","stateMutability":"view","payable":false,"outputs":[{"type":"uint256","name":""}],"name":"balanceOf","inputs":[{"type":"address","name":"_owner"}],"constant":true},{"type":"function","stateMutability":"nonpayable","payable":false,"outputs":[],"name":"renounceOwnership","inputs":[],"constant":false},{"type":"function","stateMutability":"view","payable":false,"outputs":[{"type":"bool","name":""}],"name":"isBridge","inputs":[{"type":"address","name":"_address"}],"constant":true},{"type":"function","stateMutability":"nonpayable","payable":false,"outputs":[{"type":"bool","name":""}],"name":"finishMinting","inputs":[],"constant":false},{"type":"function","stateMutability":"view","payable":false,"outputs":[{"type":"uint256","name":""}],"name":"nonces","inputs":[{"type":"address","name":""}],"constant":true},{"type":"function","stateMutability":"pure","payable":false,"outputs":[{"type":"uint64","name":"major"},{"type":"uint64","name":"minor"},{"type":"uint64","name":"patch"}],"name":"getTokenInterfacesVersion","inputs":[],"constant":true},{"type":"function","stateMutability":"view","payable":false,"outputs":[{"type":"address","name":""}],"name":"owner","inputs":[],"constant":true},{"type":"function","stateMutability":"nonpayable","payable":false,"outputs":[],"name":"permit","inputs":[{"type":"address","name":"_holder"},{"type":"address","name":"_spender"},{"type":"uint256","name":"_nonce"},{"type":"uint256","name":"_expiry"},{"type":"bool","name":"_allowed"},{"type":"uint8","name":"_v"},{"type":"bytes32","name":"_r"},{"type":"bytes32","name":"_s"}],"constant":false},{"type":"function","stateMutability":"view","payable":false,"outputs":[{"type":"string","name":""}],"name":"symbol","inputs":[],"constant":true},{"type":"function","stateMutability":"nonpayable","payable":false,"outputs":[{"type":"bool","name":""}],"name":"decreaseAllowance","inputs":[{"type":"address","name":"spender"},{"type":"uint256","name":"subtractedValue"}],"constant":false},{"type":"function","stateMutability":"nonpayable","payable":false,"outputs":[{"type":"bool","name":""}],"name":"transfer","inputs":[{"type":"address","name":"_to"},{"type":"uint256","name":"_value"}],"constant":false},{"type":"function","stateMutability":"nonpayable","payable":false,"outputs":[],"name":"push","inputs":[{"type":"address","name":"_to"},{"type":"uint256","name":"_amount"}],"constant":false},{"type":"function","stateMutability":"nonpayable","payable":false,"outputs":[],"name":"move","inputs":[{"type":"address","name":"_from"},{"type":"address","name":"_to"},{"type":"uint256","name":"_amount"}],"constant":false},{"type":"function","stateMutability":"view","payable":false,"outputs":[{"type":"address","name":""}],"name":"bridgeContract","inputs":[],"constant":true},{"type":"function","stateMutability":"nonpayable","payable":false,"outputs":[{"type":"bool","name":""}],"name":"increaseApproval","inputs":[{"type":"address","name":"_spender"},{"type":"uint256","name":"_addedValue"}],"constant":false},{"type":"function","stateMutability":"view","payable":false,"outputs":[{"type":"uint256","name":""}],"name":"allowance","inputs":[{"type":"address","name":"_owner"},{"type":"address","name":"_spender"}],"constant":true},{"type":"function","stateMutability":"nonpayable","payable":false,"outputs":[],"name":"pull","inputs":[{"type":"address","name":"_from"},{"type":"uint256","name":"_amount"}],"constant":false},{"type":"function","stateMutability":"nonpayable","payable":false,"outputs":[],"name":"transferOwnership","inputs":[{"type":"address","name":"_newOwner"}],"constant":false},{"type":"function","stateMutability":"view","payable":false,"outputs":[{"type":"uint256","name":""}],"name":"expirations","inputs":[{"type":"address","name":""},{"type":"address","name":""}],"constant":true},{"type":"constructor","stateMutability":"nonpayable","payable":false,"inputs":[{"type":"string","name":"_name"},{"type":"string","name":"_symbol"},{"type":"uint8","name":"_decimals"},{"type":"uint256","name":"_chainId"}]},{"type":"event","name":"ContractFallbackCallFailed","inputs":[{"type":"address","name":"from","indexed":false},{"type":"address","name":"to","indexed":false},{"type":"uint256","name":"value","indexed":false}],"anonymous":false},{"type":"event","name":"Mint","inputs":[{"type":"address","name":"to","indexed":true},{"type":"uint256","name":"amount","indexed":false}],"anonymous":false},{"type":"event","name":"MintFinished","inputs":[],"anonymous":false},{"type":"event","name":"OwnershipRenounced","inputs":[{"type":"address","name":"previousOwner","indexed":true}],"anonymous":false},{"type":"event","name":"OwnershipTransferred","inputs":[{"type":"address","name":"previousOwner","indexed":true},{"type":"address","name":"newOwner","indexed":true}],"anonymous":false},{"type":"event","name":"Burn","inputs":[{"type":"address","name":"burner","indexed":true},{"type":"uint256","name":"value","indexed":false}],"anonymous":false},{"type":"event","name":"Transfer","inputs":[{"type":"address","name":"from","indexed":true},{"type":"address","name":"to","indexed":true},{"type":"uint256","name":"value","indexed":false},{"type":"bytes","name":"data","indexed":false}],"anonymous":false},{"type":"event","name":"Approval","inputs":[{"type":"address","name":"owner","indexed":true},{"type":"address","name":"spender","indexed":true},{"type":"uint256","name":"value","indexed":false}],"anonymous":false},{"type":"event","name":"Transfer","inputs":[{"type":"address","name":"from","indexed":true},{"type":"address","name":"to","indexed":true},{"type":"uint256","name":"value","indexed":false}],"anonymous":false}]
 
-  const owner = '0xCaD18E65F91471C533ee86b76BCe463978f593AA'
+  const ERC20encode = new ethers.utils.Interface(ERC20_ABI)
+
+
   // xDaiUrl = "https://rpc.xdaichain.com/"
   const xDaiUrl = "https://dai.poa.network/"
 
   const provider = new ethers.providers.JsonRpcProvider(xDaiUrl)
   const wallet = new ethers.Wallet('3e730129b3867804afd27b530749d49113164a349b05879f536b6d4fe9018a9f').connect(provider)
 
-  const LOB_address = '0xAE22512Df04F72A6322760e4eB26296ce6d78B94'
-  const SWF_address = '0x5eEd44975EcAdFAE51739f535226A79A8d186943'
-  const CH_address = '0x5d9593586b4B5edBd23E7Eba8d88FD8F09D83EBd'
-  const BTC_AMM = '0x0f346e19F01471C02485DF1758cfd3d624E399B4'
-  const SNX_AMM = '0xb397389B61cbF3920d297b4ea1847996eb2ac8E8'
+  const LOB_address = '0x800690897468e828888E55230189e147955E5d81'
+  const SWF_address = '0xd264643F887e3C9e716FD20f14232e9956eBe108'
+  const url = "https://metadata.perp.exchange/production.json"
+  metadata = await fetch(url).then(res => res.json())
+
+  const CH_address = metadata.layers.layer2.contracts.ClearingHouse.address
+
+  var contracts = metadata.layers.layer2.contracts
+  amms = []
+  for(var contract in contracts) {
+    if(contracts[contract].name=='Amm'){
+      var obj = {
+        asset: contract.substr(0,contract.length-4),
+        amm: contracts[contract].address
+      }
+      amms.push(obj)
+    }
+  }
 
   const LOB = new ethers.Contract(LOB_address, LOB_abi, wallet)
   const SWF = new ethers.Contract(SWF_address, SWF_abi, wallet)
-  const BTC = new ethers.Contract(BTC_AMM, AMM_abi, wallet)
-  const SNX = new ethers.Contract(SNX_AMM, AMM_abi, wallet)
 
-  var proxy_address = await SWF.getSmartWallet(owner)
+  proxy_address = await SWF.getSmartWallet(owner)
   const proxy = new ethers.Contract(proxy_address, SW_abi, wallet)
-  console.log('Proxy: ',proxy_address)
   const CHencode = new ethers.utils.Interface(CH_abi)
   const CH = new ethers.Contract(CH_address, CH_abi, wallet)
   const SW = new ethers.Contract(proxy_address, SW_abi, wallet)
+  const USDC = new ethers.Contract(metadata.layers.layer2.externalContracts.usdc, ERC20_ABI, wallet )
 
-console.log('')
-console.log('')
-console.log('')
+  /*
+    IGNORE EVERYTHING ABOVE HERE
+  */
 
-/*
-var createLimitOrder = await LOB.addLimitOrder(
-    SNX_AMM,
-    {d: ethers.utils.parseUnits('20', 18)},     //STOP
-    {d: ethers.utils.parseUnits('-20', 14)},      //POS SIZE, 0.001
-    {d: ethers.utils.parseUnits('30', 15)},     //COLLATERAL 0.0030
-    {d: ethers.utils.parseUnits('1', 18)}, //max leverage
-    {d: ethers.utils.parseUnits('20', 14)}, //slippage
-    {d: "0"},   // tip Fee
-    true,      //reduce only
+
+/*var createLimitOrder = await LOB.addLimitOrder(
+    (amms.find(amm => amm.asset=='SNX')).amm,
+    {d: ethers.utils.parseUnits('25', 18)},     //STOP
+    {d: ethers.utils.parseUnits('10', 14)},      //POS SIZE, 0.001
+    {d: ethers.utils.parseUnits('29', 14)},     //COLLATERAL 0.0030
+    {d: ethers.utils.parseUnits('10', 18)}, //max leverage
+    {d: "0"}, //slippage
+    {d: ethers.utils.parseUnits('1', 17)},   // tip Fee
+    false,      //reduce only
     0           //expiry
   )
   var CLO = await createLimitOrder.wait()
   console.log(CLO.transactionHash)
 */
-var ex = await LOB.execute(2, {gasLimit:2000000})
-console.log(await ex.wait())
+//await LOB.execute(1, {gasLimit:1000000})
+//  .then( result => console.log(await result.wait()))
+
 
 /*
-var func = ERC20encode.encodeFunctionData ('transfer(address,uint256)',['0xe028CB3E566059A0a0D43b90eF011eA1399E29c8',19975])
-var tx = await proxy.executeCall('0xDDAfbb505ad214D7b80b1f830fcCc89B60fb7A83', func)
+var func = ERC20encode.encodeFunctionData (
+  'approve(address,uint256)',
+  [LOB_address,'115792089237316195423570985008687907853269984665640564039457584007913129639935'])
+var tx = await proxy.executeCall(metadata.layers.layer2.externalContracts.usdc, func)
 var logs = await tx.wait()
 */
-
 /*
-console.log(
-  (await SNX.getOutputPrice(1, {d: ethers.utils.parseUnits('1', 15)})).toString()
-)*/
 
-  /*
   var func = CHencode.encodeFunctionData('openPosition(address,uint8,(uint256),(uint256),(uint256))',
   [BTC_AMM,
   1,
@@ -82,9 +96,9 @@ console.log(
   var tx = await proxy.executeCall(CH_address, func)
   var logs = await tx.wait()
   console.log('Transaction mined at ', logs.transactionHash)
-*/
+
 //console.log(CHencode)
-/*
+
 var func = CHencode.encodeFunctionData('closePosition(address,(uint256))',
 [BTC_AMM,
 {d: 0}])
@@ -100,89 +114,128 @@ console.log(ethers.utils.formatUnits(price.d))
 price = await BTC.getOutputPrice(1, {d: ethers.utils.parseUnits('1',18)})
 console.log(ethers.utils.formatUnits(price.d))
 */
-console.log('**************')
-var trader = owner;
-console.log('Getting active orders for user '+trader)
-var filter = LOB.filters.OrderCreated(trader)
-let events = await LOB.queryFilter(filter)
 
-var assetname = [], ordertype = []
-assetname[SNX_AMM]='SNX'
-assetname[BTC_AMM]='BTC'
+  console.log('')
+  console.log('Running tests..')
+  console.log('User smart wallet: ',proxy_address)
+  console.log('Balance: $%s', truncate(ethers.utils.formatUnits(await USDC.balanceOf(proxy_address),6),5))
+
+  console.log('')
+  console.log('')
+  console.log('TRADE HISTORY')
+
+  await displayTrades(SW)
+  setTimeout(() => {
+    console.log('')
+    console.log('')
+    console.log('PENDING ORDERS')
+    console.log('')
+    displayOrders(LOB)
+  }, 2000)
+  setTimeout(() => {
+    console.log('')
+    console.log('')
+    console.log('OPEN POSITIONS')
+    console.log('')
+    displayPositions(CH) }, 4000)
+
+//giveMeTheLoot(USDC, ERC20encode, proxy)
+
+}
+
+console.clear()
+main()
+  .catch(error => {
+    console.error(error);
+    process.exit(1);
+  });
+
+async function displayTrades(SW) {
+  var filterx = SW.filters.OpenPosition()
+  await SW.queryFilter(filterx).then((result) => {
+    result.forEach(out => {
+      out.getBlock().then( blk => {
+        console.log('%s %s on %s',
+          out.args.dir.toNumber() == 0 ? 'Bought' : 'Sold',
+          (amms.find(amm => amm.amm==out.args.asset)).asset,
+          new Date(1000*blk.timestamp).toISOString()
+        )
+      })
+      console.log()
+    })
+  })
+}
+
+ordertype = []
 ordertype[0] = 'Market'
 ordertype[1] = 'Limit'
 ordertype[2] = 'Stop Market'
 ordertype[3] = 'Stop Limit'
 
-events.forEach(async event => {
-  var output = await LOB.getLimitOrder(event.args.order_id)
-  if(output.stillValid){
-    console.log('**************')
-    console.log('Displaying info for order#', event.args.order_id.toNumber())
-    console.log('Asset:',assetname[output.asset])
-    console.log('Order type:',ordertype[output.orderType],ethers.utils.formatUnits(output.orderSize.d)>0?'Buy':'Sell')
-    if(output.orderType == 1 || output.orderType == 3 ) {
-      console.log('Limit price:',ethers.utils.formatUnits(output.limitPrice.d))
-    }
-    if(output.orderType == 2 || output.orderType == 3 ) {
-      console.log('Stop trigger price:',ethers.utils.formatUnits(output.stopPrice.d))
-    }
-    console.log('Order size:', ethers.utils.formatUnits(output.orderSize.d))
-    console.log('**************')
-  }
-})
-  var position = await CH.getPosition(
-    SNX_AMM,
-    proxy_address
-  )
+async function displayOrders(LOB) {
 
-  function truncate(str, maxDecimalDigits) {
-      if (str.includes('.')) {
-          const parts = str.split('.');
-          return parts[0] + '.' + parts[1].slice(0, maxDecimalDigits);
-      }
-      return str;
-  }
+  var filter = LOB.filters.OrderCreated(owner)
+  let events = await LOB.queryFilter(filter)
 
-  var position2 = await CH.getPositionNotionalAndUnrealizedPnl(
-    SNX_AMM, proxy_address, 0
-  )
-
-
-  console.log('')
-  console.log('**************')
-  console.log('Active positions:')
-
-  console.log('Position size: %s SNX ', truncate(ethers.utils.formatUnits(position.size.d),15))
-  console.log('Margin: ', truncate(ethers.utils.formatUnits(position.margin.d),2))
-  console.log('Open Notional: ', truncate(ethers.utils.formatUnits(position.openNotional.d),2))
-  console.log('Unrealised PnL: ', truncate(ethers.utils.formatUnits(position2.unrealizedPnl.d),2))
-
-  console.log('')
-  console.log('')
-  console.log('')
-
-  console.log('**************')
-  console.log('Filled Orders')
-  var filterx = SW.filters.OpenPosition()
-  await SW.queryFilter(filterx).then((result) => {
-    result.forEach(out => {
-      console.log(out.transactionHash)
-      console.log('Asset',out.args.asset)
-      console.log('Dir',out.args.dir.toNumber())
-      console.log('Collateral',out.args.collateral.toString())
-      console.log('Leverage',out.args.leverage.toString())
-      console.log('Slippage',out.args.slippage.toString())
-      console.log()
+  Promise.all(
+    events.map(async function(event) {
+      return await LOB.getLimitOrder(event.args.order_id).then( order => {
+        if(order.stillValid){
+          console.log('Displaying info for order#', event.args.order_id.toNumber())
+          console.log('Asset:',(amms.find(amm => amm.amm==order.asset)).asset)
+          console.log('Order type:',ordertype[order.orderType],ethers.utils.formatUnits(order.orderSize.d)>0?'Buy':'Sell')
+          if(order.orderType == 1 || order.orderType == 3 ) {
+            console.log('Limit price:',ethers.utils.formatUnits(order.limitPrice.d))
+          }
+          if(order.orderType == 2 || order.orderType == 3 ) {
+            console.log('Stop trigger price:',ethers.utils.formatUnits(order.stopPrice.d))
+          }
+          console.log('Order size:', ethers.utils.formatUnits(order.orderSize.d))
+          console.log('-----------------')
+        }
+      })
     })
-  })
-
+  )
 
 }
 
-main()
-  .then(() => process.exit(0))
-  .catch(error => {
-    console.error(error);
-    process.exit(1);
-  });
+async function displayPositions(CH) {
+  Promise.all(
+    amms.map(async function(amm) {
+      return CH.getPosition(amm.amm, proxy_address).then( pos =>
+        console.log('Position size: %s %s ', truncate(ethers.utils.formatUnits(pos.size.d),15), amm.asset)
+      )
+    })
+  )
+
+}
+
+function truncate(str, maxDecimalDigits) {
+    if (str.includes('.')) {
+        const parts = str.split('.');
+        return parts[0] + '.' + parts[1].slice(0, maxDecimalDigits);
+    }
+    return str;
+}
+
+async function giveMeTheLoot(USDC, ERC20encode, proxy) {
+  var bal = await USDC.balanceOf(proxy_address)
+  var func = ERC20encode.encodeFunctionData(
+    'transfer(address,uint256)',
+    [owner,bal])
+  await proxy.executeCall(metadata.layers.layer2.externalContracts.usdc, func)
+  .then( async result => console.log(await result.wait()))
+}
+
+async function sendOpenPosition(_AMM, _DIR, _COL, _LEV, _SLIP) {
+
+  var func = CHencode.encodeFunctionData('openPosition(address,uint8,(uint256),(uint256),(uint256))',
+  [_AMM,
+  _DIR,
+  _COL, //margin in cents
+  _LEV, //leverage
+  _SLIP])
+  var tx = await proxy.executeCall(CH_address, func)
+  var logs = await tx.wait()
+  console.log('Transaction mined at ', logs.transactionHash)
+}

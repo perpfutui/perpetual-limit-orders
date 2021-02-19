@@ -12,14 +12,12 @@ describe("Perpetual Limit Orders:", function() {
       let LOB = await ethers.getContractFactory("LimitOrderBook");
       lob = await LOB.deploy()
       await lob.deployed()
-      console.log('Limit Order Book', lob.address)
     })
 
     it("Proxy factory deployed", async function() {
       let PF = await ethers.getContractFactory("SmartWalletFactory");
       pf = await PF.deploy(lob.address)
       await pf.deployed()
-      console.log('Proxy Contract Factory', pf.address)
     })
 
     it("Setting factory address for LOB", async function() {
@@ -50,41 +48,99 @@ describe("Perpetual Limit Orders:", function() {
 
   })
 
-  describe("Testing limit order functions", function() {
+  describe("Creating Limit Orders", function() {
 
-    var limit_price = ethers.utils.parseUnits('50000',18)
-    var position_size = ethers.utils.parseUnits('1',12) //0.000001 BTC (0.04) USDC
-    var collateral = ethers.utils.parseUnits('40', 15) //0.04 USDC
-    var address = '0x0f346e19F01471C02485DF1758cfd3d624E399B4'
-    var expiry = 0
-    var leverage = 10
+    describe("Testing Limit Order", function() {
 
-    it("Creating limit order", async function() {
-      await lob.addLimitOrder(address, {d: limit_price}, {d: position_size}, {d:collateral})
+      it("Creating simple limit order", async function() {
+        await expect(lob.addLimitOrder(
+          '0xb397389B61cbF3920d297b4ea1847996eb2ac8E8',
+          {d: ethers.utils.parseUnits('30',18)},
+          {d: ethers.utils.parseUnits('1',18)},
+          {d: ethers.utils.parseUnits('6',18)},
+          {d: ethers.utils.parseUnits('5',18)},
+          {d: '0'},
+          {d: '0'},
+          false,
+          0
+        )).to.not.be.reverted
+      })
+
+      it("Checking limit order params", async function() {
+        var order = await lob.getLimitOrder(0)
+        expect(order.asset).to.equal('0xb397389B61cbF3920d297b4ea1847996eb2ac8E8')
+        expect(order.trader).to.equal(owner.address)
+        expect(order.orderType).to.equal(1)
+        expect(order.reduceOnly).to.equal(false)
+        expect(order.expiry).to.equal(0)
+        expect(order.limitPrice.d).to.equal(ethers.utils.parseUnits('30',18))
+        expect(order.stopPrice.d).to.equal(0)
+        expect(order.orderSize.d).to.equal(ethers.utils.parseUnits('1',18))
+        expect(order.collateral.d).to.equal(ethers.utils.parseUnits('6',18))
+        expect(order.leverage.d).to.equal(ethers.utils.parseUnits('5',18))
+        expect(order.slippage.d).to.equal(0)
+        expect(order.tipFee.d).to.equal(0)
+      })
+
     })
 
-    it("Confirming parameters of limit order stored within struct", async function() {
-      var output = await lob.getLimitOrderPrices(0)
-      expect(output[0].d).to.equal(limit_price)
+    describe ("Testing Stop Order", function() {
+
+      it("Creating simple stop order", async function() {
+        await expect(lob.addStopOrder(
+          '0xb397389B61cbF3920d297b4ea1847996eb2ac8E8',
+          {d: '0'},
+          {d: '0'},
+          {d: '0'},
+          {d: '0'},
+          {d: '0'},
+          {d: '0'}, false, 0
+        )).to.not.be.reverted
+      })
+
+      it("Checking stop order params", async function() {
+        var order = await lob.getLimitOrder(1)
+        expect(order.asset).to.equal('0xb397389B61cbF3920d297b4ea1847996eb2ac8E8')
+        expect(order.trader).to.equal(owner.address)
+        expect(order.orderType).to.equal(2)
+        expect(order.reduceOnly).to.equal(false)
+        expect(order.expiry).to.equal(0)
+        expect(order.limitPrice.d).to.equal(0)
+        expect(order.stopPrice.d).to.equal(0)
+        expect(order.orderSize.d).to.equal(0)
+        expect(order.collateral.d).to.equal(0)
+        expect(order.leverage.d).to.equal(0)
+        expect(order.slippage.d).to.equal(0)
+        expect(order.tipFee.d).to.equal(0)
+      })
     })
 
-  })
+    describe ("Testing Stop Limit Order", function() {
 
-  describe("Testing execution of limit orders", function() {
+      it("Creating simple stop limit order", async function() {
+        await expect(lob.addStopLimitOrder(
+          '0xb397389B61cbF3920d297b4ea1847996eb2ac8E8', {d: '0'}, {d: '0'}, {d: '0'},
+          {d: '0'}, {d: '0'}, {d: '0'}, {d: '0'}, false, 0
+        )).to.not.be.reverted
+      })
 
-    it("Is limit order created?", async function() {
-      var output = await lob.getLimitOrderPrices(0)
-      expect(output).to.not.be.null
+      it("Checking stop limit order params", async function() {
+        var order = await lob.getLimitOrder(2)
+        expect(order.asset).to.equal('0xb397389B61cbF3920d297b4ea1847996eb2ac8E8')
+        expect(order.trader).to.equal(owner.address)
+        expect(order.orderType).to.equal(3)
+        expect(order.reduceOnly).to.equal(false)
+        expect(order.expiry).to.equal(0)
+        expect(order.limitPrice.d).to.equal(0)
+        expect(order.stopPrice.d).to.equal(0)
+        expect(order.orderSize.d).to.equal(0)
+        expect(order.collateral.d).to.equal(0)
+        expect(order.leverage.d).to.equal(0)
+        expect(order.slippage.d).to.equal(0)
+        expect(order.tipFee.d).to.equal(0)
+      })
+
     })
-
-    it("Trying to execute order 0", async function() {
-      await lob.execute(0)
-    })
-
-    it("Should fail to execute order 0 second time", async function() {
-      await expect(lob.execute(0)).to.be.revertedWith('No longer valid')
-    })
-
 
   })
 

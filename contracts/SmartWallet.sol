@@ -49,9 +49,19 @@ contract SmartWallet is Ownable {
 
   event OpenPosition(address asset, uint256 dir, uint256 collateral, uint256 leverage, uint256 slippage);
 
+  function getChainID() internal view returns (uint256) {
+    uint256 id;
+    assembly {
+        id := chainid()
+    }
+    return id;
+  }
+
   function approveAll() public {
-    IERC20(USDC).approve(ClearingHouse, type(uint256).max);
-    IERC20(USDC).approve(address(LOB), type(uint256).max);
+    if(getChainID() == 100) {
+      IERC20(USDC).approve(ClearingHouse, type(uint256).max);
+      IERC20(USDC).approve(address(LOB), type(uint256).max);
+    }
   }
 
   //Taken from https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/utils/Address.sol
@@ -180,10 +190,11 @@ contract SmartWallet is Ownable {
       emit OpenPosition(_asset, isLong ? uint(IClearingHouse.Side.BUY) : uint(IClearingHouse.Side.SELL),
         _collateral.toUint(), _leverage.toUint(), _slippage.toUint());
       if(closePosition) {
+        _slippage = _size.mulD(_limitPrice);
+        _slippage = _slippage.subD(Decimal.one());
         IClearingHouse(ClearingHouse).closePosition(
           IAmm(_asset),
-          Decimal.decimal(0) //how to calculate quoteAssetLimit
-          //should be position size * limit price
+          _slippage //ensure that this is correct
           );
       } else {
         IClearingHouse(ClearingHouse).openPosition(
@@ -230,7 +241,11 @@ contract SmartWallet is Ownable {
       if(closePosition) {
         IClearingHouse(ClearingHouse).closePosition(
           IAmm(_asset),
-          Decimal.decimal(0) //how to calculate quoteAssetLimit
+          Decimal.decimal(0)
+          //we have two options here
+          //an alternative method here is to calculate slippage from the TWAP...
+          //  Decimal.decimal memory _twap = AMM.getOutputTwap(isLong ? IAmm.Dir.REMOVE_FROM_AMM : IAmm.Dir.ADD_TO_AMM, _size);
+          //  _slippage = _twap.mulD(_slippageRatio);
           //cannot have a proper slippage parameter here...
           //calculate slippage from 15 minute TWAP
           );
@@ -240,7 +255,7 @@ contract SmartWallet is Ownable {
           isLong ? IClearingHouse.Side.BUY : IClearingHouse.Side.SELL,
           _collateral,
           _leverage, //or max leverage
-          _slippage
+          Decimal.decimal(0) //the slippage here doesn't actually make sense
           );
       }
     } else {
@@ -279,10 +294,11 @@ contract SmartWallet is Ownable {
       emit OpenPosition(_asset, isLong ? uint(IClearingHouse.Side.BUY) : uint(IClearingHouse.Side.SELL),
         _collateral.toUint(), _leverage.toUint(), _slippage.toUint());
       if(closePosition) {
+        _slippage = _size.mulD(_limitPrice);
+        _slippage = _slippage.subD(Decimal.one());
         IClearingHouse(ClearingHouse).closePosition(
           IAmm(_asset),
-          Decimal.decimal(0) //how to calculate quoteAssetLimit
-          //should be position size * limit price
+          _slippage //ensure that this is correct
           );
       } else {
         IClearingHouse(ClearingHouse).openPosition(

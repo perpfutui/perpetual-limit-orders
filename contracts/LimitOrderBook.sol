@@ -191,6 +191,22 @@ contract LimitOrderBook is Ownable, DecimalERC20{
     //can change: limitprice, stopprice, ordersize, COLLATERAL
     //leverage, slippage, tipfee, reduceonly, expiry
 
+  function modifyOrder(
+    uint order_id,
+    Decimal.decimal memory _limitPrice,
+    Decimal.decimal memory _stopPrice,
+    Decimal.decimal memory _orderSize,
+    Decimal.decimal memory _collateral,
+    Decimal.decimal memory _leverage,
+    Decimal.decimal memory _slippage,
+    Decimal.decimal memory _tipFee,
+    bool _reduceOnly,
+    uint _expiry) public {
+      LimitOrder storage order = orders[order_id];
+      require(msg.sender == order.trader, "Not your limit order");
+      
+    }
+
   //function deleteOrder()
 
   function setFactory(address _addr) public onlyOwner{

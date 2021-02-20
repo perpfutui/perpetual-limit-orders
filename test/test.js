@@ -3,7 +3,7 @@ const { expect } = require("chai");
 describe("Perpetual Limit Orders:", function() {
 
     beforeEach(async function() {
-    [owner] = await ethers.getSigners()
+    [owner,addr1] = await ethers.getSigners()
   })
 
   describe("Deployment", function() {
@@ -50,7 +50,7 @@ describe("Perpetual Limit Orders:", function() {
 
   describe("Creating Limit Orders", function() {
 
-    describe("Testing Limit Order", function() {
+    describe("Creating Limit Order", function() {
 
       it("Creating simple limit order", async function() {
         await expect(lob.addLimitOrder(
@@ -84,7 +84,7 @@ describe("Perpetual Limit Orders:", function() {
 
     })
 
-    describe ("Testing Stop Order", function() {
+    describe ("Creating Stop Order", function() {
 
       it("Creating simple stop order", async function() {
         await expect(lob.addStopOrder(
@@ -115,7 +115,7 @@ describe("Perpetual Limit Orders:", function() {
       })
     })
 
-    describe ("Testing Stop Limit Order", function() {
+    describe ("Creating Stop Limit Order", function() {
 
       it("Creating simple stop limit order", async function() {
         await expect(lob.addStopLimitOrder(
@@ -138,6 +138,86 @@ describe("Perpetual Limit Orders:", function() {
         expect(order.leverage.d).to.equal(0)
         expect(order.slippage.d).to.equal(0)
         expect(order.tipFee.d).to.equal(0)
+      })
+
+    })
+
+    describe("Deleting order", function() {
+
+      it("Ensuring that others cannot delete your order", async function() {
+        await expect(lob.connect(addr1).deleteOrder(0))
+        .to.be.revertedWith('Not your limit order')
+      })
+
+      it("Deleting order 0", async function() {
+        await expect(lob.deleteOrder(0))
+      })
+
+      it("Checking order 0 has been deleted", async function() {
+        output = await lob.getLimitOrder(0)
+        expect(output.stillValid).to.equal(false)
+        expect(output.asset).to.equal('0x0000000000000000000000000000000000000000')
+        expect(output.trader).to.equal('0x0000000000000000000000000000000000000000')
+        expect(output.orderType).to.equal(0)
+        expect(output.reduceOnly).to.equal(false)
+        expect(output.expiry).to.equal(0)
+        expect(output.limitPrice.d).to.equal(0)
+        expect(output.stopPrice.d).to.equal(0)
+        expect(output.orderSize.d).to.equal(0)
+        expect(output.collateral.d).to.equal(0)
+        expect(output.leverage.d).to.equal(0)
+        expect(output.slippage.d).to.equal(0)
+        expect(output.tipFee.d).to.equal(0)
+      })
+
+      it("Checking order 1 hasn't been affected", async function() {
+        output = await lob.getLimitOrder(1)
+        expect(output.stillValid).to.equal(true)
+      })
+
+    })
+
+    describe("Modifying orders", function() {
+
+      it("Ensuring that others cannot modify your order", async function() {
+        await expect(lob.connect(addr1).modifyOrder(1, //stop order
+          {d: "0"},
+          {d: ethers.utils.parseUnits('50000',18)},
+          {d: ethers.utils.parseUnits('1', 18)},
+          {d: ethers.utils.parseUnits('5000', 18)},
+          {d: ethers.utils.parseUnits('10', 18)},
+          {d: "0"},
+          {d: ethers.utils.parseUnits('1', 18)},
+          true,
+          100
+        )).to.be.revertedWith('Not your limit order')
+      })
+
+      it("Modifying order 1", async function(){
+        await expect(lob.modifyOrder(1, //stop order
+          {d: "0"},
+          {d: ethers.utils.parseUnits('50000',18)},
+          {d: ethers.utils.parseUnits('1', 18)},
+          {d: ethers.utils.parseUnits('5000', 18)},
+          {d: ethers.utils.parseUnits('10', 18)},
+          {d: "0"},
+          {d: ethers.utils.parseUnits('1', 18)},
+          true,
+          100
+        )).to.not.be.reverted
+      })
+
+      it("Checking order 1", async function() {
+        output = await lob.getLimitOrder(1)
+        expect(output.reduceOnly).to.equal(true)
+        expect(output.expiry).to.equal(100)
+        expect(output.limitPrice.d).to.equal(0)
+        expect(output.stopPrice.d).to.equal(ethers.utils.parseUnits('50000',18))
+        expect(output.orderSize.d).to.equal(ethers.utils.parseUnits('1',18))
+        expect(output.collateral.d).to.equal(ethers.utils.parseUnits('5000',18))
+        expect(output.leverage.d).to.equal(ethers.utils.parseUnits('10',18))
+        expect(output.slippage.d).to.equal(0)
+        expect(output.tipFee.d).to.equal(ethers.utils.parseUnits('1',18))
       })
 
     })

@@ -195,26 +195,42 @@ contract LimitOrderBook is Ownable, DecimalERC20{
     uint order_id,
     Decimal.decimal memory _limitPrice,
     Decimal.decimal memory _stopPrice,
-    Decimal.decimal memory _orderSize,
+    SignedDecimal.signedDecimal memory _orderSize,
     Decimal.decimal memory _collateral,
     Decimal.decimal memory _leverage,
     Decimal.decimal memory _slippage,
     Decimal.decimal memory _tipFee,
     bool _reduceOnly,
-    uint _expiry) public {
-      LimitOrder storage order = orders[order_id];
-      require(msg.sender == order.trader, "Not your limit order");
-      
+    uint _expiry) public onlyMyOrder(order_id) onlyValidOrder(order_id){
+      orders[order_id].limitPrice = _limitPrice;
+      orders[order_id].stopPrice = _stopPrice;
+      orders[order_id].orderSize = _orderSize;
+      orders[order_id].collateral = _collateral;
+      orders[order_id].leverage = _leverage;
+      orders[order_id].slippage = _slippage;
+      orders[order_id].tipFee = _tipFee;
+      orders[order_id].reduceOnly = _reduceOnly;
+      orders[order_id].expiry = _expiry;
+      //Is it possible for someone to reduce
+      //the fee as the order is being filled???
+      //EMIT EVENT ORDER CHANGED
     }
 
-  //function deleteOrder()
+  function deleteOrder(
+    uint order_id
+  ) public onlyMyOrder(order_id) onlyValidOrder(order_id){
+    delete orders[order_id];
+  }
 
   function setFactory(address _addr) public onlyOwner{
     factory = SmartWalletFactory(_addr);
   }
 
-  function getLimitOrder(uint id) public view onlyValidOrder(id) returns (LimitOrder memory) {
-    return (orders[id]);
+  function getLimitOrder(
+    uint order_id
+  ) public view onlyValidOrder(order_id)
+    returns (LimitOrder memory) {
+    return (orders[order_id]);
   }
 
   function getLimitOrderPrices(
@@ -274,8 +290,13 @@ contract LimitOrderBook is Ownable, DecimalERC20{
     return orders.length;
   }
 
-  modifier onlyValidOrder(uint id) {
-    require(id < orders.length, 'Invalid ID');
+  modifier onlyValidOrder(uint order_id) {
+    require(order_id < orders.length, 'Invalid ID');
+    _;
+  }
+
+  modifier onlyMyOrder(uint order_id) {
+    require(msg.sender == orders[order_id].trader, "Not your limit order");
     _;
   }
 

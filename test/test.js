@@ -195,8 +195,8 @@ describe("Perpetual Limit Orders:", function() {
 
       it("Modifying order 1", async function(){
         await expect(lob.modifyOrder(1, //stop order
-          {d: "0"},
           {d: ethers.utils.parseUnits('50000',18)},
+          {d: "0"},
           {d: ethers.utils.parseUnits('1', 18)},
           {d: ethers.utils.parseUnits('5000', 18)},
           {d: ethers.utils.parseUnits('10', 18)},
@@ -222,6 +222,30 @@ describe("Perpetual Limit Orders:", function() {
 
     })
 
+  })
+
+})
+
+describe("Checking trail order", function() {
+
+  it("Creating trailing stop limit", async function() {
+    await expect(lob.addTrailingStopLimitOrderAbs(
+      '0xb397389B61cbF3920d297b4ea1847996eb2ac8E8',
+      {d: ethers.utils.parseUnits('5000',18)},
+      {d: ethers.utils.parseUnits('1000',18)},
+      {d: ethers.utils.parseUnits('1',18)},
+      {d: ethers.utils.parseUnits('15000',18)},
+      {d: ethers.utils.parseUnits('4',18)},
+      {d: '0'},
+      {d: '0'},
+      false,
+      0
+    )).to.not.be.reverted
+  })
+
+  it("Checking data", async function() {
+    console.log(await lob.getLimitOrder(3))
+    console.log(await lob.getTrailingData(3))
   })
 
 })

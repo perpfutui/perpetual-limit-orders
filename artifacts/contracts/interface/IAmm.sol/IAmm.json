@@ -544,6 +544,73 @@
       "type": "function"
     },
     {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "enum IAmm.TwapCalcOption",
+              "name": "opt",
+              "type": "uint8"
+            },
+            {
+              "internalType": "uint256",
+              "name": "snapshotIndex",
+              "type": "uint256"
+            },
+            {
+              "components": [
+                {
+                  "internalType": "enum IAmm.Dir",
+                  "name": "dir",
+                  "type": "uint8"
+                },
+                {
+                  "components": [
+                    {
+                      "internalType": "uint256",
+                      "name": "d",
+                      "type": "uint256"
+                    }
+                  ],
+                  "internalType": "struct Decimal.decimal",
+                  "name": "assetAmount",
+                  "type": "tuple"
+                },
+                {
+                  "internalType": "enum IAmm.QuoteAssetDir",
+                  "name": "inOrOut",
+                  "type": "uint8"
+                }
+              ],
+              "internalType": "struct IAmm.TwapInputAsset",
+              "name": "asset",
+              "type": "tuple"
+            }
+          ],
+          "internalType": "struct IAmm.TwapPriceCalcParams",
+          "name": "params",
+          "type": "tuple"
+        }
+      ],
+      "name": "getPriceWithSpecificSnapshot",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "d",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct Decimal.decimal",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
       "inputs": [],
       "name": "getSettlementPrice",
       "outputs": [
@@ -558,6 +625,19 @@
           "internalType": "struct Decimal.decimal",
           "name": "",
           "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getSnapshotLen",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
         }
       ],
       "stateMutability": "view",
@@ -636,6 +716,61 @@
           "internalType": "contract IERC20",
           "name": "",
           "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "reserveSnapshots",
+      "outputs": [
+        {
+          "components": [
+            {
+              "components": [
+                {
+                  "internalType": "uint256",
+                  "name": "d",
+                  "type": "uint256"
+                }
+              ],
+              "internalType": "struct Decimal.decimal",
+              "name": "quoteAssetReserve",
+              "type": "tuple"
+            },
+            {
+              "components": [
+                {
+                  "internalType": "uint256",
+                  "name": "d",
+                  "type": "uint256"
+                }
+              ],
+              "internalType": "struct Decimal.decimal",
+              "name": "baseAssetReserve",
+              "type": "tuple"
+            },
+            {
+              "internalType": "uint256",
+              "name": "timestamp",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "blockNumber",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct IAmm.ReserveSnapshot",
+          "name": "",
+          "type": "tuple"
         }
       ],
       "stateMutability": "view",

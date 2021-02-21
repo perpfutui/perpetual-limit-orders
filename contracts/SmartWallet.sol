@@ -49,16 +49,8 @@ contract SmartWallet is Ownable {
 
   event OpenPosition(address asset, uint256 dir, uint256 collateral, uint256 leverage, uint256 slippage);
 
-  function getChainID() internal view returns (uint256) {
-    uint256 id;
-    assembly {
-        id := chainid()
-    }
-    return id;
-  }
-
   function approveAll() public {
-    if(getChainID() == 100) {
+    if(factory.getChainID() == 100) {
       IERC20(USDC).approve(ClearingHouse, type(uint256).max);
       IERC20(USDC).approve(address(LOB), type(uint256).max);
     }
@@ -165,7 +157,7 @@ contract SmartWallet is Ownable {
   function _executeLimitOrder(
     uint order_id
   ) internal returns (bool) {
-    (Decimal.decimal memory _limitPrice,,
+    (,Decimal.decimal memory _limitPrice,
       SignedDecimal.signedDecimal memory _orderSize,
       Decimal.decimal memory _collateral,
       Decimal.decimal memory _leverage,
@@ -214,7 +206,7 @@ contract SmartWallet is Ownable {
   function _executeStopOrder(
     uint order_id
   ) internal returns (bool) {
-    (,Decimal.decimal memory _stopPrice,
+    (Decimal.decimal memory _stopPrice,,
       SignedDecimal.signedDecimal memory _orderSize,
       Decimal.decimal memory _collateral,
       Decimal.decimal memory _leverage,
@@ -267,8 +259,8 @@ contract SmartWallet is Ownable {
   function _executeStopLimitOrder(
     uint order_id
   ) internal returns (bool) {
-    (Decimal.decimal memory _limitPrice,
-      Decimal.decimal memory _stopPrice,
+    (Decimal.decimal memory _stopPrice,
+      Decimal.decimal memory _limitPrice,
       SignedDecimal.signedDecimal memory _orderSize,
       Decimal.decimal memory _collateral,
       Decimal.decimal memory _leverage,
@@ -327,6 +319,14 @@ contract SmartWalletFactory {
     LimitOrderBook = _addr;
   }
 
+  function getChainID() public view returns (uint256) {
+    uint256 id;
+    assembly {
+        id := chainid()
+    }
+    return id;
+  }
+
   function spawn() public returns (address smartWallet) {
     require(getSmartWallet[msg.sender] == address(0), 'Already has smart wallet');
 
@@ -338,9 +338,9 @@ contract SmartWalletFactory {
 
     emit Created(msg.sender, address(smartWallet));
     SmartWallet(smartWallet).setOrderBook(LimitOrderBook);
+    SmartWallet(smartWallet).setFactory(this);
     SmartWallet(smartWallet).approveAll();
     SmartWallet(smartWallet).transferOwnership(msg.sender);
-    SmartWallet(smartWallet).setFactory(this);
     getSmartWallet[msg.sender] = smartWallet;
   }
 

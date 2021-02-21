@@ -24,6 +24,15 @@ interface IAmm {
         SignedDecimal.signedDecimal totalPositionSize;
     }
 
+    function reserveSnapshots(uint256) external view returns (ReserveSnapshot memory);
+
+    struct ReserveSnapshot {
+          Decimal.decimal quoteAssetReserve;
+          Decimal.decimal baseAssetReserve;
+          uint256 timestamp;
+          uint256 blockNumber;
+      }
+
     function swapInput(
         Dir _dir,
         Decimal.decimal calldata _quoteAssetAmount,
@@ -112,6 +121,28 @@ interface IAmm {
     function getMaxHoldingBaseAsset() external view returns (Decimal.decimal memory);
 
     function getOpenInterestNotionalCap() external view returns (Decimal.decimal memory);
+
+    enum TwapCalcOption { RESERVE_ASSET, INPUT_ASSET }
+    enum QuoteAssetDir { QUOTE_IN, QUOTE_OUT }
+
+    struct TwapInputAsset {
+          Dir dir;
+          Decimal.decimal assetAmount;
+          QuoteAssetDir inOrOut;
+      }
+
+    struct TwapPriceCalcParams {
+          TwapCalcOption opt;
+          uint256 snapshotIndex;
+          TwapInputAsset asset;
+      }
+
+      function getSnapshotLen() external view returns (uint256);
+
+    function getPriceWithSpecificSnapshot(TwapPriceCalcParams memory params)
+        external
+        view
+        returns (Decimal.decimal memory);
 
     function getLiquidityChangedSnapshots(uint256 i) external view returns (LiquidityChangedSnapshot memory);
 }

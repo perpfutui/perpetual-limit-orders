@@ -8,65 +8,19 @@ import { Decimal } from "./utils/Decimal.sol";
 import { SignedDecimal } from "./utils/SignedDecimal.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { DecimalERC20 } from "./utils/DecimalERC20.sol";
-
-/*
-Types of Order:
-
-A stop loss order triggers a market buy/sell when the mark price is above/below limit price
-
-A take profit order triggers a market buy/sell when the mark price is below/above limit price
-
-Trailing stop orders are stop loss orders with dynamic limit price - can this be done??
-
-Please note that the price the orders get filled at may not be the limit price.
-
-For longs:
-Take profit: sell when MP > LP. set minimum output to that of LP - therefore you are guaranteed to get more§
-Stop loss: sell when MP < LP. set minimum output to that of LP - this doesn't work so we need to do some clever stuff
-  * market sells your asset at the NEXT AVAILABLE PRICE
-Stop LIMIT - sell when MP < SP but only if it is above LP
-
-For shorts:
-Take profit: buy when MP < LP. set minimum output to that of LP - you should get more if blah
-Stop loss: buy when MP > LP. issue here with minimum output.
-STOP LIMIT BUY - buy when MP > SP but only if it is below LP
-
-Take profit and Stop loss are REDUCE ONLY
-
-Standard LIMIT BUY / LIMIT SELL are not reduce only
-
-Parameters that we need:
-ASSET ->  Address for the AMM
-TRADER -> Address for the user
-ORDER TYPE -> ENUM: Market, Limit, Stop-Market, Stop-Limit, Trailing-Stop
-LIMIT PRICE -> Decimal
-STOP PRICE -> Decimal
-REDUCE-ONLY -> Bool
-ORDER SIZE -> Decimal
-COLLATERAL -> Decimal
-LEVERAGE -> Decimal
-??SLIPPAGE?? -> we should explicitly state that stop-market orders have zero slippage
-FEE -> Decimal
-EXPIRY -> uint block timestamp
-block that order was placed in (for trailing loss)
-TRAILING_TYPE =
-TRAILING_ABS =
-TRAILING_PCT =
-
-Slippage needs to be done in a certain way, as we will not be able to get the off-chain price..
-
-Limit buy - slippage, should be from limit PRICE
-stop-market sell - sell when price goes below X - ?accept unlimited slippage-
-
-stop-limit sell - sell when price below X but you can calculate slippage from LP
-*/
-
+import {IAmm} from "./interface/IAmm.sol";
 
 contract LimitOrderBook is Ownable, DecimalERC20{
 
   event OrderCreated(address indexed trader, uint order_id);
 
-  enum OrderType {MARKET, LIMIT, STOPMARKET, STOPLIMIT}
+  enum OrderType {
+    MARKET,
+    LIMIT,
+    STOPMARKET,
+    STOPLIMIT,
+    TRAILINGSTOPMARKET,
+    TRAILINGSTOPLIMIT}
   enum Side { BUY, SELL }
 
   using Decimal for Decimal.decimal;
@@ -79,8 +33,8 @@ contract LimitOrderBook is Ownable, DecimalERC20{
     bool reduceOnly;
     bool stillValid;
     uint256 expiry;
-    Decimal.decimal limitPrice;
     Decimal.decimal stopPrice;
+    Decimal.decimal limitPrice;
     SignedDecimal.signedDecimal orderSize;
     Decimal.decimal collateral;
     Decimal.decimal leverage;
@@ -112,8 +66,8 @@ contract LimitOrderBook is Ownable, DecimalERC20{
       asset: _asset,
       trader: msg.sender,
       orderType: OrderType.LIMIT,
-      limitPrice: _limitPrice,
       stopPrice: Decimal.zero(),
+      limitPrice: _limitPrice,
       orderSize: _positionSize,
       collateral: _collateral, //will always use this amount
       leverage: _leverage, //the maximum acceptable leverage, may be less than this
@@ -142,8 +96,8 @@ contract LimitOrderBook is Ownable, DecimalERC20{
       asset: _asset,
       trader: msg.sender,
       orderType: OrderType.STOPMARKET,
-      limitPrice: Decimal.zero(),
       stopPrice: _stopPrice,
+      limitPrice: Decimal.zero(),
       orderSize: _positionSize,
       collateral: _collateral, //will always use this amount
       leverage: _leverage, //the maximum acceptable leverage, may be less than this
@@ -157,8 +111,8 @@ contract LimitOrderBook is Ownable, DecimalERC20{
 
   function addStopLimitOrder(
     address _asset,
-    Decimal.decimal memory _limitPrice,
     Decimal.decimal memory _stopPrice,
+    Decimal.decimal memory _limitPrice,
     SignedDecimal.signedDecimal memory _positionSize,
     Decimal.decimal memory _collateral,
     Decimal.decimal memory _leverage,
@@ -173,8 +127,8 @@ contract LimitOrderBook is Ownable, DecimalERC20{
       asset: _asset,
       trader: msg.sender,
       orderType: OrderType.STOPLIMIT,
-      limitPrice: _limitPrice,
       stopPrice: _stopPrice,
+      limitPrice: _limitPrice,
       orderSize: _positionSize,
       collateral: _collateral, //will always use this amount
       leverage: _leverage, //the maximum acceptable leverage, may be less than this
@@ -193,8 +147,8 @@ contract LimitOrderBook is Ownable, DecimalERC20{
 
   function modifyOrder(
     uint order_id,
-    Decimal.decimal memory _limitPrice,
     Decimal.decimal memory _stopPrice,
+    Decimal.decimal memory _limitPrice,
     SignedDecimal.signedDecimal memory _orderSize,
     Decimal.decimal memory _collateral,
     Decimal.decimal memory _leverage,
@@ -202,8 +156,8 @@ contract LimitOrderBook is Ownable, DecimalERC20{
     Decimal.decimal memory _tipFee,
     bool _reduceOnly,
     uint _expiry) public onlyMyOrder(order_id) onlyValidOrder(order_id){
-      orders[order_id].limitPrice = _limitPrice;
       orders[order_id].stopPrice = _stopPrice;
+      orders[order_id].limitPrice = _limitPrice;
       orders[order_id].orderSize = _orderSize;
       orders[order_id].collateral = _collateral;
       orders[order_id].leverage = _leverage;
@@ -245,8 +199,8 @@ contract LimitOrderBook is Ownable, DecimalERC20{
       Decimal.decimal memory,
       Decimal.decimal memory) {
     LimitOrder memory order = orders[id];
-    return (order.limitPrice,
-      order.stopPrice,
+    return (order.stopPrice,
+      order.limitPrice,
       order.orderSize,
       order.collateral,
       order.leverage,
@@ -300,4 +254,131 @@ contract LimitOrderBook is Ownable, DecimalERC20{
     _;
   }
 
+
+
+  //TRAILING ORDERS????
+
+  function addTrailingStopLimitOrderAbs(
+    address _asset,
+    Decimal.decimal memory _trail,
+    Decimal.decimal memory _gap,
+    SignedDecimal.signedDecimal memory _positionSize,
+    Decimal.decimal memory _collateral,
+    Decimal.decimal memory _leverage,
+    Decimal.decimal memory _slippage,
+    Decimal.decimal memory _tipFee,
+    bool _reduceOnly,
+    uint256 _expiry
+  ) public
+  returns (uint256){
+    require(((_expiry == 0 ) || (block.timestamp<_expiry)), 'Event will expire in past');
+    emit OrderCreated(msg.sender,orders.length);
+    uint _currSnapshot = IAmm(_asset).getSnapshotLen()-1;
+    Decimal.decimal memory _initPrice = IAmm(_asset).getSpotPrice();
+    trailingOrders[orders.length] = TrailingOrderData({
+      witnessPrice: _initPrice,
+      trail: _trail,
+      trailPct: Decimal.zero(),
+      gap: _gap,
+      gapPct: Decimal.zero(),
+      usePct: false,
+      snapshotCreated: _currSnapshot, //getSnapshotLen
+      snapshotLastUpdated: _currSnapshot //getSnapshotLen
+      });
+    orders.push(LimitOrder({
+      asset: _asset,
+      trader: msg.sender,
+      orderType: OrderType.TRAILINGSTOPLIMIT,
+      stopPrice: Decimal.zero(),
+      limitPrice: Decimal.zero(),
+      orderSize: _positionSize,
+      collateral: _collateral, //will always use this amount
+      leverage: _leverage, //the maximum acceptable leverage, may be less than this
+      slippage: _slippage, //refers to the minimum amount that user will accept
+      tipFee: _tipFee,
+      reduceOnly: _reduceOnly,
+      stillValid: true,
+      expiry: _expiry
+      }));
+    _updateTrailingPrice(orders.length-1);
+    return (orders.length-1);
+  }
+
+  function getTrailingData(uint order_id) public view
+  returns (TrailingOrderData memory){
+    return trailingOrders[order_id];
+  }
+
+  struct TrailingOrderData {
+    Decimal.decimal witnessPrice;
+    Decimal.decimal trail;
+    Decimal.decimal trailPct;
+    Decimal.decimal gap;
+    Decimal.decimal gapPct;
+    bool usePct;
+    uint256 snapshotCreated;
+    uint256 snapshotLastUpdated;
+  }
+  mapping (uint256 => TrailingOrderData) trailingOrders;
+
+
+  //TODO: change newPrice to witness price
+    //low level call, ensure that prices have been checked before calling this
+  function _updateTrailingPrice(
+    uint order_id
+  ) internal {
+    Decimal.decimal memory _newPrice = trailingOrders[order_id].witnessPrice;
+    bool isLong = orders[order_id].orderSize.isNegative() ? false : true;
+    if(trailingOrders[order_id].usePct) {
+      Decimal.decimal memory tpct = isLong ?
+        Decimal.one().addD(trailingOrders[order_id].trailPct) :
+        Decimal.one().subD(trailingOrders[order_id].trailPct);
+      Decimal.decimal memory gpct = isLong ?
+        Decimal.one().addD(trailingOrders[order_id].gapPct) :
+        Decimal.one().subD(trailingOrders[order_id].gapPct);
+      orders[order_id].stopPrice = _newPrice.mulD(tpct);
+      orders[order_id].limitPrice = orders[order_id].stopPrice.mulD(gpct);
+    } else {
+      orders[order_id].stopPrice = isLong ?
+        _newPrice.addD(trailingOrders[order_id].trail) :
+        _newPrice.subD(trailingOrders[order_id].trail);
+      orders[order_id].limitPrice = isLong ?
+        orders[order_id].stopPrice.addD(trailingOrders[order_id].gap) :
+        orders[order_id].stopPrice.subD(trailingOrders[order_id].gap);
+    }
+  }
+
+  //TODO : ensure that pct is 0<pct<1
+
+
+  function getPriceAtSnapshot( //the function in AMM isn't in aBI??
+    IAmm _asset,
+    uint256 _snapshotIndex
+  ) public view returns (Decimal.decimal memory) {
+    IAmm.ReserveSnapshot memory snap = _asset.reserveSnapshots(_snapshotIndex);
+    return snap.quoteAssetReserve.divD(snap.baseAssetReserve);
+  }
+
+  function pokeContract(
+    uint order_id,
+    uint _reserveIndex
+  ) public {
+    require(orders[order_id].orderType == OrderType.TRAILINGSTOPMARKET ||
+      orders[order_id].orderType == OrderType.TRAILINGSTOPLIMIT, "Can only poke trailing orders");
+
+    require(_reserveIndex > trailingOrders[order_id].snapshotCreated, "Order hadn't been created");
+    bool isLong = orders[order_id].orderSize.isNegative() ? false : true;
+
+    Decimal.decimal memory _newPrice = getPriceAtSnapshot(
+      IAmm(orders[order_id].asset), _reserveIndex);
+
+    if (trailingOrders[order_id].witnessPrice.cmp(_newPrice) == (isLong ? -1 : int128(1))) {
+      trailingOrders[order_id].witnessPrice = _newPrice;
+      trailingOrders[order_id].snapshotLastUpdated = _reserveIndex;
+      _updateTrailingPrice(order_id);
+    } else {
+      revert("Incorrect trailing price");
+    }
+
+  }
 }

@@ -19,14 +19,14 @@ async function main() {
   const ERC20encode = new ethers.utils.Interface(ERC20_ABI)
 
 
-  // xDaiUrl = "https://rpc.xdaichain.com/"
-  const xDaiUrl = "https://dai.poa.network/"
+  const xDaiUrl = "https://rpc.xdaichain.com/"
+  //const xDaiUrl = "https://dai.poa.network/"
 
   const provider = new ethers.providers.JsonRpcProvider(xDaiUrl)
   const wallet = new ethers.Wallet('3e730129b3867804afd27b530749d49113164a349b05879f536b6d4fe9018a9f').connect(provider)
 
-  const LOB_address = '0x800690897468e828888E55230189e147955E5d81'
-  const SWF_address = '0xd264643F887e3C9e716FD20f14232e9956eBe108'
+  const LOB_address = '0xc9D537b25552DD8594107cB4dca99EaB2b283675'
+  const SWF_address = '0x17bf6965095E412D14f16d5501649AEF4b9bAa78'
   const url = "https://metadata.perp.exchange/production.json"
   metadata = await fetch(url).then(res => res.json())
 
@@ -115,6 +115,70 @@ price = await BTC.getOutputPrice(1, {d: ethers.utils.parseUnits('1',18)})
 console.log(ethers.utils.formatUnits(price.d))
 */
 
+
+/*
+await LOB.addTrailingStopLimitOrderAbs(
+  '0x0f346e19F01471C02485DF1758cfd3d624E399B4',
+  {d: ethers.utils.parseUnits('5000',18)},
+  {d: ethers.utils.parseUnits('1000',18)},
+  {d: ethers.utils.parseUnits('-1',18)},
+  {d: ethers.utils.parseUnits('15000',18)},
+  {d: ethers.utils.parseUnits('4',18)},
+  {d: '0'},
+  {d: '0'},
+  false,
+  0
+).then(async result => console.log(await result.wait()))
+*/
+
+const BTC = new ethers.Contract(metadata.layers.layer2.contracts.BTCUSDC.address, AMM_abi, wallet)
+
+
+await LOB.getTrailingData(0).then(td => {
+  console.log('Order created with snapshot %s',td.snapshotCreated.toNumber())
+  console.log('Order last updated snapshot %s', td.snapshotLastUpdated.toNumber())
+})/*
+for (var i = 106952; i < 106957; i++) {
+  var price = await BTC.reserveSnapshots(i).then(data => {
+    return (data.quoteAssetReserve.d.div(data.baseAssetReserve.d)).toNumber()
+  })
+  console.log(i, price)
+}*/
+/*
+106930 57011
+106931 57024
+106932 57034
+106933 57049
+106934 57056
+106935 57069 --
+106936 57081
+106937 57089
+106938 57099
+106939 57110
+
+106942 57100
+106943 57081
+106944 57020
+
+106952 57086
+106953 57099
+106954 57111
+106955 57062
+106956 57197
+*/
+
+//DO 106845
+/*
+await LOB.pokeContract(0, 106955, {gasLimit: 100000})
+  .then(async result => console.log(await result.wait()))
+*/
+await LOB.getLimitOrder(0)
+  .then(result => {
+    console.log('Trailing stop price: %s', ethers.utils.formatUnits(result.stopPrice.d))
+    console.log('Trailing limit price: %s', ethers.utils.formatUnits(result.limitPrice.d))
+  })
+
+/*
   console.log('')
   console.log('Running tests..')
   console.log('User smart wallet: ',proxy_address)
@@ -138,7 +202,7 @@ console.log(ethers.utils.formatUnits(price.d))
     console.log('OPEN POSITIONS')
     console.log('')
     displayPositions(CH) }, 4000)
-
+*/
 //giveMeTheLoot(USDC, ERC20encode, proxy)
 
 }
@@ -171,6 +235,9 @@ ordertype[0] = 'Market'
 ordertype[1] = 'Limit'
 ordertype[2] = 'Stop Market'
 ordertype[3] = 'Stop Limit'
+ordertype[4] = 'Trailing Stop Market'
+ordertype[5] = 'Trailing Stop Limit'
+
 
 async function displayOrders(LOB) {
 

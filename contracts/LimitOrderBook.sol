@@ -1,3 +1,4 @@
+//SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.6.9;
 pragma experimental ABIEncoderV2;
 
@@ -19,6 +20,8 @@ contract LimitOrderBook is Ownable, DecimalERC20{
    */
 
   event OrderCreated(address indexed trader, uint order_id);
+  event OrderFilled(address indexed trader, uint order_id);
+
 
   /*
    * ENUMS
@@ -72,6 +75,7 @@ contract LimitOrderBook is Ownable, DecimalERC20{
 
   SmartWalletFactory public factory;
   address constant USDC = 0xDDAfbb505ad214D7b80b1f830fcCc89B60fb7A83;
+  uint256 constant pokeContractDelay = 15 minutes;
 
   /*
    * FUNCTIONS TO ADD ORDERS
@@ -406,6 +410,7 @@ contract LimitOrderBook is Ownable, DecimalERC20{
       }
       orders[order_id].stillValid = false;
       delete orders[order_id];
+      emit OrderFilled(orders[order_id].trader, order_id);
     }
   }
 
@@ -447,20 +452,22 @@ contract LimitOrderBook is Ownable, DecimalERC20{
     require(_reserveIndex > trailingOrders[order_id].snapshotCreated, "Order hadn't been created");
 
     //TODO: check the lastupdated timetamp
+    require(_reserveIndex < trailingOrders[order_id].snapshotLastUpdated ||
+      (block.timestamp - trailingOrders[order_id].snapshotLastUpdated > pokeContractDelay), "Can only be updated every 15 minutes");
+    trailingOrders[order_id].snapshotLastUpdated = block.timestamp;
 
     bool isLong = orders[order_id].orderSize.isNegative() ? false : true;
 
     Decimal.decimal memory _newPrice = getPriceAtSnapshot(
       IAmm(orders[order_id].asset), _reserveIndex);
 
-    if (trailingOrders[order_id].witnessPrice.cmp(_newPrice) == (isLong ? -1 : int128(1))) {
-      trailingOrders[order_id].witnessPrice = _newPrice;
-      trailingOrders[order_id].snapshotLastUpdated = _reserveIndex;
-      _updateTrailingPrice(order_id);
-      trailingOrders[order_id].lastUpdatedKeeper = msg.sender;
-    } else {
-      revert("Incorrect trailing price");
-    }
+    require(trailingOrders[order_id].witnessPrice.cmp(_newPrice) == (isLong ? int128(1) : -1),
+      "Incorrect trailing price");
+
+    trailingOrders[order_id].witnessPrice = _newPrice;
+    trailingOrders[order_id].snapshotLastUpdated = _reserveIndex;
+    trailingOrders[order_id].lastUpdatedKeeper = msg.sender;
+    _updateTrailingPrice(order_id);
   }
 
   /*

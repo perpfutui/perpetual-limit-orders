@@ -25,8 +25,8 @@ async function main() {
   const provider = new ethers.providers.JsonRpcProvider(xDaiUrl)
   const wallet = new ethers.Wallet('3e730129b3867804afd27b530749d49113164a349b05879f536b6d4fe9018a9f').connect(provider)
 
-  const LOB_address = '0xc9D537b25552DD8594107cB4dca99EaB2b283675'
-  const SWF_address = '0x17bf6965095E412D14f16d5501649AEF4b9bAa78'
+  const LOB_address = '0xB7dEE432D550B98754715f540Bf950457490dC9D'
+  const SWF_address = '0x4518C76B7e41C18cB7e0Aed709a883dCB87f8C3F'
   const url = "https://metadata.perp.exchange/production.json"
   metadata = await fetch(url).then(res => res.json())
 
@@ -53,157 +53,106 @@ async function main() {
   const CH = new ethers.Contract(CH_address, CH_abi, wallet)
   const SW = new ethers.Contract(proxy_address, SW_abi, wallet)
   const USDC = new ethers.Contract(metadata.layers.layer2.externalContracts.usdc, ERC20_ABI, wallet )
+  const SNX = new ethers.Contract(metadata.layers.layer2.contracts.SNXUSDC.address, AMM_abi, wallet)
 
   /*
     IGNORE EVERYTHING ABOVE HERE
   */
 
-
-/*var createLimitOrder = await LOB.addLimitOrder(
-    (amms.find(amm => amm.asset=='SNX')).amm,
-    {d: ethers.utils.parseUnits('25', 18)},     //STOP
-    {d: ethers.utils.parseUnits('10', 14)},      //POS SIZE, 0.001
-    {d: ethers.utils.parseUnits('29', 14)},     //COLLATERAL 0.0030
-    {d: ethers.utils.parseUnits('10', 18)}, //max leverage
-    {d: "0"}, //slippage
-    {d: ethers.utils.parseUnits('1', 17)},   // tip Fee
-    false,      //reduce only
-    0           //expiry
-  )
-  var CLO = await createLimitOrder.wait()
-  console.log(CLO.transactionHash)
-*/
-//await LOB.execute(1, {gasLimit:1000000})
-//  .then( result => console.log(await result.wait()))
-
+console.log('Proxy contract: %s', proxy_address)
+console.log('Balance: $%s', ethers.utils.formatUnits(await USDC.balanceOf(proxy_address),6))
 
 /*
-var func = ERC20encode.encodeFunctionData (
-  'approve(address,uint256)',
-  [LOB_address,'115792089237316195423570985008687907853269984665640564039457584007913129639935'])
-var tx = await proxy.executeCall(metadata.layers.layer2.externalContracts.usdc, func)
-var logs = await tx.wait()
-*/
-/*
-
-  var func = CHencode.encodeFunctionData('openPosition(address,uint8,(uint256),(uint256),(uint256))',
-  [BTC_AMM,
-  1,
-  {d: ethers.utils.parseUnits('1', 16)}, //margin in cents
-  {d: ethers.utils.parseUnits('1', 18)}, //leverage
-  {d: 0}])
-  console.log(func)
-  var tx = await proxy.executeCall(CH_address, func)
-  var logs = await tx.wait()
-  console.log('Transaction mined at ', logs.transactionHash)
-
-//console.log(CHencode)
-
-var func = CHencode.encodeFunctionData('closePosition(address,(uint256))',
-[BTC_AMM,
-{d: 0}])
-console.log(func)
-*/
-//var tx = await proxy.executeCall(CH_address, func)
-//var logs = await tx.wait()
-//console.log('Transaction mined at ', logs.transactionHash)
-/*
-var price = await BTC.getOutputPrice(0, {d: ethers.utils.parseUnits('1',18)})
-console.log(ethers.utils.formatUnits(price.d))
-
-price = await BTC.getOutputPrice(1, {d: ethers.utils.parseUnits('1',18)})
-console.log(ethers.utils.formatUnits(price.d))
+var func = CHencode.encodeFunctionData('openPosition(address,uint8,(uint256),(uint256),(uint256))',
+[metadata.layers.layer2.contracts.SNXUSDC.address,
+0,
+{d: ethers.utils.parseUnits('1', 16)}, //margin in cents
+{d: ethers.utils.parseUnits('1', 18)}, //leverage
+{d: '0'} ])
+console.log('Sending tx with calldata:', func)
 */
 
+// await proxy.executeCall(CH_address, func, {gasLimit:1000000})
+//   .then(async result => console.log(await result.wait()))
+
+var limit_price = ethers.utils.parseUnits('21.15',18)
+var position_size = ethers.utils.parseUnits('0.001',18)
+var collat = limit_price.mul(position_size).div('1000000000000000000')
+var lev = ethers.utils.parseUnits('1', 18)
+var slippage = ethers.utils.parseUnits('0.001',18)
 
 /*
-await LOB.addTrailingStopLimitOrderAbs(
-  '0x0f346e19F01471C02485DF1758cfd3d624E399B4',
-  {d: ethers.utils.parseUnits('5000',18)},
-  {d: ethers.utils.parseUnits('1000',18)},
-  {d: ethers.utils.parseUnits('-1',18)},
-  {d: ethers.utils.parseUnits('15000',18)},
-  {d: ethers.utils.parseUnits('4',18)},
-  {d: '0'},
-  {d: '0'},
+await LOB.addLimitOrder(
+  metadata.layers.layer2.contracts.SNXUSDC.address,
+  {d: limit_price},
+  {d: position_size},
+  {d: collat},
+  {d: lev},
+  {d: slippage},
+  {d: ethers.utils.parseUnits('0.001',18)},
   false,
   0
 ).then(async result => console.log(await result.wait()))
+
+
+await LOB.execute(1)
+.then(async result => console.log(await result.wait()))
 */
-
-const BTC = new ethers.Contract(metadata.layers.layer2.contracts.BTCUSDC.address, AMM_abi, wallet)
-
-
-await LOB.getTrailingData(0).then(td => {
-  console.log('Order created with snapshot %s',td.snapshotCreated.toNumber())
-  console.log('Order last updated snapshot %s', td.snapshotLastUpdated.toNumber())
-})/*
-for (var i = 106952; i < 106957; i++) {
-  var price = await BTC.reserveSnapshots(i).then(data => {
-    return (data.quoteAssetReserve.d.div(data.baseAssetReserve.d)).toNumber()
-  })
-  console.log(i, price)
-}*/
 /*
-106930 57011
-106931 57024
-106932 57034
-106933 57049
-106934 57056
-106935 57069 --
-106936 57081
-106937 57089
-106938 57099
-106939 57110
-
-106942 57100
-106943 57081
-106944 57020
-
-106952 57086
-106953 57099
-106954 57111
-106955 57062
-106956 57197
+await LOB.addTrailingStopMarketOrderPct(
+  metadata.layers.layer2.contracts.SNXUSDC.address,
+  {d: ethers.utils.parseUnits('0.1', 18)}, //10%
+  {d: ethers.utils.parseUnits('-0.001',18)},
+  {d: collat},
+  {d: ethers.utils.parseUnits('2', 18)},
+  {d: '0'},
+  {d: ethers.utils.parseUnits('0.001',18)},
+  true,
+  0
+)
 */
 
-//DO 106845
-/*
-await LOB.pokeContract(0, 106955, {gasLimit: 100000})
-  .then(async result => console.log(await result.wait()))
-*/
-await LOB.getLimitOrder(0)
+//await LOB.pokeContract(2, 60449, {gasLimit: 1000000})
+// .then(async result => console.log(await result.wait()))
+
+await LOB.getLimitOrder(2)
   .then(result => {
-    console.log('Trailing stop price: %s', ethers.utils.formatUnits(result.stopPrice.d))
-    console.log('Trailing limit price: %s', ethers.utils.formatUnits(result.limitPrice.d))
+    console.log(result.stopPrice.d.toString())
   })
 
+  await LOB.getTrailingData(2)
+    .then(result => {
+      console.log(result.witnessPrice.d.toString())
+      console.log(result.snapshotLastUpdated.toString())
+
+    })
+
+
+//witnessed 20.8
+//this is a trailing sell
+//therefore sell at 20.8 - 10%
+//new price, 20.6
+
+for(var i=60442; i<60462; i++){
+
+await LOB.getPriceAtSnapshot(
+  metadata.layers.layer2.contracts.SNXUSDC.address, i
+).then( res => console.log(i, res.toString()))
+
+}
+
 /*
-  console.log('')
-  console.log('Running tests..')
-  console.log('User smart wallet: ',proxy_address)
-  console.log('Balance: $%s', truncate(ethers.utils.formatUnits(await USDC.balanceOf(proxy_address),6),5))
-
-  console.log('')
-  console.log('')
-  console.log('TRADE HISTORY')
-
-  await displayTrades(SW)
-  setTimeout(() => {
-    console.log('')
-    console.log('')
-    console.log('PENDING ORDERS')
-    console.log('')
-    displayOrders(LOB)
-  }, 2000)
-  setTimeout(() => {
-    console.log('')
-    console.log('')
-    console.log('OPEN POSITIONS')
-    console.log('')
-    displayPositions(CH) }, 4000)
+var func = CHencode.encodeFunctionData('closePosition(address,(uint256))',
+[metadata.layers.layer2.contracts.SNXUSDC.address,
+{d: 0}])
+await proxy.executeCall(CH_address, func)
+.then(async result => console.log(await result.wait()))
 */
-//giveMeTheLoot(USDC, ERC20encode, proxy)
+await displayOrders(LOB)
+
+CH.getPosition(metadata.layers.layer2.contracts.SNXUSDC.address, proxy_address).then( pos =>
+     console.log('Position size: %s %s ', truncate(ethers.utils.formatUnits(pos.size.d),15), 'SNX')
+)
 
 }
 
@@ -306,3 +255,154 @@ async function sendOpenPosition(_AMM, _DIR, _COL, _LEV, _SLIP) {
   var logs = await tx.wait()
   console.log('Transaction mined at ', logs.transactionHash)
 }
+
+
+
+/*var createLimitOrder = await LOB.addLimitOrder(
+    (amms.find(amm => amm.asset=='SNX')).amm,
+    {d: ethers.utils.parseUnits('25', 18)},     //STOP
+    {d: ethers.utils.parseUnits('10', 14)},      //POS SIZE, 0.001
+    {d: ethers.utils.parseUnits('29', 14)},     //COLLATERAL 0.0030
+    {d: ethers.utils.parseUnits('10', 18)}, //max leverage
+    {d: "0"}, //slippage
+    {d: ethers.utils.parseUnits('1', 17)},   // tip Fee
+    false,      //reduce only
+    0           //expiry
+  )
+  var CLO = await createLimitOrder.wait()
+  console.log(CLO.transactionHash)
+*/
+//await LOB.execute(1, {gasLimit:1000000})
+//  .then( result => console.log(await result.wait()))
+
+
+/*
+var func = ERC20encode.encodeFunctionData (
+  'approve(address,uint256)',
+  [LOB_address,'115792089237316195423570985008687907853269984665640564039457584007913129639935'])
+var tx = await proxy.executeCall(metadata.layers.layer2.externalContracts.usdc, func)
+var logs = await tx.wait()
+*/
+/*
+
+  var func = CHencode.encodeFunctionData('openPosition(address,uint8,(uint256),(uint256),(uint256))',
+  [BTC_AMM,
+  1,
+  {d: ethers.utils.parseUnits('1', 16)}, //margin in cents
+  {d: ethers.utils.parseUnits('1', 18)}, //leverage
+  {d: 0}])
+  console.log(func)
+  var tx = await proxy.executeCall(CH_address, func)
+  var logs = await tx.wait()
+  console.log('Transaction mined at ', logs.transactionHash)
+
+//console.log(CHencode)
+
+var func = CHencode.encodeFunctionData('closePosition(address,(uint256))',
+[BTC_AMM,
+{d: 0}])
+console.log(func)
+*/
+//var tx = await proxy.executeCall(CH_address, func)
+//var logs = await tx.wait()
+//console.log('Transaction mined at ', logs.transactionHash)
+/*
+var price = await BTC.getOutputPrice(0, {d: ethers.utils.parseUnits('1',18)})
+console.log(ethers.utils.formatUnits(price.d))
+
+price = await BTC.getOutputPrice(1, {d: ethers.utils.parseUnits('1',18)})
+console.log(ethers.utils.formatUnits(price.d))
+*/
+
+
+/*
+await LOB.addTrailingStopLimitOrderAbs(
+  '0x0f346e19F01471C02485DF1758cfd3d624E399B4',
+  {d: ethers.utils.parseUnits('5000',18)},
+  {d: ethers.utils.parseUnits('1000',18)},
+  {d: ethers.utils.parseUnits('-1',18)},
+  {d: ethers.utils.parseUnits('15000',18)},
+  {d: ethers.utils.parseUnits('4',18)},
+  {d: '0'},
+  {d: '0'},
+  false,
+  0
+).then(async result => console.log(await result.wait()))
+*/
+
+//const BTC = new ethers.Contract(metadata.layers.layer2.contracts.BTCUSDC.address, AMM_abi, wallet)
+
+/*
+await LOB.getTrailingData(0).then(td => {
+  console.log('Order created with snapshot %s',td.snapshotCreated.toNumber())
+  console.log('Order last updated snapshot %s', td.snapshotLastUpdated.toNumber())
+})
+*/
+/*
+for (var i = 106952; i < 106957; i++) {
+  var price = await BTC.reserveSnapshots(i).then(data => {
+    return (data.quoteAssetReserve.d.div(data.baseAssetReserve.d)).toNumber()
+  })
+  console.log(i, price)
+}*/
+/*
+106930 57011
+106931 57024
+106932 57034
+106933 57049
+106934 57056
+106935 57069 --
+106936 57081
+106937 57089
+106938 57099
+106939 57110
+
+106942 57100
+106943 57081
+106944 57020
+
+106952 57086
+106953 57099
+106954 57111
+106955 57062
+106956 57197
+*/
+
+//DO 106845
+/*
+await LOB.pokeContract(0, 106955, {gasLimit: 100000})
+  .then(async result => console.log(await result.wait()))
+*/
+/*
+await LOB.getLimitOrder(0)
+  .then(result => {
+    console.log('Trailing stop price: %s', ethers.utils.formatUnits(result.stopPrice.d))
+    console.log('Trailing limit price: %s', ethers.utils.formatUnits(result.limitPrice.d))
+  })
+*/
+/*
+  console.log('')
+  console.log('Running tests..')
+  console.log('User smart wallet: ',proxy_address)
+  console.log('Balance: $%s', truncate(ethers.utils.formatUnits(await USDC.balanceOf(proxy_address),6),5))
+
+  console.log('')
+  console.log('')
+  console.log('TRADE HISTORY')
+
+  await displayTrades(SW)
+  setTimeout(() => {
+    console.log('')
+    console.log('')
+    console.log('PENDING ORDERS')
+    console.log('')
+    displayOrders(LOB)
+  }, 2000)
+  setTimeout(() => {
+    console.log('')
+    console.log('')
+    console.log('OPEN POSITIONS')
+    console.log('')
+    displayPositions(CH) }, 4000)
+*/
+//giveMeTheLoot(USDC, ERC20encode, proxy)

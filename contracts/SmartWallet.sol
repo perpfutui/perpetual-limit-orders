@@ -1,3 +1,4 @@
+//SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.6.9;
 pragma experimental ABIEncoderV2;
 
@@ -47,7 +48,7 @@ contract SmartWallet is Ownable {
   using Decimal for Decimal.decimal;
   using SignedDecimal for SignedDecimal.signedDecimal;
 
-  event OpenPosition(address asset, uint256 dir, uint256 collateral, uint256 leverage, uint256 slippage);
+  event AttemptingPosition(address asset, uint256 dir, uint256 collateral, uint256 leverage, uint256 slippage);
 
   function approveAll() public {
     if(factory.getChainID() == 100) {
@@ -180,10 +181,11 @@ contract SmartWallet is Ownable {
       Decimal.decimal memory _size = _orderSize.abs();
       Decimal.decimal memory _quote = (IAmm(_asset)
         .getOutputPrice(isLong ? IAmm.Dir.REMOVE_FROM_AMM : IAmm.Dir.ADD_TO_AMM, _size));
+      //TODO: check whether you actually need to adjust slippage like this
       _slippage = (_slippage.toUint()==0) ? _slippage :
         ( isLong ? _slippage.subD(Decimal.decimal(1)) : _slippage.addD(Decimal.decimal(1)));
       _leverage = minD(_quote.divD(_collateral),_leverage);
-      emit OpenPosition(_asset, isLong ? uint(IClearingHouse.Side.BUY) : uint(IClearingHouse.Side.SELL),
+      emit AttemptingPosition(_asset, isLong ? uint(IClearingHouse.Side.BUY) : uint(IClearingHouse.Side.SELL),
         _collateral.toUint(), _leverage.toUint(), _slippage.toUint());
       if(closePosition) {
         _slippage = _size.mulD(_limitPrice);
@@ -213,8 +215,7 @@ contract SmartWallet is Ownable {
     (Decimal.decimal memory _stopPrice,,
       SignedDecimal.signedDecimal memory _orderSize,
       Decimal.decimal memory _collateral,
-      Decimal.decimal memory _leverage,
-      Decimal.decimal memory _slippage,) = LOB.getLimitOrderPrices(order_id);
+      Decimal.decimal memory _leverage,,) = LOB.getLimitOrderPrices(order_id);
     (address _asset,,,bool _reduceOnly,,) = LOB.getLimitOrderParams(order_id);
 
     bool closePosition = false;
@@ -229,29 +230,21 @@ contract SmartWallet is Ownable {
       Decimal.decimal memory _size = _orderSize.abs();
       Decimal.decimal memory _quote = (IAmm(_asset)
         .getOutputPrice(isLong ? IAmm.Dir.REMOVE_FROM_AMM : IAmm.Dir.ADD_TO_AMM, _size));
-      _slippage = (_slippage.toUint()==0) ? _slippage :
-        ( isLong ? _slippage.subD(Decimal.decimal(1)) : _slippage.addD(Decimal.decimal(1)));
       _leverage = minD(_quote.divD(_collateral),_leverage);
-      emit OpenPosition(_asset, isLong ? uint(IClearingHouse.Side.BUY) : uint(IClearingHouse.Side.SELL),
-        _collateral.toUint(), _leverage.toUint(), _slippage.toUint());
+      emit AttemptingPosition(_asset, isLong ? uint(IClearingHouse.Side.BUY) : uint(IClearingHouse.Side.SELL),
+        _collateral.toUint(), _leverage.toUint(), Decimal.zero().toUint());
       if(closePosition) {
         IClearingHouse(ClearingHouse).closePosition(
           IAmm(_asset),
           Decimal.decimal(0)
-          //we have two options here
-          //an alternative method here is to calculate slippage from the TWAP...
-          //  Decimal.decimal memory _twap = AMM.getOutputTwap(isLong ? IAmm.Dir.REMOVE_FROM_AMM : IAmm.Dir.ADD_TO_AMM, _size);
-          //  _slippage = _twap.mulD(_slippageRatio);
-          //cannot have a proper slippage parameter here...
-          //calculate slippage from 15 minute TWAP
           );
       } else {
         IClearingHouse(ClearingHouse).openPosition(
           IAmm(_asset),
           isLong ? IClearingHouse.Side.BUY : IClearingHouse.Side.SELL,
           _collateral,
-          _leverage, //or max leverage
-          Decimal.decimal(0) //the slippage here doesn't actually make sense
+          _leverage,
+          Decimal.decimal(0)
           );
       }
     } else {
@@ -287,7 +280,7 @@ contract SmartWallet is Ownable {
       _slippage = (_slippage.toUint()==0) ? _slippage :
         ( isLong ? _slippage.subD(Decimal.decimal(1)) : _slippage.addD(Decimal.decimal(1)));
       _leverage = minD(_quote.divD(_collateral),_leverage);
-      emit OpenPosition(_asset, isLong ? uint(IClearingHouse.Side.BUY) : uint(IClearingHouse.Side.SELL),
+      emit AttemptingPosition(_asset, isLong ? uint(IClearingHouse.Side.BUY) : uint(IClearingHouse.Side.SELL),
         _collateral.toUint(), _leverage.toUint(), _slippage.toUint());
       if(closePosition) {
         _slippage = _size.mulD(_limitPrice);

@@ -120,6 +120,10 @@ contract SmartWallet is Ownable {
       return _executeStopOrder(order_id);
     } else if(_orderType == LimitOrderBook.OrderType.STOPLIMIT) {
       return _executeStopLimitOrder(order_id);
+    } else if (_orderType == LimitOrderBook.OrderType.TRAILINGSTOPMARKET) {
+      return _executeStopOrder(order_id);
+    } else if (_orderType == LimitOrderBook.OrderType.TRAILINGSTOPLIMIT) {
+      return _executeStopLimitOrder(order_id);
     }
     return false;
   }
@@ -319,7 +323,7 @@ contract SmartWalletFactory {
     LimitOrderBook = _addr;
   }
 
-  function getChainID() public view returns (uint256) {
+  function getChainID() public pure returns (uint256) {
     uint256 id;
     assembly {
         id := chainid()

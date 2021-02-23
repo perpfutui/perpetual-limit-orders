@@ -76,15 +76,16 @@ console.log('Sending tx with calldata:', func)
 //   .then(async result => console.log(await result.wait()))
 
 var limit_price = ethers.utils.parseUnits('21.15',18)
+var stop_price = ethers.utils.parseUnits('16.5',18)
 var position_size = ethers.utils.parseUnits('0.001',18)
 var collat = limit_price.mul(position_size).div('1000000000000000000')
 var lev = ethers.utils.parseUnits('1', 18)
 var slippage = ethers.utils.parseUnits('0.001',18)
 
 /*
-await LOB.addLimitOrder(
+await LOB.addStopOrder(
   metadata.layers.layer2.contracts.SNXUSDC.address,
-  {d: limit_price},
+  {d: stop_price},
   {d: position_size},
   {d: collat},
   {d: lev},
@@ -93,11 +94,15 @@ await LOB.addLimitOrder(
   false,
   0
 ).then(async result => console.log(await result.wait()))
-
-
-await LOB.execute(1)
-.then(async result => console.log(await result.wait()))
 */
+
+await LOB.getLimitOrder(2).then(result =>
+  { console.log(result.reduceOnly) })
+
+
+// await LOB.execute(2, {gasLimit: 1000000})
+// .then(async result => console.log(await result.wait()))
+
 /*
 await LOB.addTrailingStopMarketOrderPct(
   metadata.layers.layer2.contracts.SNXUSDC.address,
@@ -115,39 +120,6 @@ await LOB.addTrailingStopMarketOrderPct(
 //await LOB.pokeContract(2, 60449, {gasLimit: 1000000})
 // .then(async result => console.log(await result.wait()))
 
-await LOB.getLimitOrder(2)
-  .then(result => {
-    console.log(result.stopPrice.d.toString())
-  })
-
-  await LOB.getTrailingData(2)
-    .then(result => {
-      console.log(result.witnessPrice.d.toString())
-      console.log(result.snapshotLastUpdated.toString())
-
-    })
-
-
-//witnessed 20.8
-//this is a trailing sell
-//therefore sell at 20.8 - 10%
-//new price, 20.6
-
-for(var i=60442; i<60462; i++){
-
-await LOB.getPriceAtSnapshot(
-  metadata.layers.layer2.contracts.SNXUSDC.address, i
-).then( res => console.log(i, res.toString()))
-
-}
-
-/*
-var func = CHencode.encodeFunctionData('closePosition(address,(uint256))',
-[metadata.layers.layer2.contracts.SNXUSDC.address,
-{d: 0}])
-await proxy.executeCall(CH_address, func)
-.then(async result => console.log(await result.wait()))
-*/
 await displayOrders(LOB)
 
 CH.getPosition(metadata.layers.layer2.contracts.SNXUSDC.address, proxy_address).then( pos =>

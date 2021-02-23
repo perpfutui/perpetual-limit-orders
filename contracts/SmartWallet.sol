@@ -141,6 +141,7 @@ contract SmartWallet is Ownable {
     IClearingHouse.Position memory _currentPosition = IClearingHouse(ClearingHouse)
       .getPosition(IAmm(_asset), address(this));
     SignedDecimal.signedDecimal memory _currentSize = _currentPosition.size;
+    require(_currentSize.abs().toUint() != 0, "invalid reduceOnly #3");
     if(_orderSize.isNegative() != _currentSize.isNegative()) {
       if(_orderSize.isNegative()) {
         if(_orderSize.abs().cmp(_currentSize.abs()) == 1) {

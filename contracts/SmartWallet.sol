@@ -9,6 +9,7 @@ import "./LimitOrderBook.sol";
 import { Decimal } from "./utils/Decimal.sol";
 import { SignedDecimal } from "./utils/SignedDecimal.sol";
 import { IAmm } from "./interface/IAmm.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
 
 interface IClearingHouse {
     enum Side { BUY, SELL }
@@ -47,17 +48,16 @@ contract SmartWallet is Ownable {
 
   using Decimal for Decimal.decimal;
   using SignedDecimal for SignedDecimal.signedDecimal;
+  using Address for address;
 
   event AttemptingPosition(address asset, uint256 dir, uint256 collateral, uint256 leverage, uint256 slippage);
 
   function approveAll() public {
-    if(factory.getChainID() == 100) {
-      IERC20(USDC).approve(ClearingHouse, type(uint256).max);
-      IERC20(USDC).approve(address(LOB), type(uint256).max);
-    }
+    IERC20(USDC).approve(ClearingHouse, type(uint256).max);
+    IERC20(USDC).approve(address(LOB), type(uint256).max);
   }
 
-  //Taken from https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/utils/Address.sol
+/*  //Taken from https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/utils/Address.sol
   function isContract(address account) internal view returns (bool) {
       // This method relies on extcodesize, which returns 0 for contracts in
       // construction, since the code is only stored at the end of the
@@ -67,24 +67,15 @@ contract SmartWallet is Ownable {
       // solhint-disable-next-line no-inline-assembly
       assembly { size := extcodesize(account) }
       return size > 0;
-  }
+  }*/
 
   function executeCall(
     address target,
     bytes calldata callData
   ) external onlyOwner() returns (bytes memory) {
-    require(isContract(target), 'call to non-contract');
+    require(target.isContract(), 'call to non-contract');
     //require(factory.isWhitelisted(target), 'Invalid target contract');
-    (bool success, bytes memory result) = target.call(callData);
-    if (success == false) {
-      assembly {
-        let ptr := mload(0x40)
-        let size := returndatasize()
-        returndatacopy(ptr, 0, size)
-        revert(ptr, size)
-      }
-    }
-    return result;
+    return target.functionCall(callData);
   }
 
   function setOrderBook(
@@ -106,7 +97,6 @@ contract SmartWallet is Ownable {
     uint order_id
   ) public returns (bool) {
     require(msg.sender == address(LOB), 'Only execute from the order book');
-    console.log('--SW: Order #', order_id);
     (, address _trader,
       LimitOrderBook.OrderType _orderType,
       ,bool _stillValid, uint _expiry) =
@@ -182,10 +172,7 @@ contract SmartWallet is Ownable {
       Decimal.decimal memory _size = _orderSize.abs();
       Decimal.decimal memory _quote = (IAmm(_asset)
         .getOutputPrice(isLong ? IAmm.Dir.REMOVE_FROM_AMM : IAmm.Dir.ADD_TO_AMM, _size));
-      //TODO: check whether you actually need to adjust slippage like this
-      _slippage = (_slippage.toUint()==0) ? _slippage :
-        ( isLong ? _slippage.subD(Decimal.decimal(1)) : _slippage.addD(Decimal.decimal(1)));
-      _leverage = minD(_quote.divD(_collateral),_leverage);
+      _leverage = minD(_quote.divD(_collateral).addD(Decimal.one()),_leverage);
       emit AttemptingPosition(_asset, isLong ? uint(IClearingHouse.Side.BUY) : uint(IClearingHouse.Side.SELL),
         _collateral.toUint(), _leverage.toUint(), _slippage.toUint());
       if(closePosition) {
@@ -231,7 +218,7 @@ contract SmartWallet is Ownable {
       Decimal.decimal memory _size = _orderSize.abs();
       Decimal.decimal memory _quote = (IAmm(_asset)
         .getOutputPrice(isLong ? IAmm.Dir.REMOVE_FROM_AMM : IAmm.Dir.ADD_TO_AMM, _size));
-      _leverage = minD(_quote.divD(_collateral),_leverage);
+      _leverage = minD(_quote.divD(_collateral).addD(Decimal.one()),_leverage);
       emit AttemptingPosition(_asset, isLong ? uint(IClearingHouse.Side.BUY) : uint(IClearingHouse.Side.SELL),
         _collateral.toUint(), _leverage.toUint(), Decimal.zero().toUint());
       if(closePosition) {
@@ -278,9 +265,7 @@ contract SmartWallet is Ownable {
       Decimal.decimal memory _size = _orderSize.abs();
       Decimal.decimal memory _quote = (IAmm(_asset)
         .getOutputPrice(isLong ? IAmm.Dir.REMOVE_FROM_AMM : IAmm.Dir.ADD_TO_AMM, _size));
-      _slippage = (_slippage.toUint()==0) ? _slippage :
-        ( isLong ? _slippage.subD(Decimal.decimal(1)) : _slippage.addD(Decimal.decimal(1)));
-      _leverage = minD(_quote.divD(_collateral),_leverage);
+      _leverage = minD(_quote.divD(_collateral).addD(Decimal.one()),_leverage);
       emit AttemptingPosition(_asset, isLong ? uint(IClearingHouse.Side.BUY) : uint(IClearingHouse.Side.SELL),
         _collateral.toUint(), _leverage.toUint(), _slippage.toUint());
       if(closePosition) {
@@ -315,14 +300,6 @@ contract SmartWalletFactory {
 
   constructor(address _addr) public {
     LimitOrderBook = _addr;
-  }
-
-  function getChainID() public pure returns (uint256) {
-    uint256 id;
-    assembly {
-        id := chainid()
-    }
-    return id;
   }
 
   function spawn() public returns (address smartWallet) {

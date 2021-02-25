@@ -21,7 +21,8 @@ contract LimitOrderBook is Ownable, DecimalERC20{
 
   event OrderCreated(address indexed trader, uint order_id);
   event OrderFilled(address indexed trader, uint order_id);
-
+  event OrderChanged(address indexed trader, uint order_id);
+  //Should we store order data with events?
 
   /*
    * ENUMS
@@ -372,6 +373,10 @@ contract LimitOrderBook is Ownable, DecimalERC20{
     Decimal.decimal memory _tipFee,
     bool _reduceOnly,
     uint _expiry) public onlyMyOrder(order_id) onlyValidOrder(order_id){
+      require(orders[order_id].orderType == OrderType.LIMIT ||
+        orders[order_id].orderType == OrderType.STOPMARKET ||
+        orders[order_id].orderType == OrderType.STOPLIMIT,
+        "Can only modify stop/limit orders");
       orders[order_id].stopPrice = _stopPrice;
       orders[order_id].limitPrice = _limitPrice;
       orders[order_id].orderSize = _orderSize;
@@ -381,17 +386,48 @@ contract LimitOrderBook is Ownable, DecimalERC20{
       orders[order_id].tipFee = _tipFee;
       orders[order_id].reduceOnly = _reduceOnly;
       orders[order_id].expiry = _expiry;
-      //Is it possible for someone to reduce
-      //the fee as the order is being filled???
-      //EMIT EVENT ORDER CHANGED
+      emit OrderChanged(orders[order_id].trader, order_id);
     }
 
-    //TODO: Modify trailing order
+  function modifyTrailingOrder(
+    uint order_id,
+    Decimal.decimal memory _newStop,
+    Decimal.decimal memory _newLimit,
+    SignedDecimal.signedDecimal memory _orderSize,
+    Decimal.decimal memory _collateral,
+    Decimal.decimal memory _leverage,
+    Decimal.decimal memory _slippage,
+    Decimal.decimal memory _tipFee,
+    bool _reduceOnly,
+    uint _expiry) public onlyMyOrder(order_id) onlyValidOrder(order_id){
+      require(orders[order_id].orderType == OrderType.TRAILINGSTOPMARKET ||
+        orders[order_id].orderType == OrderType.TRAILINGSTOPLIMIT,
+        "Can only modify trailing orders");
+      orders[order_id].orderSize = _orderSize;
+      orders[order_id].collateral = _collateral;
+      orders[order_id].leverage = _leverage;
+      orders[order_id].slippage = _slippage;
+      orders[order_id].tipFee = _tipFee;
+      orders[order_id].reduceOnly = _reduceOnly;
+      orders[order_id].expiry = _expiry;
+
+      if(trailingOrders[order_id].usePct) {
+        trailingOrders[order_id].trailPct = _newStop;
+        trailingOrders[order_id].gapPct = _newLimit;
+      } else {
+        trailingOrders[order_id].trail = _newStop;
+        trailingOrders[order_id].gap = _newLimit;
+      }
+      _updateTrailingPrice(order_id);
+
+      emit OrderChanged(orders[order_id].trader, order_id);
+    }
 
   function deleteOrder(
     uint order_id
   ) public onlyMyOrder(order_id) onlyValidOrder(order_id){
     delete orders[order_id];
+    emit OrderChanged(orders[order_id].trader, order_id);
   }
 
   function execute(uint order_id) public onlyValidOrder(order_id) {
@@ -451,7 +487,6 @@ contract LimitOrderBook is Ownable, DecimalERC20{
       orders[order_id].orderType == OrderType.TRAILINGSTOPLIMIT, "Can only poke trailing orders");
     require(_reserveIndex > trailingOrders[order_id].snapshotCreated, "Order hadn't been created");
 
-    //TODO: check the lastupdated timetamp
     require(_reserveIndex < trailingOrders[order_id].snapshotLastUpdated ||
       (block.timestamp - trailingOrders[order_id].snapshotLastUpdated > pokeContractDelay), "Can only be updated every 15 minutes");
     trailingOrders[order_id].snapshotLastUpdated = block.timestamp;
@@ -474,7 +509,7 @@ contract LimitOrderBook is Ownable, DecimalERC20{
    * VIEW FUNCTIONS
    */
 
-  function getNextOrderId() public view returns (uint){
+  function getNumberOrders() public view returns (uint){
     return orders.length;
   }
 

@@ -25,8 +25,8 @@ async function main() {
   const provider = new ethers.providers.JsonRpcProvider(xDaiUrl)
   const wallet = new ethers.Wallet('3e730129b3867804afd27b530749d49113164a349b05879f536b6d4fe9018a9f').connect(provider)
 
-  const LOB_address = '0xB7dEE432D550B98754715f540Bf950457490dC9D'
-  const SWF_address = '0x4518C76B7e41C18cB7e0Aed709a883dCB87f8C3F'
+  const LOB_address = '0xb1a797c31c67049CF3F78cbf1CDD65579A211E0B'
+  const SWF_address = '0x2dE89197d14F1947AcADDB50F61917aab377734e'
   const url = "https://metadata.perp.exchange/production.json"
   metadata = await fetch(url).then(res => res.json())
 
@@ -83,9 +83,9 @@ var lev = ethers.utils.parseUnits('1', 18)
 var slippage = ethers.utils.parseUnits('0.001',18)
 
 /*
-await LOB.addStopOrder(
+await LOB.addLimitOrder(
   metadata.layers.layer2.contracts.SNXUSDC.address,
-  {d: stop_price},
+  {d: limit_price},
   {d: position_size},
   {d: collat},
   {d: lev},
@@ -94,14 +94,16 @@ await LOB.addStopOrder(
   false,
   0
 ).then(async result => console.log(await result.wait()))
+
 */
 
-await LOB.getLimitOrder(2).then(result =>
-  { console.log(result.reduceOnly) })
+for(var i =0; i<4; i++) {
+await LOB.getLimitOrder(i).then(result =>
+  { console.log(result) })
+}
 
-
-// await LOB.execute(2, {gasLimit: 1000000})
-// .then(async result => console.log(await result.wait()))
+ //await LOB.execute(3)
+  //.then(async result => console.log(await result.wait()))
 
 /*
 await LOB.addTrailingStopMarketOrderPct(
@@ -116,6 +118,14 @@ await LOB.addTrailingStopMarketOrderPct(
   0
 )
 */
+
+
+//var func = CHencode.encodeFunctionData('closePosition(address,(uint256))',
+// [metadata.layers.layer2.contracts.SNXUSDC.address,
+// {d: 0}])
+// await proxy.executeCall(CH_address, func)
+//   .then(async result => console.log(await result.wait()))
+
 
 //await LOB.pokeContract(2, 60449, {gasLimit: 1000000})
 // .then(async result => console.log(await result.wait()))

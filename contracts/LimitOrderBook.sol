@@ -22,6 +22,10 @@ contract LimitOrderBook is Ownable, DecimalERC20{
   event OrderCreated(address indexed trader, uint order_id);
   event OrderFilled(address indexed trader, uint order_id);
   event OrderChanged(address indexed trader, uint order_id);
+
+  event TrailingOrderCreated(uint order_id, uint snapshotIndex);
+  event TrailingOrderFilled(uint order_id);
+
   //Should we store order data with events?
 
   /*
@@ -187,6 +191,7 @@ contract LimitOrderBook is Ownable, DecimalERC20{
     require(((_expiry == 0 ) || (block.timestamp<_expiry)), 'Event will expire in past');
     emit OrderCreated(msg.sender,orders.length);
     uint _currSnapshot = IAmm(_asset).getSnapshotLen()-1;
+    emit TrailingOrderCreated(orders.length, _currSnapshot);
     Decimal.decimal memory _initPrice = IAmm(_asset).getSpotPrice();
     trailingOrders[orders.length] = TrailingOrderData({
       witnessPrice: _initPrice,
@@ -233,6 +238,7 @@ contract LimitOrderBook is Ownable, DecimalERC20{
     require(_trailPct.cmp(Decimal.one()) == -1, 'Invalid trail percent');
     emit OrderCreated(msg.sender,orders.length);
     uint _currSnapshot = IAmm(_asset).getSnapshotLen()-1;
+    emit TrailingOrderCreated(orders.length, _currSnapshot);
     Decimal.decimal memory _initPrice = IAmm(_asset).getSpotPrice();
     trailingOrders[orders.length] = TrailingOrderData({
       witnessPrice: _initPrice,
@@ -279,6 +285,7 @@ contract LimitOrderBook is Ownable, DecimalERC20{
     require(((_expiry == 0 ) || (block.timestamp<_expiry)), 'Event will expire in past');
     emit OrderCreated(msg.sender,orders.length);
     uint _currSnapshot = IAmm(_asset).getSnapshotLen()-1;
+    emit TrailingOrderCreated(orders.length, _currSnapshot);
     Decimal.decimal memory _initPrice = IAmm(_asset).getSpotPrice();
     trailingOrders[orders.length] = TrailingOrderData({
       witnessPrice: _initPrice,
@@ -327,6 +334,7 @@ contract LimitOrderBook is Ownable, DecimalERC20{
     require(_gapPct.cmp(Decimal.one()) == -1, 'Invalid gap percent');
     emit OrderCreated(msg.sender,orders.length);
     uint _currSnapshot = IAmm(_asset).getSnapshotLen()-1;
+    emit TrailingOrderCreated(orders.length, _currSnapshot);
     Decimal.decimal memory _initPrice = IAmm(_asset).getSpotPrice();
     trailingOrders[orders.length] = TrailingOrderData({
       witnessPrice: _initPrice,
@@ -441,6 +449,8 @@ contract LimitOrderBook is Ownable, DecimalERC20{
           _transferFrom(IERC20(USDC), _smartwallet, msg.sender, orders[order_id].tipFee.divScalar(2));
           _transferFrom(IERC20(USDC), _smartwallet, trailingOrders[order_id].lastUpdatedKeeper,
             orders[order_id].tipFee.divScalar(2));
+          TrailingOrderFilled(order_id);
+          delete trailingOrders[order_id];
       } else {
         _transferFrom(IERC20(USDC), _smartwallet, msg.sender, orders[order_id].tipFee);
       }

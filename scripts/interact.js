@@ -19,8 +19,8 @@ async function main() {
   const ERC20encode = new ethers.utils.Interface(ERC20_ABI)
 
 
-  const xDaiUrl = "https://rpc.xdaichain.com/"
-  //const xDaiUrl = "https://dai.poa.network/"
+  // const xDaiUrl = "https://rpc.xdaichain.com/"
+  const xDaiUrl = "https://dai.poa.network/"
 
   const provider = new ethers.providers.JsonRpcProvider(xDaiUrl)
   const wallet = new ethers.Wallet('3e730129b3867804afd27b530749d49113164a349b05879f536b6d4fe9018a9f').connect(provider)
@@ -75,16 +75,16 @@ console.log('Sending tx with calldata:', func)
 // await proxy.executeCall(CH_address, func, {gasLimit:1000000})
 //   .then(async result => console.log(await result.wait()))
 
-var limit_price = ethers.utils.parseUnits('21.15',18)
+var limit_price = ethers.utils.parseUnits('44500',18)
 var stop_price = ethers.utils.parseUnits('16.5',18)
-var position_size = ethers.utils.parseUnits('0.001',18)
+var position_size = ethers.utils.parseUnits('0.000001',18)
 var collat = limit_price.mul(position_size).div('1000000000000000000')
 var lev = ethers.utils.parseUnits('1', 18)
-var slippage = ethers.utils.parseUnits('0.001',18)
+var slippage = ethers.utils.parseUnits('0.000001',18)
 
-/*
+
 await LOB.addLimitOrder(
-  metadata.layers.layer2.contracts.SNXUSDC.address,
+  metadata.layers.layer2.contracts.BTCUSDC.address,
   {d: limit_price},
   {d: position_size},
   {d: collat},
@@ -95,15 +95,15 @@ await LOB.addLimitOrder(
   0
 ).then(async result => console.log(await result.wait()))
 
-*/
 
+/*
 for(var i =0; i<4; i++) {
 await LOB.getLimitOrder(i).then(result =>
   { console.log(result) })
 }
-
- //await LOB.execute(3)
-  //.then(async result => console.log(await result.wait()))
+*/
+  // await LOB.execute(19, {gasLimit: 1000000})
+  //  .then(async result => console.log(await result.wait()))
 
 /*
 await LOB.addTrailingStopMarketOrderPct(
@@ -119,12 +119,14 @@ await LOB.addTrailingStopMarketOrderPct(
 )
 */
 
-
-//var func = CHencode.encodeFunctionData('closePosition(address,(uint256))',
+//
+// var func = CHencode.encodeFunctionData('closePosition(address,(uint256))',
 // [metadata.layers.layer2.contracts.SNXUSDC.address,
 // {d: 0}])
 // await proxy.executeCall(CH_address, func)
 //   .then(async result => console.log(await result.wait()))
+
+
 
 
 //await LOB.pokeContract(2, 60449, {gasLimit: 1000000})

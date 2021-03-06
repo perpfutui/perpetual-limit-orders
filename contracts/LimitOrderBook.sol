@@ -81,6 +81,7 @@ contract LimitOrderBook is Ownable, DecimalERC20{
   SmartWalletFactory public factory;
   address constant USDC = 0xDDAfbb505ad214D7b80b1f830fcCc89B60fb7A83;
   uint256 constant pokeContractDelay = 15 minutes;
+  uint256 constant minimumTipFee = 1000000; // set minimum fee to arbitrary amount determined later
 
   /*
    * FUNCTIONS TO ADD ORDERS
@@ -98,6 +99,7 @@ contract LimitOrderBook is Ownable, DecimalERC20{
     uint256 _expiry
   ) public {
     require(((_expiry == 0 ) || (block.timestamp<_expiry)), 'Event will expire in past');
+    require(_tipFee.cmp(minimum) == 1, 'Just the tip! Tip is below minimum tip fee');
     emit OrderCreated(msg.sender,orders.length);
     _createOrder(_asset, OrderType.LIMIT, Decimal.zero(), _limitPrice, _positionSize, _collateral, _leverage, _slippage, _tipFee, _reduceOnly, _expiry)
     orders.push(LimitOrder({
@@ -129,6 +131,7 @@ contract LimitOrderBook is Ownable, DecimalERC20{
     uint256 _expiry
   ) public {
     require(((_expiry == 0 ) || (block.timestamp<_expiry)), 'Event will expire in past');
+    require(_tipFee.cmp(minimum) == 1, 'Just the tip! Tip is below minimum tip fee');
     emit OrderCreated(msg.sender,orders.length);
     orders.push(LimitOrder({
       asset: _asset,
@@ -160,6 +163,7 @@ contract LimitOrderBook is Ownable, DecimalERC20{
     uint256 _expiry
   ) public {
     require(((_expiry == 0 ) || (block.timestamp<_expiry)), 'Event will expire in past');
+    require(_tipFee.cmp(minimum) == 1, 'Just the tip! Tip is below minimum tip fee');
     emit OrderCreated(msg.sender,orders.length);
     orders.push(LimitOrder({
       asset: _asset,
@@ -190,6 +194,7 @@ contract LimitOrderBook is Ownable, DecimalERC20{
     uint256 _expiry
   ) public returns (uint256){
     require(((_expiry == 0 ) || (block.timestamp<_expiry)), 'Event will expire in past');
+    require(_tipFee.cmp(minimum) == 1, 'Just the tip! Tip is below minimum tip fee');
     emit OrderCreated(msg.sender,orders.length);
     uint _currSnapshot = IAmm(_asset).getSnapshotLen()-1;
     emit TrailingOrderCreated(orders.length, _currSnapshot);
@@ -237,6 +242,7 @@ contract LimitOrderBook is Ownable, DecimalERC20{
   ) public returns (uint256){
     require(((_expiry == 0 ) || (block.timestamp<_expiry)), 'Event will expire in past');
     require(_trailPct.cmp(Decimal.one()) == -1, 'Invalid trail percent');
+    require(_tipFee.cmp(minimum) == 1, 'Just the tip! Tip is below minimum tip fee');
     emit OrderCreated(msg.sender,orders.length);
     uint _currSnapshot = IAmm(_asset).getSnapshotLen()-1;
     emit TrailingOrderCreated(orders.length, _currSnapshot);
@@ -284,6 +290,7 @@ contract LimitOrderBook is Ownable, DecimalERC20{
     uint256 _expiry
   ) public returns (uint256){
     require(((_expiry == 0 ) || (block.timestamp<_expiry)), 'Event will expire in past');
+    require(_tipFee.cmp(minimum) == 1, 'Just the tip! Tip is below minimum tip fee');
     emit OrderCreated(msg.sender,orders.length);
     uint _currSnapshot = IAmm(_asset).getSnapshotLen()-1;
     emit TrailingOrderCreated(orders.length, _currSnapshot);
@@ -333,6 +340,7 @@ contract LimitOrderBook is Ownable, DecimalERC20{
     require(((_expiry == 0 ) || (block.timestamp<_expiry)), 'Event will expire in past');
     require(_trailPct.cmp(Decimal.one()) == -1, 'Invalid trail percent');
     require(_gapPct.cmp(Decimal.one()) == -1, 'Invalid gap percent');
+    require(_tipFee.cmp(minimum) == 1, 'Just the tip! Tip is below minimum tip fee');
     emit OrderCreated(msg.sender,orders.length);
     uint _currSnapshot = IAmm(_asset).getSnapshotLen()-1;
     emit TrailingOrderCreated(orders.length, _currSnapshot);
@@ -635,7 +643,7 @@ contract LimitOrderBook is Ownable, DecimalERC20{
   }
 
   modifier onlyMyOrder(uint order_id) {
-    require(msg.sender == orders[order_id].trader, "Not your limit order");
+    require(msg.sender == orders[order_id].trader, "Just not your limit order");
     _;
   }
 

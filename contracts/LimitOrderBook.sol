@@ -98,25 +98,7 @@ contract LimitOrderBook is Ownable, DecimalERC20{
     bool _reduceOnly,
     uint256 _expiry
   ) public {
-    require(((_expiry == 0 ) || (block.timestamp<_expiry)), 'Event will expire in past');
-    require(_tipFee.cmp(minimum) == 1, 'Just the tip! Tip is below minimum tip fee');
-    emit OrderCreated(msg.sender,orders.length);
     _createOrder(_asset, OrderType.LIMIT, Decimal.zero(), _limitPrice, _positionSize, _collateral, _leverage, _slippage, _tipFee, _reduceOnly, _expiry)
-    orders.push(LimitOrder({
-      asset: _asset,
-      trader: msg.sender,
-      orderType: OrderType.LIMIT,
-      stopPrice: Decimal.zero(),
-      limitPrice: _limitPrice,
-      orderSize: _positionSize,
-      collateral: _collateral, //will always use this amount
-      leverage: _leverage, //the maximum acceptable leverage, may be less than this
-      slippage: _slippage, //refers to the minimum amount that user will accept
-      tipFee: _tipFee,
-      reduceOnly: _reduceOnly,
-      stillValid: true,
-      expiry: _expiry
-      }));
   }
 
   function addStopOrder(
@@ -130,24 +112,7 @@ contract LimitOrderBook is Ownable, DecimalERC20{
     bool _reduceOnly,
     uint256 _expiry
   ) public {
-    require(((_expiry == 0 ) || (block.timestamp<_expiry)), 'Event will expire in past');
-    require(_tipFee.cmp(minimum) == 1, 'Just the tip! Tip is below minimum tip fee');
-    emit OrderCreated(msg.sender,orders.length);
-    orders.push(LimitOrder({
-      asset: _asset,
-      trader: msg.sender,
-      orderType: OrderType.STOPMARKET,
-      stopPrice: _stopPrice,
-      limitPrice: Decimal.zero(),
-      orderSize: _positionSize,
-      collateral: _collateral, //will always use this amount
-      leverage: _leverage, //the maximum acceptable leverage, may be less than this
-      slippage: _slippage, //refers to the minimum amount that user will accept
-      tipFee: _tipFee,
-      reduceOnly: _reduceOnly,
-      stillValid: true,
-      expiry: _expiry
-      }));
+    _createOrder(_asset, OrderType.STOPMARKET, _stopPrice, Decimal.zero(), _positionSize, _collateral, _leverage, _slippage, _tipFee, _reduceOnly, _expiry)
   }
 
   function addStopLimitOrder(
@@ -162,24 +127,7 @@ contract LimitOrderBook is Ownable, DecimalERC20{
     bool _reduceOnly,
     uint256 _expiry
   ) public {
-    require(((_expiry == 0 ) || (block.timestamp<_expiry)), 'Event will expire in past');
-    require(_tipFee.cmp(minimum) == 1, 'Just the tip! Tip is below minimum tip fee');
-    emit OrderCreated(msg.sender,orders.length);
-    orders.push(LimitOrder({
-      asset: _asset,
-      trader: msg.sender,
-      orderType: OrderType.STOPLIMIT,
-      stopPrice: _stopPrice,
-      limitPrice: _limitPrice,
-      orderSize: _positionSize,
-      collateral: _collateral, //will always use this amount
-      leverage: _leverage, //the maximum acceptable leverage, may be less than this
-      slippage: _slippage, //refers to the minimum amount that user will accept
-      tipFee: _tipFee,
-      reduceOnly: _reduceOnly,
-      stillValid: true,
-      expiry: _expiry
-      }));
+    _createOrder(_asset, OrderType.STOPLIMIT, _stopPrice, _limitPrice, _positionSize, _collateral, _leverage, _slippage, _tipFee, _reduceOnly, _expiry)
   }
 
   function addTrailingStopMarketOrderAbs(
@@ -192,41 +140,10 @@ contract LimitOrderBook is Ownable, DecimalERC20{
     Decimal.decimal memory _tipFee,
     bool _reduceOnly,
     uint256 _expiry
-  ) public returns (uint256){
-    require(((_expiry == 0 ) || (block.timestamp<_expiry)), 'Event will expire in past');
-    require(_tipFee.cmp(minimum) == 1, 'Just the tip! Tip is below minimum tip fee');
-    emit OrderCreated(msg.sender,orders.length);
-    uint _currSnapshot = IAmm(_asset).getSnapshotLen()-1;
-    emit TrailingOrderCreated(orders.length, _currSnapshot);
-    Decimal.decimal memory _initPrice = IAmm(_asset).getSpotPrice();
-    trailingOrders[orders.length] = TrailingOrderData({
-      witnessPrice: _initPrice,
-      trail: _trail,
-      trailPct: Decimal.zero(),
-      gap: Decimal.zero(),
-      gapPct: Decimal.zero(),
-      usePct: false,
-      snapshotCreated: _currSnapshot,
-      snapshotLastUpdated: _currSnapshot,
-      lastUpdatedKeeper: address(0)
-      });
-    orders.push(LimitOrder({
-      asset: _asset,
-      trader: msg.sender,
-      orderType: OrderType.TRAILINGSTOPMARKET,
-      stopPrice: Decimal.zero(), //will get updated
-      limitPrice: Decimal.zero(), //will get updated
-      orderSize: _positionSize,
-      collateral: _collateral,
-      leverage: _leverage,
-      slippage: _slippage,
-      tipFee: _tipFee,
-      reduceOnly: _reduceOnly,
-      stillValid: true,
-      expiry: _expiry
-      }));
-    _updateTrailingPrice(orders.length-1);
-    return (orders.length-1);
+  ) public {
+    _createOrder(_asset, OrderType.TRAILINGSTOPMARKET, Decimal.zero(), Decimal.zero(),
+      _positionSize, _collateral, _leverage, _slippage, _tipFee, _reduceOnly, _expiry)
+    _createTrailingOrder(_asset, _trail, Decimal.zero(), false);
   }
 
   function addTrailingStopMarketOrderPct(
@@ -239,42 +156,10 @@ contract LimitOrderBook is Ownable, DecimalERC20{
     Decimal.decimal memory _tipFee,
     bool _reduceOnly,
     uint256 _expiry
-  ) public returns (uint256){
-    require(((_expiry == 0 ) || (block.timestamp<_expiry)), 'Event will expire in past');
-    require(_trailPct.cmp(Decimal.one()) == -1, 'Invalid trail percent');
-    require(_tipFee.cmp(minimum) == 1, 'Just the tip! Tip is below minimum tip fee');
-    emit OrderCreated(msg.sender,orders.length);
-    uint _currSnapshot = IAmm(_asset).getSnapshotLen()-1;
-    emit TrailingOrderCreated(orders.length, _currSnapshot);
-    Decimal.decimal memory _initPrice = IAmm(_asset).getSpotPrice();
-    trailingOrders[orders.length] = TrailingOrderData({
-      witnessPrice: _initPrice,
-      trail: Decimal.zero(),
-      trailPct: _trailPct,
-      gap: Decimal.zero(),
-      gapPct: Decimal.zero(),
-      usePct: true,
-      snapshotCreated: _currSnapshot,
-      snapshotLastUpdated: _currSnapshot,
-      lastUpdatedKeeper: address(0)
-      });
-    orders.push(LimitOrder({
-      asset: _asset,
-      trader: msg.sender,
-      orderType: OrderType.TRAILINGSTOPMARKET,
-      stopPrice: Decimal.zero(), //will get updated
-      limitPrice: Decimal.zero(),
-      orderSize: _positionSize,
-      collateral: _collateral,
-      leverage: _leverage,
-      slippage: _slippage,
-      tipFee: _tipFee,
-      reduceOnly: _reduceOnly,
-      stillValid: true,
-      expiry: _expiry
-      }));
-    _updateTrailingPrice(orders.length-1);
-    return (orders.length-1);
+  ) public {
+    _createOrder(_asset, OrderType.TRAILINGSTOPMARKET, Decimal.zero(), Decimal.zero(),
+      _positionSize, _collateral, _leverage, _slippage, _tipFee, _reduceOnly, _expiry)
+    _createTrailingOrder(_asset, _trailPct, Decimal.zero(), true);
   }
 
   function addTrailingStopLimitOrderAbs(
@@ -288,41 +173,10 @@ contract LimitOrderBook is Ownable, DecimalERC20{
     Decimal.decimal memory _tipFee,
     bool _reduceOnly,
     uint256 _expiry
-  ) public returns (uint256){
-    require(((_expiry == 0 ) || (block.timestamp<_expiry)), 'Event will expire in past');
-    require(_tipFee.cmp(minimum) == 1, 'Just the tip! Tip is below minimum tip fee');
-    emit OrderCreated(msg.sender,orders.length);
-    uint _currSnapshot = IAmm(_asset).getSnapshotLen()-1;
-    emit TrailingOrderCreated(orders.length, _currSnapshot);
-    Decimal.decimal memory _initPrice = IAmm(_asset).getSpotPrice();
-    trailingOrders[orders.length] = TrailingOrderData({
-      witnessPrice: _initPrice,
-      trail: _trail,
-      trailPct: Decimal.zero(),
-      gap: _gap,
-      gapPct: Decimal.zero(),
-      usePct: false,
-      snapshotCreated: _currSnapshot,
-      snapshotLastUpdated: _currSnapshot,
-      lastUpdatedKeeper: address(0)
-      });
-    orders.push(LimitOrder({
-      asset: _asset,
-      trader: msg.sender,
-      orderType: OrderType.TRAILINGSTOPLIMIT,
-      stopPrice: Decimal.zero(), //will get updated
-      limitPrice: Decimal.zero(), //will get updated
-      orderSize: _positionSize,
-      collateral: _collateral,
-      leverage: _leverage,
-      slippage: _slippage,
-      tipFee: _tipFee,
-      reduceOnly: _reduceOnly,
-      stillValid: true,
-      expiry: _expiry
-      }));
-    _updateTrailingPrice(orders.length-1);
-    return (orders.length-1);
+  ) public{
+    _createOrder(_asset, OrderType.TRAILINGSTOPLIMIT, Decimal.zero(), Decimal.zero(),
+      _positionSize, _collateral, _leverage, _slippage, _tipFee, _reduceOnly, _expiry)
+    _createTrailingOrder(_asset, _trail, _gap, false);
   }
 
   function addTrailingStopLimitOrderPct(
@@ -336,43 +190,10 @@ contract LimitOrderBook is Ownable, DecimalERC20{
     Decimal.decimal memory _tipFee,
     bool _reduceOnly,
     uint256 _expiry
-  ) public returns (uint256){
-    require(((_expiry == 0 ) || (block.timestamp<_expiry)), 'Event will expire in past');
-    require(_trailPct.cmp(Decimal.one()) == -1, 'Invalid trail percent');
-    require(_gapPct.cmp(Decimal.one()) == -1, 'Invalid gap percent');
-    require(_tipFee.cmp(minimum) == 1, 'Just the tip! Tip is below minimum tip fee');
-    emit OrderCreated(msg.sender,orders.length);
-    uint _currSnapshot = IAmm(_asset).getSnapshotLen()-1;
-    emit TrailingOrderCreated(orders.length, _currSnapshot);
-    Decimal.decimal memory _initPrice = IAmm(_asset).getSpotPrice();
-    trailingOrders[orders.length] = TrailingOrderData({
-      witnessPrice: _initPrice,
-      trail: Decimal.zero(),
-      trailPct: _trailPct,
-      gap: Decimal.zero(),
-      gapPct: _gapPct,
-      usePct: true,
-      snapshotCreated: _currSnapshot,
-      snapshotLastUpdated: _currSnapshot,
-      lastUpdatedKeeper: address(0)
-      });
-    orders.push(LimitOrder({
-      asset: _asset,
-      trader: msg.sender,
-      orderType: OrderType.TRAILINGSTOPLIMIT,
-      stopPrice: Decimal.zero(), //will get updated
-      limitPrice: Decimal.zero(), //will get updated
-      orderSize: _positionSize,
-      collateral: _collateral,
-      leverage: _leverage,
-      slippage: _slippage,
-      tipFee: _tipFee,
-      reduceOnly: _reduceOnly,
-      stillValid: true,
-      expiry: _expiry
-      }));
-    _updateTrailingPrice(orders.length-1);
-    return (orders.length-1);
+  ) public {
+    _createOrder(_asset, OrderType.TRAILINGSTOPLIMIT, Decimal.zero(), Decimal.zero(),
+      _positionSize, _collateral, _leverage, _slippage, _tipFee, _reduceOnly, _expiry)
+    _createTrailingOrder(_asset, _trailPct, _gapPct, true);
   }
 
   function _createOrder(
@@ -389,6 +210,8 @@ contract LimitOrderBook is Ownable, DecimalERC20{
     uint256 _expiry
   ) internal {
     require(((_expiry == 0 ) || (block.timestamp<_expiry)), 'Event will expire in past');
+    require(_tipFee.cmp(minimum) == 1, 'Just the tip! Tip is below minimum tip fee');
+    require(factory.getSmartWallet(msg.sender) != address(0), 'Need smart wallet');
     emit OrderCreated(msg.sender,orders.length);
     orders.push(LimitOrder({
       asset: _asset,
@@ -405,6 +228,43 @@ contract LimitOrderBook is Ownable, DecimalERC20{
       stillValid: true,
       expiry: _expiry
       }));
+  }
+
+  function _createTrailingOrder(
+    address _asset,
+    Decimal.decimal memory _trail,
+    Decimal.decimal memory _gap,
+    boolean _usePct
+  ) internal {
+    uint _currSnapshot = IAmm(_asset).getSnapshotLen()-1;
+    emit TrailingOrderCreated(orders.length-1, _currSnapshot);
+    Decimal.decimal memory _initPrice = IAmm(_asset).getSpotPrice();
+    if(usePct) {
+      trailingOrders[orders.length] = TrailingOrderData({
+        witnessPrice: _initPrice,
+        trail: Decimal.zero(),
+        trailPct: _trail,
+        gap: Decimal.zero(),
+        gapPct: _gap,
+        usePct: true,
+        snapshotCreated: _currSnapshot,
+        snapshotLastUpdated: _currSnapshot,
+        lastUpdatedKeeper: address(0)
+      });
+    } else {
+      trailingOrders[orders.length-1] = TrailingOrderData({
+        witnessPrice: _initPrice,
+        trail: _trail,
+        trailPct: Decimal.zero(),
+        gap: _gap,
+        gapPct: Decimal.zero(),
+        usePct: false,
+        snapshotCreated: _currSnapshot,
+        snapshotLastUpdated: _currSnapshot,
+        lastUpdatedKeeper: address(0)
+      });
+    }
+    _updateTrailingPrice(orders.length-1);
   }
 
   /*

@@ -335,12 +335,13 @@ contract LimitOrderBook is Ownable, DecimalERC20{
   function deleteOrder(
     uint order_id
   ) public onlyMyOrder(order_id) onlyValidOrder(order_id){
-    delete orders[order_id];
     emit OrderChanged(orders[order_id].trader, order_id);
+    delete orders[order_id];
   }
 
   function execute(uint order_id) public onlyValidOrder(order_id) {
     require(orders[order_id].stillValid, 'No longer valid');
+    emit OrderFilled(orders[order_id].trader, order_id);
     address _smartwallet = factory.getSmartWallet(orders[order_id].trader);
     bool success = SmartWallet(_smartwallet).executeOrder(order_id);
     if(success) {
@@ -357,7 +358,6 @@ contract LimitOrderBook is Ownable, DecimalERC20{
       }
       orders[order_id].stillValid = false;
       delete orders[order_id];
-      emit OrderFilled(orders[order_id].trader, order_id);
     }
   }
 

@@ -82,7 +82,7 @@ contract LimitOrderBook is Ownable, DecimalERC20{
   SmartWalletFactory public factory;
   address constant USDC = 0xDDAfbb505ad214D7b80b1f830fcCc89B60fb7A83;
   uint256 constant pokeContractDelay = 15 minutes;
-  uint256 constant minimumTipFee = 1000000; // set minimum fee to arbitrary amount determined later
+  Decimal.decimal minimumTipFee; // set minimum fee to arbitrary amount determined later
   address private insurancefund = 0x8C29F6F7fc1999aB84b476952E986F974Acb3824;
 
   /*
@@ -100,7 +100,7 @@ contract LimitOrderBook is Ownable, DecimalERC20{
     bool _reduceOnly,
     uint256 _expiry
   ) public {
-    _createOrder(_asset, OrderType.LIMIT, Decimal.zero(), _limitPrice, _positionSize, _collateral, _leverage, _slippage, _tipFee, _reduceOnly, _expiry)
+    _createOrder(_asset, OrderType.LIMIT, Decimal.zero(), _limitPrice, _positionSize, _collateral, _leverage, _slippage, _tipFee, _reduceOnly, _expiry);
   }
 
   function addStopOrder(
@@ -114,7 +114,8 @@ contract LimitOrderBook is Ownable, DecimalERC20{
     bool _reduceOnly,
     uint256 _expiry
   ) public {
-    _createOrder(_asset, OrderType.STOPMARKET, _stopPrice, Decimal.zero(), _positionSize, _collateral, _leverage, _slippage, _tipFee, _reduceOnly, _expiry)
+    _createOrder(_asset, OrderType.STOPMARKET, _stopPrice, Decimal.zero(), _positionSize,
+      _collateral, _leverage, _slippage, _tipFee, _reduceOnly, _expiry);
   }
 
   function addStopLimitOrder(
@@ -129,7 +130,8 @@ contract LimitOrderBook is Ownable, DecimalERC20{
     bool _reduceOnly,
     uint256 _expiry
   ) public {
-    _createOrder(_asset, OrderType.STOPLIMIT, _stopPrice, _limitPrice, _positionSize, _collateral, _leverage, _slippage, _tipFee, _reduceOnly, _expiry)
+    _createOrder(_asset, OrderType.STOPLIMIT, _stopPrice, _limitPrice, _positionSize,
+      _collateral, _leverage, _slippage, _tipFee, _reduceOnly, _expiry);
   }
 
   function addTrailingStopMarketOrderAbs(
@@ -144,7 +146,7 @@ contract LimitOrderBook is Ownable, DecimalERC20{
     uint256 _expiry
   ) public {
     _createOrder(_asset, OrderType.TRAILINGSTOPMARKET, Decimal.zero(), Decimal.zero(),
-      _positionSize, _collateral, _leverage, _slippage, _tipFee, _reduceOnly, _expiry)
+      _positionSize, _collateral, _leverage, _slippage, _tipFee, _reduceOnly, _expiry);
     _createTrailingOrder(_asset, _trail, Decimal.zero(), false);
   }
 
@@ -160,7 +162,7 @@ contract LimitOrderBook is Ownable, DecimalERC20{
     uint256 _expiry
   ) public {
     _createOrder(_asset, OrderType.TRAILINGSTOPMARKET, Decimal.zero(), Decimal.zero(),
-      _positionSize, _collateral, _leverage, _slippage, _tipFee, _reduceOnly, _expiry)
+      _positionSize, _collateral, _leverage, _slippage, _tipFee, _reduceOnly, _expiry);
     _createTrailingOrder(_asset, _trailPct, Decimal.zero(), true);
   }
 
@@ -177,7 +179,7 @@ contract LimitOrderBook is Ownable, DecimalERC20{
     uint256 _expiry
   ) public{
     _createOrder(_asset, OrderType.TRAILINGSTOPLIMIT, Decimal.zero(), Decimal.zero(),
-      _positionSize, _collateral, _leverage, _slippage, _tipFee, _reduceOnly, _expiry)
+      _positionSize, _collateral, _leverage, _slippage, _tipFee, _reduceOnly, _expiry);
     _createTrailingOrder(_asset, _trail, _gap, false);
   }
 
@@ -194,7 +196,7 @@ contract LimitOrderBook is Ownable, DecimalERC20{
     uint256 _expiry
   ) public {
     _createOrder(_asset, OrderType.TRAILINGSTOPLIMIT, Decimal.zero(), Decimal.zero(),
-      _positionSize, _collateral, _leverage, _slippage, _tipFee, _reduceOnly, _expiry)
+      _positionSize, _collateral, _leverage, _slippage, _tipFee, _reduceOnly, _expiry);
     _createTrailingOrder(_asset, _trailPct, _gapPct, true);
   }
 
@@ -212,9 +214,9 @@ contract LimitOrderBook is Ownable, DecimalERC20{
     uint256 _expiry
   ) internal {
     require(((_expiry == 0 ) || (block.timestamp<_expiry)), 'Event will expire in past');
-    require(_tipFee.cmp(minimum) == 1, 'Just the tip! Tip is below minimum tip fee');
+    require(_tipFee.cmp(minimumTipFee) == 1, 'Just the tip! Tip is below minimum tip fee');
     require(factory.getSmartWallet(msg.sender) != address(0), 'Need smart wallet');
-    require(IInsuranceFund(insuranceFund).isExistedAmm(_asset), "amm not found");
+    require(IInsuranceFund(insurancefund).isExistedAmm(IAmm(_asset)), "amm not found");
     _transferFrom(IERC20(USDC), factory.getSmartWallet(msg.sender), address(this), _tipFee);
     emit OrderCreated(msg.sender,orders.length);
     orders.push(LimitOrder({
@@ -238,12 +240,12 @@ contract LimitOrderBook is Ownable, DecimalERC20{
     address _asset,
     Decimal.decimal memory _trail,
     Decimal.decimal memory _gap,
-    boolean _usePct
+    bool _usePct
   ) internal {
     uint _currSnapshot = IAmm(_asset).getSnapshotLen()-1;
     emit TrailingOrderCreated(orders.length-1, _currSnapshot);
     Decimal.decimal memory _initPrice = IAmm(_asset).getSpotPrice();
-    if(usePct) {
+    if(_usePct) {
       trailingOrders[orders.length] = TrailingOrderData({
         witnessPrice: _initPrice,
         trail: Decimal.zero(),
@@ -493,6 +495,10 @@ contract LimitOrderBook is Ownable, DecimalERC20{
 
   function setFactory(address _addr) public onlyOwner{
     factory = SmartWalletFactory(_addr);
+  }
+
+  function changeMinimumFee(Decimal.decimal memory _fee) public onlyOwner {
+    minimumTipFee = _fee;
   }
 
   /*

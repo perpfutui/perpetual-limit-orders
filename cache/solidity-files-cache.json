@@ -2,8 +2,8 @@
   "_format": "hh-sol-cache-2",
   "files": {
     "/Users/abdullaalkamil/Coding/PERP/contracts/LimitOrderBook.sol": {
-      "lastModificationDate": 1614284619795,
-      "contentHash": "3c1fc5710afe4c69f20f93c87ef9b082",
+      "lastModificationDate": 1615064286340,
+      "contentHash": "2e6d39aeae7a95ce2d74c9e1965f8179",
       "sourceName": "contracts/LimitOrderBook.sol",
       "solcConfig": {
         "version": "0.6.9",
@@ -33,6 +33,7 @@
         "./utils/SignedDecimal.sol",
         "./utils/DecimalERC20.sol",
         "./interface/IAmm.sol",
+        "./interface/IInsuranceFund.sol",
         "@openzeppelin/contracts/access/Ownable.sol",
         "@openzeppelin/contracts/token/ERC20/IERC20.sol"
       ],
@@ -583,6 +584,44 @@
       ],
       "artifacts": [
         "Address"
+      ]
+    },
+    "/Users/abdullaalkamil/Coding/PERP/contracts/interface/IInsuranceFund.sol": {
+      "lastModificationDate": 1615059318122,
+      "contentHash": "c8dfb3d46345e1851c880067b66777eb",
+      "sourceName": "contracts/interface/IInsuranceFund.sol",
+      "solcConfig": {
+        "version": "0.6.9",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 2000
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "@openzeppelin/contracts/token/ERC20/IERC20.sol",
+        "../utils/Decimal.sol",
+        "./IAmm.sol"
+      ],
+      "versionPragmas": [
+        "0.6.9"
+      ],
+      "artifacts": [
+        "IInsuranceFund"
       ]
     }
   }

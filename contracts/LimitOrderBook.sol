@@ -7,6 +7,7 @@ import { Decimal } from "./utils/Decimal.sol";
 import { SignedDecimal } from "./utils/SignedDecimal.sol";
 import { DecimalERC20 } from "./utils/DecimalERC20.sol";
 import {IAmm} from "./interface/IAmm.sol";
+import {IInsuranceFund} from "./interface/IInsuranceFund.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
@@ -82,6 +83,7 @@ contract LimitOrderBook is Ownable, DecimalERC20{
   address constant USDC = 0xDDAfbb505ad214D7b80b1f830fcCc89B60fb7A83;
   uint256 constant pokeContractDelay = 15 minutes;
   uint256 constant minimumTipFee = 1000000; // set minimum fee to arbitrary amount determined later
+  address private insurancefund = 0x8C29F6F7fc1999aB84b476952E986F974Acb3824;
 
   /*
    * FUNCTIONS TO ADD ORDERS
@@ -212,6 +214,7 @@ contract LimitOrderBook is Ownable, DecimalERC20{
     require(((_expiry == 0 ) || (block.timestamp<_expiry)), 'Event will expire in past');
     require(_tipFee.cmp(minimum) == 1, 'Just the tip! Tip is below minimum tip fee');
     require(factory.getSmartWallet(msg.sender) != address(0), 'Need smart wallet');
+    require(IInsuranceFund(insuranceFund).isExistedAmm(_asset), "amm not found");
     emit OrderCreated(msg.sender,orders.length);
     orders.push(LimitOrder({
       asset: _asset,

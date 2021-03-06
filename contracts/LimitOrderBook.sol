@@ -215,7 +215,7 @@ contract LimitOrderBook is Ownable, DecimalERC20{
     require(_tipFee.cmp(minimum) == 1, 'Just the tip! Tip is below minimum tip fee');
     require(factory.getSmartWallet(msg.sender) != address(0), 'Need smart wallet');
     require(IInsuranceFund(insuranceFund).isExistedAmm(_asset), "amm not found");
-    _transferFrom(IERC20(USDC), factory.getSmartWallet(msg.sender), address(this), orders[order_id].tipFee);
+    _transferFrom(IERC20(USDC), factory.getSmartWallet(msg.sender), address(this), _tipFee);
     emit OrderCreated(msg.sender,orders.length);
     orders.push(LimitOrder({
       asset: _asset,

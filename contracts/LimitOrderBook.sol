@@ -99,6 +99,7 @@ contract LimitOrderBook is Ownable, DecimalERC20{
   ) public {
     require(((_expiry == 0 ) || (block.timestamp<_expiry)), 'Event will expire in past');
     emit OrderCreated(msg.sender,orders.length);
+    _createOrder(_asset, OrderType.LIMIT, Decimal.zero(), _limitPrice, _positionSize, _collateral, _leverage, _slippage, _tipFee, _reduceOnly, _expiry)
     orders.push(LimitOrder({
       asset: _asset,
       trader: msg.sender,
@@ -364,6 +365,38 @@ contract LimitOrderBook is Ownable, DecimalERC20{
       }));
     _updateTrailingPrice(orders.length-1);
     return (orders.length-1);
+  }
+
+  function _createOrder(
+    address _asset,
+    OrderType _orderType,
+    Decimal.decimal memory _stopPrice,
+    Decimal.decimal memory _limitPrice,
+    SignedDecimal.signedDecimal memory _positionSize,
+    Decimal.decimal memory _collateral,
+    Decimal.decimal memory _leverage,
+    Decimal.decimal memory _slippage,
+    Decimal.decimal memory _tipFee,
+    bool _reduceOnly,
+    uint256 _expiry
+  ) internal {
+    require(((_expiry == 0 ) || (block.timestamp<_expiry)), 'Event will expire in past');
+    emit OrderCreated(msg.sender,orders.length);
+    orders.push(LimitOrder({
+      asset: _asset,
+      trader: msg.sender,
+      orderType: _orderType,
+      stopPrice: _stopPrice,
+      limitPrice: _limitPrice,
+      orderSize: _positionSize,
+      collateral: _collateral,
+      leverage: _leverage,
+      slippage: _slippage,
+      tipFee: _tipFee,
+      reduceOnly: _reduceOnly,
+      stillValid: true,
+      expiry: _expiry
+      }));
   }
 
   /*

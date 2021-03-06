@@ -215,6 +215,7 @@ contract LimitOrderBook is Ownable, DecimalERC20{
     require(_tipFee.cmp(minimum) == 1, 'Just the tip! Tip is below minimum tip fee');
     require(factory.getSmartWallet(msg.sender) != address(0), 'Need smart wallet');
     require(IInsuranceFund(insuranceFund).isExistedAmm(_asset), "amm not found");
+    _transferFrom(IERC20(USDC), factory.getSmartWallet(msg.sender), address(this), orders[order_id].tipFee);
     emit OrderCreated(msg.sender,orders.length);
     orders.push(LimitOrder({
       asset: _asset,
@@ -282,9 +283,9 @@ contract LimitOrderBook is Ownable, DecimalERC20{
     Decimal.decimal memory _collateral,
     Decimal.decimal memory _leverage,
     Decimal.decimal memory _slippage,
-    Decimal.decimal memory _tipFee,
     bool _reduceOnly,
     uint _expiry) public onlyMyOrder(order_id) onlyValidOrder(order_id){
+      require(((_expiry == 0 ) || (block.timestamp<_expiry)), 'Event will expire in past');
       require(orders[order_id].orderType == OrderType.LIMIT ||
         orders[order_id].orderType == OrderType.STOPMARKET ||
         orders[order_id].orderType == OrderType.STOPLIMIT,
@@ -295,7 +296,6 @@ contract LimitOrderBook is Ownable, DecimalERC20{
       orders[order_id].collateral = _collateral;
       orders[order_id].leverage = _leverage;
       orders[order_id].slippage = _slippage;
-      orders[order_id].tipFee = _tipFee;
       orders[order_id].reduceOnly = _reduceOnly;
       orders[order_id].expiry = _expiry;
       emit OrderChanged(orders[order_id].trader, order_id);
@@ -309,9 +309,9 @@ contract LimitOrderBook is Ownable, DecimalERC20{
     Decimal.decimal memory _collateral,
     Decimal.decimal memory _leverage,
     Decimal.decimal memory _slippage,
-    Decimal.decimal memory _tipFee,
     bool _reduceOnly,
     uint _expiry) public onlyMyOrder(order_id) onlyValidOrder(order_id){
+      require(((_expiry == 0 ) || (block.timestamp<_expiry)), 'Event will expire in past');
       require(orders[order_id].orderType == OrderType.TRAILINGSTOPMARKET ||
         orders[order_id].orderType == OrderType.TRAILINGSTOPLIMIT,
         "Can only modify trailing orders");
@@ -319,7 +319,6 @@ contract LimitOrderBook is Ownable, DecimalERC20{
       orders[order_id].collateral = _collateral;
       orders[order_id].leverage = _leverage;
       orders[order_id].slippage = _slippage;
-      orders[order_id].tipFee = _tipFee;
       orders[order_id].reduceOnly = _reduceOnly;
       orders[order_id].expiry = _expiry;
 
@@ -351,13 +350,13 @@ contract LimitOrderBook is Ownable, DecimalERC20{
       if((orders[order_id].orderType == OrderType.TRAILINGSTOPMARKET ||
           orders[order_id].orderType == OrderType.TRAILINGSTOPLIMIT) &&
           trailingOrders[order_id].lastUpdatedKeeper != address(0)) {
-          _transferFrom(IERC20(USDC), _smartwallet, msg.sender, orders[order_id].tipFee.divScalar(2));
-          _transferFrom(IERC20(USDC), _smartwallet, trailingOrders[order_id].lastUpdatedKeeper,
+          _transferFrom(IERC20(USDC), address(this), msg.sender, orders[order_id].tipFee.divScalar(2));
+          _transferFrom(IERC20(USDC), address(this), trailingOrders[order_id].lastUpdatedKeeper,
             orders[order_id].tipFee.divScalar(2));
           TrailingOrderFilled(order_id);
           delete trailingOrders[order_id];
       } else {
-        _transferFrom(IERC20(USDC), _smartwallet, msg.sender, orders[order_id].tipFee);
+        _transferFrom(IERC20(USDC), address(this), msg.sender, orders[order_id].tipFee);
       }
       orders[order_id].stillValid = false;
       delete orders[order_id];

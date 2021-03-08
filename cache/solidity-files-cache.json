@@ -2,8 +2,8 @@
   "_format": "hh-sol-cache-2",
   "files": {
     "/Users/abdullaalkamil/Coding/PERP/contracts/LimitOrderBook.sol": {
-      "lastModificationDate": 1615234904177,
-      "contentHash": "3f7faaf6d92e4b00222dcd1150059bdd",
+      "lastModificationDate": 1615240414831,
+      "contentHash": "eb1228afdbabb94cbbf63726227f39df",
       "sourceName": "contracts/LimitOrderBook.sol",
       "solcConfig": {
         "version": "0.6.9",
@@ -29,13 +29,13 @@
       },
       "imports": [
         "./SmartWallet.sol",
+        "@openzeppelin/contracts/access/Ownable.sol",
+        "@openzeppelin/contracts/token/ERC20/IERC20.sol",
         "./utils/Decimal.sol",
         "./utils/SignedDecimal.sol",
         "./utils/DecimalERC20.sol",
         "./interface/IAmm.sol",
-        "./interface/IInsuranceFund.sol",
-        "@openzeppelin/contracts/access/Ownable.sol",
-        "@openzeppelin/contracts/token/ERC20/IERC20.sol"
+        "./interface/IInsuranceFund.sol"
       ],
       "versionPragmas": [
         "0.6.9"
@@ -149,8 +149,8 @@
       ]
     },
     "/Users/abdullaalkamil/Coding/PERP/contracts/SmartWallet.sol": {
-      "lastModificationDate": 1614290072377,
-      "contentHash": "b64a1934644879e95842c18512ee5484",
+      "lastModificationDate": 1615242323631,
+      "contentHash": "8675d7b836b4a327e72b0027d979bcac",
       "sourceName": "contracts/SmartWallet.sol",
       "solcConfig": {
         "version": "0.6.9",
@@ -175,20 +175,19 @@
         }
       },
       "imports": [
-        "@openzeppelin/contracts/access/Ownable.sol",
-        "hardhat/console.sol",
-        "@openzeppelin/contracts/token/ERC20/IERC20.sol",
         "./LimitOrderBook.sol",
+        "@openzeppelin/contracts/access/Ownable.sol",
+        "@openzeppelin/contracts/token/ERC20/IERC20.sol",
+        "@openzeppelin/contracts/utils/Address.sol",
         "./utils/Decimal.sol",
         "./utils/SignedDecimal.sol",
         "./interface/IAmm.sol",
-        "@openzeppelin/contracts/utils/Address.sol"
+        "./interface/IClearingHouse.sol"
       ],
       "versionPragmas": [
         "0.6.9"
       ],
       "artifacts": [
-        "IClearingHouse",
         "SmartWallet",
         "SmartWalletFactory"
       ]
@@ -622,6 +621,44 @@
       ],
       "artifacts": [
         "IInsuranceFund"
+      ]
+    },
+    "/Users/abdullaalkamil/Coding/PERP/contracts/interface/IClearingHouse.sol": {
+      "lastModificationDate": 1615239793043,
+      "contentHash": "5c73780c642626888a7ed0776c134cfb",
+      "sourceName": "contracts/interface/IClearingHouse.sol",
+      "solcConfig": {
+        "version": "0.6.9",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 2000
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "../utils/Decimal.sol",
+        "../utils/SignedDecimal.sol",
+        "./IAmm.sol"
+      ],
+      "versionPragmas": [
+        "0.6.9"
+      ],
+      "artifacts": [
+        "IClearingHouse"
       ]
     }
   }

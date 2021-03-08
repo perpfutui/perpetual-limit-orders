@@ -10,6 +10,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { Decimal } from "./utils/Decimal.sol";
 import { SignedDecimal } from "./utils/SignedDecimal.sol";
 import { DecimalERC20 } from "./utils/DecimalERC20.sol";
+
 import { IAmm } from "./interface/IAmm.sol";
 import { IInsuranceFund } from "./interface/IInsuranceFund.sol";
 
@@ -536,15 +537,13 @@ contract LimitOrderBook is Ownable, DecimalERC20{
 
   /*
    * @notice Delete an order
-   * The order information is still kept in the struct although we could delete
-   *  the information for gas/storage efficiency...
    */
   function deleteOrder(
     uint order_id
   ) public onlyMyOrder(order_id) onlyValidOrder(order_id){
     emit OrderChanged(orders[order_id].trader, order_id);
     orders[order_id].stillValid = false;
-    /* delete orders[order_id]; */
+    delete orders[order_id];
   }
 
   /*
@@ -571,11 +570,11 @@ contract LimitOrderBook is Ownable, DecimalERC20{
               _transferFrom(IERC20(USDC), address(this), trailingOrders[order_id].lastUpdatedKeeper,
                 orders[order_id].tipFee.divScalar(2));
               TrailingOrderFilled(order_id);
-              /* delete trailingOrders[order_id]; */
+              delete trailingOrders[order_id];
             } else {
               _transferFrom(IERC20(USDC), address(this), msg.sender, orders[order_id].tipFee);
               TrailingOrderFilled(order_id);
-              /* delete trailingOrders[order_id]; */
+              delete trailingOrders[order_id];
             }
       } else {
         //Fee goes to executor
@@ -583,7 +582,7 @@ contract LimitOrderBook is Ownable, DecimalERC20{
       }
       //Invalidate order to prevent double spend
       orders[order_id].stillValid = false;
-      /* delete orders[order_id]; */
+      delete orders[order_id];
     }
   }
 

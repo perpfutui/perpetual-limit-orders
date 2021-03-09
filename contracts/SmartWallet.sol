@@ -17,8 +17,8 @@ import { IClearingHouse } from "./interface/IClearingHouse.sol";
 contract SmartWallet is Ownable {
 
   // Store addresses of smart contracts that we will be interacting with
-  LimitOrderBook LOB;
-  SmartWalletFactory factory;
+  LimitOrderBook public LOB;
+  SmartWalletFactory public factory;
   address constant USDC = 0xDDAfbb505ad214D7b80b1f830fcCc89B60fb7A83;
   address constant ClearingHouse = 0x5d9593586b4B5edBd23E7Eba8d88FD8F09D83EBd;
 

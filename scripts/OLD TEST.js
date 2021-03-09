@@ -3,25 +3,22 @@ const { expect } = require("chai");
 describe("Perpetual Limit Orders:", function() {
 
     beforeEach(async function() {
-    [owner,addr1] = await ethers.getSigners()
+    signer = await ethers.provider.getSigner("0xCaD18E65F91471C533ee86b76BCe463978f593AA")
   })
 
   describe("Deployment", function() {
 
     it("Limit Order Book deployed", async function() {
-      let LOB = await ethers.getContractFactory("LimitOrderBook");
-      lob = await LOB.deploy()
-      await lob.deployed()
+      lob = await ethers.getContractAt('LimitOrderBook','0xb1a797c31c67049CF3F78cbf1CDD65579A211E0B')
+      console.log(await signer.getAddress())
     })
 
     it("Proxy factory deployed", async function() {
-      let PF = await ethers.getContractFactory("SmartWalletFactory");
-      pf = await PF.deploy(lob.address)
-      await pf.deployed()
+      pf = await ethers.getContractAt('SmartWalletFactory','0x2dE89197d14F1947AcADDB50F61917aab377734e')
     })
 
     it("Setting factory address for LOB", async function() {
-      await lob.setFactory(pf.address)
+      signer.sendTransaction(lob.setFactory(pf.address))
       expect(await lob.factory()).to.equal(pf.address)
     })
 

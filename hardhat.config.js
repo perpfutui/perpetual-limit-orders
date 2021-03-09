@@ -20,9 +20,15 @@ module.exports = {
     ]
   },
   networks: {
-    xdai: {
-      url: 'https://dai.poa.network/',
-      accounts: [`0x${PRIVATE_KEY}`]
+    // xdai: {
+    //   url: 'https://dai.poa.network/',
+    //   accounts: [`0x${PRIVATE_KEY}`]
+    // },
+    hardhat: {
+      forking: {
+        url: "https://xdai-archive.blockscout.com/",
+        blockNumber: 14913016
+      }
     }
   }
 };

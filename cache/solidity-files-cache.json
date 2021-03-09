@@ -149,8 +149,8 @@
       ]
     },
     "/Users/abdullaalkamil/Coding/PERP/contracts/SmartWallet.sol": {
-      "lastModificationDate": 1615242323631,
-      "contentHash": "8675d7b836b4a327e72b0027d979bcac",
+      "lastModificationDate": 1615317723351,
+      "contentHash": "fbabc3fa3ac5207e7be035c16c7f3f7d",
       "sourceName": "contracts/SmartWallet.sol",
       "solcConfig": {
         "version": "0.6.9",

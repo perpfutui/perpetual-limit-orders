@@ -349,7 +349,7 @@ contract LimitOrderBook is Ownable, DecimalERC20{
     //Check expiry parameter
     require(((_expiry == 0 ) || (block.timestamp<_expiry)), 'Event will expire in past');
     //Check whether fee is sufficient
-    require(_tipFee.cmp(minimumTipFee) == 1, 'Just the tip! Tip is below minimum tip fee');
+    require(_tipFee.cmp(minimumTipFee) !=  -1, 'Just the tip! Tip is below minimum tip fee');
     //Check on the smart wallet factory whether this trader has a smart wallet
     require(factory.getSmartWallet(msg.sender) != address(0), 'Need smart wallet');
     //Need to make sure the asset is actually a PERP asset

@@ -25,6 +25,7 @@ contract LimitOrderBook is Ownable, DecimalERC20{
 
   event OrderCreated(address indexed trader, uint order_id);
   event OrderFilled(address indexed trader, uint order_id);
+  //TODO: consider emitting more information here to display in front end
   event OrderChanged(address indexed trader, uint order_id);
 
   event TrailingOrderCreated(uint order_id, uint snapshotIndex);

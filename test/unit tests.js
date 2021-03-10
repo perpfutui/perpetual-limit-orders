@@ -186,15 +186,19 @@ describe("Perpetual limit orders", function() {
 
     describe("LIMIT ORDERS", function() {
 
-      it("Creating first limit order", async function() {
+      let index;
+
+      it("Creating limit order", async function() {
         var cur_price = await BTC_AMM.getSpotPrice() //51773
-        var index = await lob.getNumberOrders()
+        index = await lob.getNumberOrders()
         var limit_price = cur_price.d.sub(ethers.utils.parseUnits('1000',18))
         var size = ethers.utils.parseUnits('1',18)
         var collateral = cur_price.d
         var leverage = ethers.utils.parseUnits('1',18)
         var slippage = 0
         var tipFee = MINIMUM_FEE
+        var reduceOnly = false
+        var expiry = 0
         await lob.connect(Bob).addLimitOrder(
           BTC_Address,
           {d: limit_price},
@@ -203,9 +207,68 @@ describe("Perpetual limit orders", function() {
           {d: leverage},
           {d: slippage},
           {d: tipFee},
-          false,
-          0
+          reduceOnly,
+          expiry
         )
+        var order = await lob.getLimitOrder(index)
+        expect(order.asset).to.equal(BTC_Address)
+        expect(order.trader).to.equal(Bob.address)
+        expect(order.orderType).to.equal(1) //Limit order
+        expect(order.reduceOnly).to.equal(reduceOnly)
+        expect(order.stillValid).to.equal(true)
+        expect(order.expiry).to.equal(expiry)
+        expect(order.stopPrice.d).to.equal(0)
+        expect(order.limitPrice.d).to.equal(limit_price)
+        expect(order.orderSize.d).to.equal(size)
+        expect(order.collateral.d).to.equal(collateral)
+        expect(order.leverage.d).to.equal(leverage)
+        expect(order.slippage.d).to.equal(slippage)
+        expect(order.tipFee.d).to.equal(tipFee)
+      })
+
+      it("Should fail to execute that order", async function() {
+        await expect(lob.execute(index)).to.be
+          .revertedWith('Price has not hit limit price')
+      })
+
+      it("Updating order to adjust price", async function() {
+        var cur_price = await BTC_AMM.getSpotPrice() //51773
+        var limit_price = cur_price.d.add(ethers.utils.parseUnits('1000',18))
+        var size = ethers.utils.parseUnits('1',18)
+        var collateral = cur_price.d
+        var leverage = ethers.utils.parseUnits('1',18)
+        var slippage = 0
+        var reduceOnly = false
+        var expiry = 0
+        await lob.connect(Bob).modifyOrder(
+          0,
+          {d: '0'},
+          {d: limit_price},
+          {d: size},
+          {d: collateral},
+          {d: leverage},
+          {d: slippage},
+          reduceOnly,
+          expiry
+        )
+        var order = await lob.getLimitOrder(index)
+        expect(order.asset).to.equal(BTC_Address)
+        expect(order.trader).to.equal(Bob.address)
+        expect(order.orderType).to.equal(1) //Limit order
+        expect(order.reduceOnly).to.equal(reduceOnly)
+        expect(order.stillValid).to.equal(true)
+        expect(order.expiry).to.equal(expiry)
+        expect(order.stopPrice.d).to.equal(0)
+        expect(order.limitPrice.d).to.equal(limit_price)
+        expect(order.orderSize.d).to.equal(size)
+        expect(order.collateral.d).to.equal(collateral)
+        expect(order.leverage.d).to.equal(leverage)
+        expect(order.slippage.d).to.equal(slippage)
+        expect(order.tipFee.d).to.equal(MINIMUM_FEE)
+      })
+
+      it("Should now execute that order", async function() {
+        await lob.execute(index)
       })
 
     })

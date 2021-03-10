@@ -23,7 +23,7 @@ async function main() {
   const xDaiUrl = "https://dai.poa.network/"
 
   const provider = new ethers.providers.JsonRpcProvider(xDaiUrl)
-  const wallet = new ethers.Wallet('3e730129b3867804afd27b530749d49113164a349b05879f536b6d4fe9018a9f').connect(provider)
+  const wallet = new ethers.Wallet(PRIVATE_KEY).connect(provider)
 
   const LOB_address = '0xb1a797c31c67049CF3F78cbf1CDD65579A211E0B'
   const SWF_address = '0x2dE89197d14F1947AcADDB50F61917aab377734e'

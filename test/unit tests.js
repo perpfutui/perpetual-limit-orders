@@ -269,7 +269,103 @@ describe("Perpetual limit orders", function() {
 
       it("Should now execute that order", async function() {
         await lob.execute(index)
+        var output = await CH.getPosition(BTC_Address, BobSW)
+        expect(output.size.d).to.not.equal('0')
       })
+
+      it("Should revert if size = 0", async function() {
+        var cur_price = await BTC_AMM.getSpotPrice()
+        var limit_price = cur_price.d
+        var size = ethers.utils.parseUnits('0',18)
+        var collateral = cur_price.d
+        var leverage = ethers.utils.parseUnits('1',18)
+        var slippage = 0
+        var tipFee = MINIMUM_FEE
+        var reduceOnly = false
+        var expiry = 0
+        await expect(lob.connect(Bob).addLimitOrder(
+          BTC_Address,
+          {d: limit_price},
+          {d: size},
+          {d: collateral},
+          {d: leverage},
+          {d: slippage},
+          {d: tipFee},
+          reduceOnly,
+          expiry
+        )).to.be.revertedWith('Cannot do empty order')
+      })
+
+      it("Should revert if collateral = 0", async function() {
+        var cur_price = await BTC_AMM.getSpotPrice()
+        var limit_price = cur_price.d
+        var size = ethers.utils.parseUnits('1',18)
+        var collateral = ethers.utils.parseUnits('0',18)
+        var leverage = ethers.utils.parseUnits('1',18)
+        var slippage = 0
+        var tipFee = MINIMUM_FEE
+        var reduceOnly = false
+        var expiry = 0
+        await expect(lob.connect(Bob).addLimitOrder(
+          BTC_Address,
+          {d: limit_price},
+          {d: size},
+          {d: collateral},
+          {d: leverage},
+          {d: slippage},
+          {d: tipFee},
+          reduceOnly,
+          expiry
+        )).to.be.revertedWith('Cannot spend 0 collateral')
+      })
+
+      it("Should revert if leverage = 0", async function() {
+        var cur_price = await BTC_AMM.getSpotPrice()
+        var limit_price = cur_price.d
+        var size = ethers.utils.parseUnits('1',18)
+        var collateral = cur_price.d
+        var leverage = ethers.utils.parseUnits('0',18)
+        var slippage = 0
+        var tipFee = MINIMUM_FEE
+        var reduceOnly = false
+        var expiry = 0
+        await expect(lob.connect(Bob).addLimitOrder(
+          BTC_Address,
+          {d: limit_price},
+          {d: size},
+          {d: collateral},
+          {d: leverage},
+          {d: slippage},
+          {d: tipFee},
+          reduceOnly,
+          expiry
+        )).to.be.revertedWith('Cannot use 0x leverage')
+      })
+
+      it("Should revert if order in past", async function() {
+        var cur_price = await BTC_AMM.getSpotPrice()
+        var limit_price = cur_price.d
+        var size = ethers.utils.parseUnits('1',18)
+        var collateral = cur_price.d
+        var leverage = ethers.utils.parseUnits('1',18)
+        var slippage = 0
+        var tipFee = MINIMUM_FEE
+        var reduceOnly = false
+        var block = await ethers.provider.getBlock('latest')
+        var expiry = block.timestamp
+        await expect(lob.connect(Bob).addLimitOrder(
+          BTC_Address,
+          {d: limit_price},
+          {d: size},
+          {d: collateral},
+          {d: leverage},
+          {d: slippage},
+          {d: tipFee},
+          reduceOnly,
+          expiry
+        )).to.be.revertedWith('Event will expire in past')
+      })
+
 
     })
 

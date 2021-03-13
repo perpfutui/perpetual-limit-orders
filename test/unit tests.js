@@ -343,7 +343,7 @@ abiDecoder.addABI(AMM_ABI)
         var limit_price = cur_price.d
         var size = ethers.utils.parseUnits('1',18)
         var collateral = limit_price
-        var leverage = ethers.utils.parseUnits('0.999999999',18)
+        var leverage = ethers.utils.parseUnits('0.9',18)
         var slippage = 0
         var tipFee = MINIMUM_FEE
         var reduceOnly = false

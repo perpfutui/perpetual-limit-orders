@@ -168,10 +168,6 @@ contract SmartWallet is Ownable {
           return true;
         }
       }
-      //It shouldn't be possible to make an order of size 0
-      if(_orderSize.abs().toUint() == 0) {
-        revert('#reduceOnly: orderSize cannot be 0');
-      }
     } else {
       //User is trying to increase the size of their position
       revert('#reduceOnly: cannot increase size of position');

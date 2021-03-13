@@ -358,7 +358,7 @@ contract LimitOrderBook is Ownable, DecimalERC20{
     //Sanity checks
     requireNonZeroInput(_positionSize.abs(), "Cannot do empty order");
     requireNonZeroInput(_collateral, "Cannot spend 0 collateral");
-    requireNonZeroInput(_leverage, "Cannot use 0x leverage");
+    require(_leverage.cmp(Decimal.one()) != -1, "Minimum 1x leverage");
     //Take fee from user
     _transferFrom(IERC20(USDC), factory.getSmartWallet(msg.sender), address(this), _tipFee);
     //Emit event on order creation

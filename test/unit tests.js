@@ -17,6 +17,7 @@ describe("Perpetual limit orders", function() {
   let SWF;
   let swf;
   let CHInterface;
+  let USDCInterface;
 
   const MINIMUM_FEE = ethers.utils.parseUnits('0.1',18)
   const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
@@ -42,6 +43,7 @@ abiDecoder.addABI(AMM_ABI)
     [owner, Alice, Bob] = await ethers.getSigners()
     usdc = await ethers.getContractAt(ERC20_ABI, USDC_Address)
     CHInterface = new ethers.utils.Interface(CH_ABI)
+    USDCInterface = new ethers.utils.Interface(ERC20_ABI)
     BTC_AMM = await ethers.getContractAt(AMM_ABI, BTC_Address)
     CH = await ethers.getContractAt(CH_ABI, ClearingHouse_Address)
   })
@@ -139,6 +141,13 @@ abiDecoder.addABI(AMM_ABI)
       await network.provider.request({ method: "hardhat_impersonateAccount",  params: ["0x1A48776f436bcDAA16845A378666cf4BA131eb0F"]});
       const sugarDaddy = await ethers.provider.getSigner('0x1A48776f436bcDAA16845A378666cf4BA131eb0F')
       await usdc.connect(sugarDaddy).transfer(BobSW, ethers.utils.parseUnits('120000', 6))
+    })
+
+    it("Approve BOB to spend USDC on LOB", async function() {
+      var fn = USDCInterface.encodeFunctionData('approve(address, uint256)',[lob.address, '1000000000'])
+      await BobSWC.connect(Bob).executeCall(USDC_Address, fn)
+      expect(await usdc.allowance(BobSW,lob.address)).to.equal('1000000000')
+
     })
 
   })

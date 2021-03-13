@@ -30,15 +30,6 @@ contract SmartWallet is Ownable {
   using Address for address;
   using SafeERC20 for IERC20;
 
-  //Allow the limit order book and clearing house contracts access to spend the
-  //USDC on this smart wallet
-  function approveAll() public {
-    //IERC20(USDC).approve(ClearingHouse, type(uint256).max);
-    //TODO: increase approval -> when sending tx
-    IERC20(USDC).approve(address(LOB), type(uint256).max);
-    //TODO: can this be avoided??
-  }
-
   /*
    * @notice allows the owner of the smart wallet to execute any transaction
    *  on an external smart contract. There are no restrictions on the contracts
@@ -125,7 +116,7 @@ contract SmartWallet is Ownable {
     Decimal.decimal memory _leverage,
     Decimal.decimal memory _slippage
     ) internal {
-    (Decimal.decimal memory toll, Decimal.decimal memory spread) = IAmm(_asset)
+    (Decimal.decimal memory toll, Decimal.decimal memory spread) = _asset
       .calcFee(_collateral.mulD(_leverage));
     Decimal.decimal memory totalCost = _collateral.addD(toll).addD(spread);
 
@@ -134,7 +125,7 @@ contract SmartWallet is Ownable {
     console.log('APPROVAL:', IERC20(USDC).allowance(address(this),ClearingHouse));
 
     IClearingHouse(ClearingHouse).openPosition(
-      IAmm(_asset),
+      _asset,
       _isLong ? IClearingHouse.Side.BUY : IClearingHouse.Side.SELL,
       _collateral,
       _leverage,
@@ -398,7 +389,6 @@ contract SmartWalletFactory {
     emit Created(msg.sender, address(smartWallet));
     SmartWallet(smartWallet).setOrderBook(LimitOrderBook);
     SmartWallet(smartWallet).setFactory(this);
-    SmartWallet(smartWallet).approveAll();
     SmartWallet(smartWallet).transferOwnership(msg.sender);
     getSmartWallet[msg.sender] = smartWallet;
   }

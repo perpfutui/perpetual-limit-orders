@@ -32,4 +32,6 @@ interface IClearingHouse {
     ) external;
 
     function getPosition(IAmm _amm, address _trader) external view returns (Position memory);
+
+    function getUnadjustedPosition(IAmm _amm, address _trader) external view returns (Position memory);
 }

@@ -66,6 +66,23 @@ contract SmartWallet is Ownable {
     factory = SmartWalletFactory(_addr);
   }
 
+  function executeMarketOrder(
+    IAmm _asset,
+    bool _isLong,
+    Decimal.decimal memory _collateral,
+    Decimal.decimal memory _leverage,
+    Decimal.decimal memory _slippage
+  ) public onlyOwner(){
+    _handleOpenPositionWithApproval(_asset, _isLong, _collateral, _leverage, _slippage);
+  }
+
+  function executeClosePosition(
+    IAmm _asset,
+    Decimal.decimal memory _slippage
+  ) public onlyOwner() {
+    _handleClosePositionWithApproval(_asset, _slippage);
+  }
+
   /*
    * @notice Will execute an order from the limit order book. Note that the only
    *  way to call this function is via the LimitOrderBook where you call execute().
@@ -109,7 +126,7 @@ contract SmartWallet is Ownable {
     return (a.cmp(b) == 1) ? b : a;
   }
 
-  function _placeOrderWithApproval(
+  function _handleOpenPositionWithApproval(
     IAmm _asset,
     bool _isLong,
     Decimal.decimal memory _collateral,
@@ -129,6 +146,29 @@ contract SmartWallet is Ownable {
       _isLong ? IClearingHouse.Side.BUY : IClearingHouse.Side.SELL,
       _collateral,
       _leverage,
+      _slippage
+      );
+  }
+
+  function _handleClosePositionWithApproval(
+    IAmm _asset,
+    Decimal.decimal memory _slippage
+    ) internal {
+    IClearingHouse.Position memory oldPosition = IClearingHouse(ClearingHouse)
+      .getUnadjustedPosition(_asset, address(this));
+    SignedDecimal.signedDecimal memory oldPositionSize = oldPosition.size;
+    Decimal.decimal memory _quoteAsset = _asset.getOutputPrice(
+      oldPositionSize.toInt() > 0 ? IAmm.Dir.ADD_TO_AMM : IAmm.Dir.REMOVE_FROM_AMM,
+      oldPositionSize.abs()
+      );
+    (Decimal.decimal memory toll, Decimal.decimal memory spread) = _asset
+      .calcFee(_quoteAsset);
+    Decimal.decimal memory totalCost = toll.addD(spread);
+    console.log('TOTAL COST', totalCost.toUint());
+    IERC20(USDC).safeIncreaseAllowance(ClearingHouse,(totalCost.toUint()/(10**12)));
+    console.log('APPROVAL:', IERC20(USDC).allowance(address(this),ClearingHouse));
+    IClearingHouse(ClearingHouse).closePosition(
+      _asset,
       _slippage
       );
   }
@@ -224,7 +264,7 @@ contract SmartWallet is Ownable {
           );
       } else {
         //openPosition using the values calculated above
-        _placeOrderWithApproval(
+        _handleOpenPositionWithApproval(
           IAmm(_asset),
           isLong,
           _collateral,
@@ -282,7 +322,7 @@ contract SmartWallet is Ownable {
         //Strictly speaking, stop orders cannot have slippage as by definition they
         //will get executed at the next available price. Restricting them with slippage
         //will turn them into stop limit orders.
-        _placeOrderWithApproval(
+        _handleOpenPositionWithApproval(
           IAmm(_asset),
           isLong,
           _collateral,
@@ -344,7 +384,7 @@ contract SmartWallet is Ownable {
           );
       } else {
         //openPosition using the values calculated above
-        _placeOrderWithApproval(
+        _handleOpenPositionWithApproval(
           IAmm(_asset),
           isLong,
           _collateral,

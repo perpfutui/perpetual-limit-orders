@@ -149,8 +149,8 @@
       ]
     },
     "/Users/abdullaalkamil/Coding/PERP/contracts/SmartWallet.sol": {
-      "lastModificationDate": 1615649920170,
-      "contentHash": "2608ff55e5c8d11084e7992409cf0f6c",
+      "lastModificationDate": 1615651980663,
+      "contentHash": "3a7e5dc9bcd974c3c663b882a4c02230",
       "sourceName": "contracts/SmartWallet.sol",
       "solcConfig": {
         "version": "0.6.9",
@@ -626,8 +626,8 @@
       ]
     },
     "/Users/abdullaalkamil/Coding/PERP/contracts/interface/IClearingHouse.sol": {
-      "lastModificationDate": 1615239793043,
-      "contentHash": "5c73780c642626888a7ed0776c134cfb",
+      "lastModificationDate": 1615651504800,
+      "contentHash": "031d1b6f9cd4b2d5273a52a3e5e3fb78",
       "sourceName": "contracts/interface/IClearingHouse.sol",
       "solcConfig": {
         "version": "0.6.9",

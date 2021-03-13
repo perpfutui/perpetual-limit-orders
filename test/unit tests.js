@@ -153,18 +153,15 @@ abiDecoder.addABI(AMM_ABI)
   })
 
   describe("Creating/Submitting orders", function() {
-/*
+
     describe("MARKET ORDERS", function() {
 
       it("Should revert if no money", async function() {
-        var fn = CHInterface.encodeFunctionData('openPosition(address,uint8,(uint256),(uint256),(uint256))', [
-          BTC_Address,
-          0,
-          {d: ethers.utils.parseUnits('50000', 18)},
-          {d: ethers.utils.parseUnits('1', 18)},
-          {d: ethers.utils.parseUnits('0', 18)},
-        ])
-        await expect(AliceSWC.connect(Alice).executeCall(ClearingHouse_Address, fn))
+        await expect(AliceSWC.connect(Alice).executeMarketOrder(BTC_Address,
+        true,
+        {d: ethers.utils.parseUnits('50000', 18)},
+        {d: ethers.utils.parseUnits('1', 18)},
+        {d: ethers.utils.parseUnits('0', 18)}))
           .to.be.revertedWith('DecimalERC20: transferFrom failed')
       })
 
@@ -172,14 +169,11 @@ abiDecoder.addABI(AMM_ABI)
         var order_size = ethers.utils.parseUnits('50000', 18)
         var balanceBefore = await usdc.balanceOf(BobSW)
         var price = (await BTC_AMM.getInputPrice(0, {d: order_size})).d
-        var fn = CHInterface.encodeFunctionData('openPosition(address,uint8,(uint256),(uint256),(uint256))', [
-          BTC_Address,
-          0,
-          {d: order_size},
-          {d: ethers.utils.parseUnits('1', 18)},
-          {d: ethers.utils.parseUnits('0', 18)},
-        ])
-        await BobSWC.connect(Bob).executeCall(ClearingHouse_Address, fn)
+        await BobSWC.connect(Bob).executeMarketOrder(BTC_Address,
+        true,
+        {d: order_size},
+        {d: ethers.utils.parseUnits('1', 18)},
+        {d: ethers.utils.parseUnits('0', 18)})
         var balanceAfter = await usdc.balanceOf(BobSW)
         var output = await CH.getPosition(BTC_Address, BobSW)
         expect(output.size.d).to.equal(price)
@@ -187,17 +181,14 @@ abiDecoder.addABI(AMM_ABI)
       })
 
       it("Closing position", async function() {
-        var fn = CHInterface.encodeFunctionData('closePosition(address,(uint256))', [
-          BTC_Address,
-          {d: ethers.utils.parseUnits('0', 18)}
-        ])
-        await BobSWC.connect(Bob).executeCall(ClearingHouse_Address, fn)
+        await BobSWC.connect(Bob).executeClosePosition(BTC_Address,
+        {d: ethers.utils.parseUnits('0', 18)})
         var output = await CH.getPosition(BTC_Address, BobSW)
         expect(output.size.d).to.equal('0')
       })
 
     })
-*/
+
     describe("LIMIT ORDERS", function() {
 
       let index;

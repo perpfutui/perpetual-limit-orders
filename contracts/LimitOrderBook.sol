@@ -543,7 +543,6 @@ contract LimitOrderBook is Ownable, DecimalERC20{
     uint order_id
   ) public onlyMyOrder(order_id) onlyValidOrder(order_id){
     emit OrderChanged(orders[order_id].trader, order_id);
-    orders[order_id].stillValid = false;
     delete orders[order_id];
   }
 
@@ -554,37 +553,35 @@ contract LimitOrderBook is Ownable, DecimalERC20{
   function execute(uint order_id) public onlyValidOrder(order_id) {
     //First check that the order hasn't been cancelled/already been executed
     require(orders[order_id].stillValid, 'No longer valid');
-    //emit event
-    emit OrderFilled(orders[order_id].trader, order_id);
     //Get the smart wallet of the trader from the factory contract
     address _smartwallet = factory.getSmartWallet(orders[order_id].trader);
     //Try and execute the order (should return true if successful)
     bool success = SmartWallet(_smartwallet).executeOrder(order_id);
-    if(success) {
-      if((orders[order_id].orderType == OrderType.TRAILINGSTOPMARKET ||
-          orders[order_id].orderType == OrderType.TRAILINGSTOPLIMIT)) {
-          //If this is a trailing order, then the botFee gets split between the keeper that
-          //executed the transaction, and the last keeper to update the price
-            if(trailingOrders[order_id].lastUpdatedKeeper != address(0)) {
-              //Making sure that a keeper has actually updated the price, otherwise the executor gets full fee
-              _transferFrom(IERC20(USDC), address(this), msg.sender, orders[order_id].tipFee.divScalar(2));
-              _transferFrom(IERC20(USDC), address(this), trailingOrders[order_id].lastUpdatedKeeper,
-                orders[order_id].tipFee.divScalar(2));
-              TrailingOrderFilled(order_id);
-              delete trailingOrders[order_id];
-            } else {
-              _transferFrom(IERC20(USDC), address(this), msg.sender, orders[order_id].tipFee);
-              TrailingOrderFilled(order_id);
-              delete trailingOrders[order_id];
-            }
-      } else {
-        //Fee goes to executor
-        _transferFrom(IERC20(USDC), address(this), msg.sender, orders[order_id].tipFee);
-      }
-      //Invalidate order to prevent double spend
-      orders[order_id].stillValid = false;
-      delete orders[order_id];
+    require(success, "Error executing order");
+    if((orders[order_id].orderType == OrderType.TRAILINGSTOPMARKET ||
+        orders[order_id].orderType == OrderType.TRAILINGSTOPLIMIT)) {
+        //If this is a trailing order, then the botFee gets split between the keeper that
+        //executed the transaction, and the last keeper to update the price
+          if(trailingOrders[order_id].lastUpdatedKeeper != address(0)) {
+            //Making sure that a keeper has actually updated the price, otherwise the executor gets full fee
+            _transferFrom(IERC20(USDC), address(this), msg.sender, orders[order_id].tipFee.divScalar(2));
+            _transferFrom(IERC20(USDC), address(this), trailingOrders[order_id].lastUpdatedKeeper,
+              orders[order_id].tipFee.divScalar(2));
+            TrailingOrderFilled(order_id);
+            delete trailingOrders[order_id];
+          } else {
+            _transferFrom(IERC20(USDC), address(this), msg.sender, orders[order_id].tipFee);
+            TrailingOrderFilled(order_id);
+            delete trailingOrders[order_id];
+          }
+    } else {
+      //Fee goes to executor
+      _transferFrom(IERC20(USDC), address(this), msg.sender, orders[order_id].tipFee);
     }
+    //Invalidate order to prevent double spend
+    delete orders[order_id];
+    //emit event
+    emit OrderFilled(orders[order_id].trader, order_id);
   }
 
   /*

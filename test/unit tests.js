@@ -490,7 +490,7 @@ abiDecoder.addABI(AMM_ABI)
       var size = ethers.utils.parseUnits('-0.2',18)
       var collateral = ethers.utils.parseUnits('0',18)
       var tipFee = MINIMUM_FEE
-      var reduceOnly = false
+      var reduceOnly = true
       var leverage = ethers.utils.parseUnits('0',18)
       var expiry = 0
       var slippage = ethers.utils.parseUnits('0.2',18)

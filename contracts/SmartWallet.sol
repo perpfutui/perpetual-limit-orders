@@ -7,6 +7,7 @@ import "./LimitOrderBook.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
+import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 
 import "hardhat/console.sol";
 
@@ -27,12 +28,15 @@ contract SmartWallet is Ownable {
   using Decimal for Decimal.decimal;
   using SignedDecimal for SignedDecimal.signedDecimal;
   using Address for address;
+  using SafeERC20 for IERC20;
 
   //Allow the limit order book and clearing house contracts access to spend the
   //USDC on this smart wallet
   function approveAll() public {
-    IERC20(USDC).approve(ClearingHouse, type(uint256).max);
+    //IERC20(USDC).approve(ClearingHouse, type(uint256).max);
+    //TODO: increase approval -> when sending tx
     IERC20(USDC).approve(address(LOB), type(uint256).max);
+    //TODO: can this be avoided??
   }
 
   /*
@@ -82,7 +86,7 @@ contract SmartWallet is Ownable {
     //Only the LimitOrderBook can call this function
     require(msg.sender == address(LOB), 'Only execute from the order book');
     //Get some of the parameters
-    (, address _trader,
+    (,address _trader,
       LimitOrderBook.OrderType _orderType,
       ,bool _stillValid, uint _expiry) =
       LOB.getLimitOrderParams(order_id);
@@ -93,6 +97,7 @@ contract SmartWallet is Ownable {
     //Make sure the order is still valid
     require(_stillValid, 'Order no longer valid');
     //Perform function depending on the type of order
+
     if(_orderType == LimitOrderBook.OrderType.LIMIT) {
       return _executeLimitOrder(order_id);
     } else if(_orderType == LimitOrderBook.OrderType.STOPMARKET) {
@@ -111,6 +116,30 @@ contract SmartWallet is Ownable {
   function minD(Decimal.decimal memory a, Decimal.decimal memory b) public pure
   returns (Decimal.decimal memory){
     return (a.cmp(b) == 1) ? b : a;
+  }
+
+  function _placeOrderWithApproval(
+    IAmm _asset,
+    bool _isLong,
+    Decimal.decimal memory _collateral,
+    Decimal.decimal memory _leverage,
+    Decimal.decimal memory _slippage
+    ) internal {
+    (Decimal.decimal memory toll, Decimal.decimal memory spread) = IAmm(_asset)
+      .calcFee(_collateral.mulD(_leverage));
+    Decimal.decimal memory totalCost = _collateral.addD(toll).addD(spread);
+
+    console.log('TOTAL COST', totalCost.toUint());
+    IERC20(USDC).safeIncreaseAllowance(ClearingHouse,(totalCost.toUint()/(10**12)));
+    console.log('APPROVAL:', IERC20(USDC).allowance(address(this),ClearingHouse));
+
+    IClearingHouse(ClearingHouse).openPosition(
+      IAmm(_asset),
+      _isLong ? IClearingHouse.Side.BUY : IClearingHouse.Side.SELL,
+      _collateral,
+      _leverage,
+      _slippage
+      );
   }
 
   /*
@@ -208,9 +237,9 @@ contract SmartWallet is Ownable {
           );
       } else {
         //openPosition using the values calculated above
-        IClearingHouse(ClearingHouse).openPosition(
+        _placeOrderWithApproval(
           IAmm(_asset),
-          isLong ? IClearingHouse.Side.BUY : IClearingHouse.Side.SELL,
+          isLong,
           _collateral,
           _leverage,
           _slippage
@@ -266,9 +295,9 @@ contract SmartWallet is Ownable {
         //Strictly speaking, stop orders cannot have slippage as by definition they
         //will get executed at the next available price. Restricting them with slippage
         //will turn them into stop limit orders.
-        IClearingHouse(ClearingHouse).openPosition(
+        _placeOrderWithApproval(
           IAmm(_asset),
-          isLong ? IClearingHouse.Side.BUY : IClearingHouse.Side.SELL,
+          isLong,
           _collateral,
           _leverage,
           Decimal.decimal(0)
@@ -328,9 +357,9 @@ contract SmartWallet is Ownable {
           );
       } else {
         //openPosition using the values calculated above
-        IClearingHouse(ClearingHouse).openPosition(
+        _placeOrderWithApproval(
           IAmm(_asset),
-          isLong ? IClearingHouse.Side.BUY : IClearingHouse.Side.SELL,
+          isLong,
           _collateral,
           _leverage,
           _slippage

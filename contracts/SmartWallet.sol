@@ -167,7 +167,7 @@ contract SmartWallet is Ownable {
     Decimal.decimal memory _positionSize,
     bool _isLong,
     Decimal.decimal memory _slippage
-  ) internal returns (Decimal.decimal memory){
+  ) internal pure returns (Decimal.decimal memory){
     Decimal.decimal memory factor;
     require(_slippage.cmp(Decimal.one()) == -1, 'Slippage must be %');
     if (_isLong) {

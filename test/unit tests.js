@@ -488,10 +488,10 @@ abiDecoder.addABI(AMM_ABI)
       index = await lob.getNumberOrders()
       var limit_price = cur_price.d.sub(ethers.utils.parseUnits('1000',18))
       var size = ethers.utils.parseUnits('-0.05',18)
-      var collateral = ethers.utils.parseUnits('0',18)
+      var collateral = ethers.utils.parseUnits('1',18)
       var tipFee = MINIMUM_FEE
       var reduceOnly = true
-      var leverage = ethers.utils.parseUnits('0',18)
+      var leverage = ethers.utils.parseUnits('1',18)
       var expiry = 0
       var slippage = ethers.utils.parseUnits('0.2',18)
       await lob.connect(Bob).addLimitOrder(

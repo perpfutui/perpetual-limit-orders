@@ -480,14 +480,14 @@ abiDecoder.addABI(AMM_ABI)
         {d: ethers.utils.parseUnits('0.1',18)}
       )
       var output = await CH.getPosition(BTC_Address, BobSW)
-      console.log(ethers.utils.formatUnits(output.size.d,18))
+      // console.log(ethers.utils.formatUnits(output.size.d,18))
     })
 
     it("Creating limit order", async function() {
       var cur_price = await BTC_AMM.getSpotPrice() //51773
       index = await lob.getNumberOrders()
       var limit_price = cur_price.d.sub(ethers.utils.parseUnits('1000',18))
-      var size = ethers.utils.parseUnits('-0.2',18)
+      var size = ethers.utils.parseUnits('-0.05',18)
       var collateral = ethers.utils.parseUnits('0',18)
       var tipFee = MINIMUM_FEE
       var reduceOnly = true
@@ -512,7 +512,7 @@ abiDecoder.addABI(AMM_ABI)
     it("Should now execute that order", async function() {
       let tx = await lob.execute(index)
       var output = await CH.getPosition(BTC_Address, BobSW)
-      console.log(ethers.utils.formatUnits(output.size.d,18))
+      // console.log(ethers.utils.formatUnits(output.size.d,18))
     })
 
   })

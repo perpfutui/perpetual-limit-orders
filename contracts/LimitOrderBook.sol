@@ -357,11 +357,10 @@ contract LimitOrderBook is Ownable, DecimalERC20{
     require(IInsuranceFund(insurancefund).isExistedAmm(IAmm(_asset)), "amm not found");
     //Sanity checks
     requireNonZeroInput(_positionSize.abs(), "Cannot do empty order");
+    require(_slippage.cmp(Decimal.one()) == -1, "Slippage must be percentage");
 
-    if(!_reduceOnly) {
-      requireNonZeroInput(_collateral, "Cannot spend 0 collateral");
-      require(_leverage.cmp(Decimal.one()) != -1, "Minimum 1x leverage");
-    }
+    requireNonZeroInput(_collateral, "Cannot spend 0 collateral");
+    require(_leverage.cmp(Decimal.one()) != -1, "Minimum 1x leverage");
     //Take fee from user
     _transferFrom(IERC20(USDC), factory.getSmartWallet(msg.sender), address(this), _tipFee);
     //Emit event on order creation
@@ -471,10 +470,8 @@ contract LimitOrderBook is Ownable, DecimalERC20{
         "Can only modify stop/limit orders");
       //Sanity checks
       requireNonZeroInput(_orderSize.abs(), "Cannot do empty order");
-      if(!_reduceOnly) {
-        requireNonZeroInput(_collateral, "Cannot spend 0 collateral");
-        require(_leverage.cmp(Decimal.one()) != -1, "Minimum 1x leverage");
-      }
+      requireNonZeroInput(_collateral, "Cannot spend 0 collateral");
+      require(_leverage.cmp(Decimal.one()) != -1, "Minimum 1x leverage");
       //Update parameters
       orders[order_id].stopPrice = _stopPrice;
       orders[order_id].limitPrice = _limitPrice;
@@ -514,10 +511,8 @@ contract LimitOrderBook is Ownable, DecimalERC20{
         "Can only modify trailing orders");
       //Sanity checks
       requireNonZeroInput(_orderSize.abs(), "Cannot do empty order");
-      if(!_reduceOnly) {
-        requireNonZeroInput(_collateral, "Cannot spend 0 collateral");
-        require(_leverage.cmp(Decimal.one()) != -1, "Minimum 1x leverage");
-      }
+      requireNonZeroInput(_collateral, "Cannot spend 0 collateral");
+      require(_leverage.cmp(Decimal.one()) != -1, "Minimum 1x leverage");
       //Update parameters
       orders[order_id].orderSize = _orderSize;
       orders[order_id].collateral = _collateral;

@@ -133,6 +133,11 @@ contract SmartWallet is Ownable {
     Decimal.decimal memory _leverage,
     Decimal.decimal memory _slippage
   ) internal {
+    console.log('OPEN POSITION');
+    console.log('ORDER SIZE', _orderSize.abs().toUint());
+    console.log('SLIPPAGEEE', _slippage.toUint());
+    console.log('---');
+
     //Get cost of placing order (fees)
     (Decimal.decimal memory toll, Decimal.decimal memory spread) = _asset
       .calcFee(_collateral.mulD(_leverage));
@@ -142,6 +147,7 @@ contract SmartWallet is Ownable {
     //Establish how much leverage will be needed for that order based on the
     //amount of collateral and the maximum leverage the user was happy with.
     bool _isLong = _orderSize.isNegative() ? false : true;
+
     Decimal.decimal memory _size = _orderSize.abs();
     Decimal.decimal memory _quote = (IAmm(_asset)
       .getOutputPrice(_isLong ? IAmm.Dir.REMOVE_FROM_AMM : IAmm.Dir.ADD_TO_AMM, _size));
@@ -161,7 +167,7 @@ contract SmartWallet is Ownable {
     Decimal.decimal memory _positionSize,
     bool _isLong,
     Decimal.decimal memory _slippage
-  ) internal pure returns (Decimal.decimal memory){
+  ) internal returns (Decimal.decimal memory){
     Decimal.decimal memory factor;
     require(_slippage.cmp(Decimal.one()) == -1, 'Slippage must be %');
     if (_isLong) {
@@ -211,6 +217,9 @@ contract SmartWallet is Ownable {
     IAmm _asset,
     Decimal.decimal memory _slippage
   ) internal {
+    console.log('CLOSE POSITION');
+    console.log('SLIPPAGE', _slippage.toUint());
+    console.log('---');
     //Need to calculate trading fees to close position (no margin required)
     IClearingHouse.Position memory oldPosition = IClearingHouse(ClearingHouse)
       .getUnadjustedPosition(_asset, address(this));
@@ -316,7 +325,7 @@ contract SmartWallet is Ownable {
           );
       } else {
         //openPosition using the values calculated above
-        Decimal.decimal memory baseAssetLimit = _calcBaseAssetAmountLimit(_limitPrice, isLong, _slippage);
+        Decimal.decimal memory baseAssetLimit = _calcBaseAssetAmountLimit(_orderSize.abs(), isLong, _slippage);
         _handleOpenPositionWithApproval(
           IAmm(_asset),
           _orderSize,
@@ -425,7 +434,7 @@ contract SmartWallet is Ownable {
           );
       } else {
         //openPosition using the values calculated above
-        Decimal.decimal memory baseAssetLimit = _calcBaseAssetAmountLimit(_limitPrice, isLong, _slippage);
+        Decimal.decimal memory baseAssetLimit = _calcBaseAssetAmountLimit(_orderSize.abs(), isLong, _slippage);
         _handleOpenPositionWithApproval(
           IAmm(_asset),
           _orderSize,

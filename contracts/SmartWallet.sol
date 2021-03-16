@@ -132,20 +132,20 @@ contract SmartWallet is Ownable {
     Decimal.decimal memory _collateral,
     Decimal.decimal memory _leverage,
     Decimal.decimal memory _slippage
-    ) internal {
+  ) internal {
+    //Get cost of placing order (fees)
     (Decimal.decimal memory toll, Decimal.decimal memory spread) = _asset
       .calcFee(_collateral.mulD(_leverage));
     Decimal.decimal memory totalCost = _collateral.addD(toll).addD(spread);
     IERC20(USDC).safeIncreaseAllowance(ClearingHouse,(totalCost.toUint()/(10**12)));
-    bool _isLong = _orderSize.isNegative() ? false : true;
 
+    //Establish how much leverage will be needed for that order based on the
+    //amount of collateral and the maximum leverage the user was happy with.
+    bool _isLong = _orderSize.isNegative() ? false : true;
     Decimal.decimal memory _size = _orderSize.abs();
     Decimal.decimal memory _quote = (IAmm(_asset)
       .getOutputPrice(_isLong ? IAmm.Dir.REMOVE_FROM_AMM : IAmm.Dir.ADD_TO_AMM, _size));
-    //Establish how much leverage will be needed for that order based on the
-    //amount of collateral and the maximum leverage the user was happy with.
-    Decimal.decimal memory _offset = Decimal.decimal(1);
-    
+    Decimal.decimal memory _offset = Decimal.decimal(1); //Need to add one wei for rounding
     _leverage = minD(_quote.divD(_collateral).addD(_offset),_leverage);
 
     IClearingHouse(ClearingHouse).openPosition(
@@ -157,10 +157,61 @@ contract SmartWallet is Ownable {
       );
   }
 
+  function _calcBaseAssetAmountLimit(
+    Decimal.decimal memory _positionSize,
+    bool _isLong,
+    Decimal.decimal memory _slippage
+  ) internal pure returns (Decimal.decimal memory){
+    Decimal.decimal memory factor;
+    require(_slippage.cmp(Decimal.one()) == -1, 'Slippage must be %');
+    if (_isLong) {
+      //base amount must be greater than base amount limit
+      factor = Decimal.one().subD(_slippage);
+    } else {
+      //base amount must be less than base amount limit
+      factor = Decimal.one().addD(_slippage);
+    }
+    return factor.mulD(_positionSize);
+  }
+
+  /*
+
+    OPEN LONG
+    BASE ASSET LIMIT = POSITION SIZE - SLIPPAGE
+
+    OPEN SHORT
+    BASE ASSET LIMIT = POSITION SIZE + SLIPPAGE
+
+    CLOSE LONG
+    QUOTE ASSET LIMIT = VALUE - SLIPPAGE
+
+    CLOSE SHORT
+    QUOTE ASSET LIMIT = VALUE + SLIPPAGE
+
+  */
+
+  function _calcQuoteAssetAmountLimit(
+    Decimal.decimal memory _positionValue,
+    bool _isLong,
+    Decimal.decimal memory _slippage
+  ) internal pure returns (Decimal.decimal memory){
+    Decimal.decimal memory factor;
+    require(_slippage.cmp(Decimal.one()) == -1, 'Slippage must be %');
+    if (_isLong) {
+      //quote amount must be less than quote amount limit
+      factor = Decimal.one().subD(_slippage);
+    } else {
+      //quote amount must be greater than quote amount limit
+      factor = Decimal.one().addD(_slippage);
+    }
+    return factor.mulD(_positionValue);
+  }
+
   function _handleClosePositionWithApproval(
     IAmm _asset,
     Decimal.decimal memory _slippage
-    ) internal {
+  ) internal {
+    //Need to calculate trading fees to close position (no margin required)
     IClearingHouse.Position memory oldPosition = IClearingHouse(ClearingHouse)
       .getUnadjustedPosition(_asset, address(this));
     SignedDecimal.signedDecimal memory oldPositionSize = oldPosition.size;
@@ -172,6 +223,7 @@ contract SmartWallet is Ownable {
       .calcFee(_quoteAsset);
     Decimal.decimal memory totalCost = toll.addD(spread);
     IERC20(USDC).safeIncreaseAllowance(ClearingHouse,(totalCost.toUint()/(10**12)));
+
     IClearingHouse(ClearingHouse).closePosition(
       _asset,
       _slippage
@@ -250,26 +302,27 @@ contract SmartWallet is Ownable {
     bool priceCheck = (_limitPrice.cmp(_markPrice)) == (isLong ? int128(1) : -1);
     if(priceCheck) {
       if(closePosition) {
-        //Need to update slippage parameter as slippage is minimum amount of BASE ASSET
-        //closePosition() takes quoteAssetAmountLimit.
-        //Therefore we take the current position size and multiply it by the limit price to
-        //establish how much quoteAsset we would expect
         IClearingHouse.Position memory oldPosition = IClearingHouse(ClearingHouse)
           .getUnadjustedPosition(IAmm(_asset), address(this));
         SignedDecimal.signedDecimal memory oldPositionSize = oldPosition.size;
-        _slippage = _slippage.mulD(oldPositionSize.abs()).divD(_orderSize.abs());
+        Decimal.decimal memory value = oldPositionSize.abs().mulD(_limitPrice);
+        Decimal.decimal memory quoteAssetLimit = _calcQuoteAssetAmountLimit(
+          value,
+          isLong,
+          _slippage);
         _handleClosePositionWithApproval(
           IAmm(_asset),
-          _slippage
+          quoteAssetLimit
           );
       } else {
         //openPosition using the values calculated above
+        Decimal.decimal memory baseAssetLimit = _calcBaseAssetAmountLimit(_limitPrice, isLong, _slippage);
         _handleOpenPositionWithApproval(
           IAmm(_asset),
           _orderSize,
           _collateral,
           _leverage,
-          _slippage
+          baseAssetLimit
           );
       }
     } else {
@@ -358,26 +411,27 @@ contract SmartWallet is Ownable {
       (_markPrice.cmp(_stopPrice)) == (isLong ? int128(1) : -1);
     if(priceCheck) {
       if(closePosition) {
-        //Need to update slippage parameter as slippage is minimum amount of BASE ASSET
-        //closePosition() takes quoteAssetAmountLimit.
-        //Therefore we take the current position size and multiply it by the limit price to
-        //establish how much quoteAsset we would expect
         IClearingHouse.Position memory oldPosition = IClearingHouse(ClearingHouse)
           .getUnadjustedPosition(IAmm(_asset), address(this));
         SignedDecimal.signedDecimal memory oldPositionSize = oldPosition.size;
-        _slippage = _slippage.mulD(oldPositionSize.abs()).divD(_orderSize.abs());
+        Decimal.decimal memory value = oldPositionSize.abs().mulD(_limitPrice);
+        Decimal.decimal memory quoteAssetLimit = _calcQuoteAssetAmountLimit(
+          value,
+          isLong,
+          _slippage);
         _handleClosePositionWithApproval(
           IAmm(_asset),
-          _slippage
+          quoteAssetLimit
           );
       } else {
         //openPosition using the values calculated above
+        Decimal.decimal memory baseAssetLimit = _calcBaseAssetAmountLimit(_limitPrice, isLong, _slippage);
         _handleOpenPositionWithApproval(
           IAmm(_asset),
           _orderSize,
           _collateral,
           _leverage,
-          _slippage
+          baseAssetLimit
           );
       }
     } else {

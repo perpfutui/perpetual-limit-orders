@@ -20,6 +20,7 @@ import { IClearingHouse } from "./interface/IClearingHouse.sol";
 contract SmartWallet is Ownable {
 
   // Store addresses of smart contracts that we will be interacting with
+  // @audit recommendation: naming convention, we usually use CAPITAL for constant, but others are not.
   LimitOrderBook public LOB;
   SmartWalletFactory public factory;
   address constant USDC = 0xDDAfbb505ad214D7b80b1f830fcCc89B60fb7A83;
@@ -41,6 +42,13 @@ contract SmartWallet is Ownable {
    * @param callData the data bytes of the function and parameters to execute
    *    Can use encodeFunctionData() from ethers.js
    */
+  // @audit it's too danger without any limitations. If attacker changes the `target` or `callData`, 
+  // users are hard to regconize what happen. For example, if `target` is `this` and `callData`
+  // is OPCODE of `selfdestruct`, this contract will be destroyed and user may loss their fund.
+  // suggest that 
+  // 1. have a whitelisting for `target`, only `target` in the whitelisting can be executed
+  // 2. have an allow-list(like EIP-165) for `callData`, only allowed functions can be executed
+
   function executeCall(
     address target,
     bytes calldata callData
@@ -51,6 +59,7 @@ contract SmartWallet is Ownable {
   }
 
   //Initialisation function to set LOB
+  // @audit recommendation: can use constructor to init `LOB` or invoke factory.LimitOrderBook()
   function setOrderBook(
     address _addr
   ) public {
@@ -59,6 +68,7 @@ contract SmartWallet is Ownable {
   }
 
   //Initialisation function to set factory
+  // @audit recommendation: can use constructor to init `factory`
   function setFactory(
     SmartWalletFactory _addr
   ) public {
@@ -99,6 +109,7 @@ contract SmartWallet is Ownable {
       ,bool _stillValid, uint _expiry) =
       LOB.getLimitOrderParams(order_id);
     //Make sure that the order belongs to this smart wallet
+    // TODO: find another way to check this
     require(factory.getSmartWallet(_trader) == address(this), 'Incorrect smart wallet');
     //Make sure that the order hasn't expired
     require(((_expiry == 0 ) || (block.timestamp<_expiry)), 'Order expired');
@@ -123,6 +134,7 @@ contract SmartWallet is Ownable {
 
   function minD(Decimal.decimal memory a, Decimal.decimal memory b) public pure
   returns (Decimal.decimal memory){
+    // @audit if this function tries to get the minimum value, should be `a.cmp(b) >= 1 ? b : a`
     return (a.cmp(b) == 1) ? b : a;
   }
 
@@ -133,6 +145,7 @@ contract SmartWallet is Ownable {
     Decimal.decimal memory _leverage,
     Decimal.decimal memory _slippage
   ) internal {
+    // @audit should remove before launch
     console.log('OPEN POSITION');
     console.log('ORDER SIZE', _orderSize.abs().toUint());
     console.log('SLIPPAGEEE', _slippage.toUint());
@@ -464,15 +477,19 @@ contract SmartWalletFactory {
   /*
    * @notice Create and deploy a smart wallet for the user and stores the address
    */
+  //  @audit no one calls this function, can make the visibility to `external`
   function spawn() public returns (address smartWallet) {
     require(getSmartWallet[msg.sender] == address(0), 'Already has smart wallet');
 
     bytes memory bytecode = type(SmartWallet).creationCode;
+    // @audit suggest to have an parameter input frome the user or block number as part of salt
+    // in case that the user needs to have another smartWallet 
     bytes32 salt = keccak256(abi.encodePacked(msg.sender));
     assembly {
       smartWallet := create2(0, add(bytecode, 0x20), mload(bytecode), salt)
     }
 
+    // @audit the type of smartWallet is address, no needs to convert it again.
     emit Created(msg.sender, address(smartWallet));
     SmartWallet(smartWallet).setOrderBook(LimitOrderBook);
     SmartWallet(smartWallet).setFactory(this);

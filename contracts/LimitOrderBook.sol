@@ -82,6 +82,9 @@ contract LimitOrderBook is Ownable, DecimalERC20{
     * @param tipFee is the fee that goes to the keeper for executing the order.
     *   This fee is taken when the order is created, and paid out when executing.
     */
+    // @audit recommendation, better reoder the vars for saving gas
+    // For example, type of address occupies 20 bytes and bool occupies 1 byte
+    // if `address asset` is followed by `bool reduceOly`, it only takes one SLOAD op code to load two vars.
   struct LimitOrder {
     address asset;
     address trader;
@@ -117,6 +120,7 @@ contract LimitOrderBook is Ownable, DecimalERC20{
    * @param lastUpdatedKeeper the last address that successfully updated the witness
    *    price. This address will be paid on execution of the order
    */
+  //  @audit recommendation, same as above, better reoder the vars for saving gas
   struct TrailingOrderData {
     Decimal.decimal witnessPrice;
     Decimal.decimal trail;
@@ -131,6 +135,7 @@ contract LimitOrderBook is Ownable, DecimalERC20{
   }
   /* Utilising mapping here to ensure order_id is the same for LimitOrder struct and
   TrailingOrderData struct */
+  // @audit recommendation, better to add a visibility
   mapping (uint256 => TrailingOrderData) trailingOrders;
 
   /*
@@ -142,12 +147,16 @@ contract LimitOrderBook is Ownable, DecimalERC20{
   SmartWalletFactory public factory;
 
   /* Other smart contracts that we interact with */
+  // @audit recommendation: naming convention, we usually use ALL CAPITAL for constant, but others are not.
   address constant USDC = 0xDDAfbb505ad214D7b80b1f830fcCc89B60fb7A83;
   address constant insurancefund = 0x8C29F6F7fc1999aB84b476952E986F974Acb3824;
 
   /* Trailing orders can only be updated every 15 minutes - this is to prevent the need
   for the contract to be poked as frequently. 15 minutes has been chosen as the
   15 minute TWAP is used by PERP for liquidations. */
+  // @audit better to be less than 15mins in case that any possible delay from keeperbot.
+  // for example, if we set 1min timer in lamba, it could possibly be poked 15mins and 59secs later from last poke
+  // Or delay due to low gas price
   uint256 public pokeContractDelay = 15 minutes;
 
   /* The minimum fee that needs to be attached to an order for it to be executed
@@ -350,6 +359,7 @@ contract LimitOrderBook is Ownable, DecimalERC20{
     //Check expiry parameter
     require(((_expiry == 0 ) || (block.timestamp<_expiry)), 'Event will expire in past');
     //Check whether fee is sufficient
+    // @audit recommendation, better to use > = < for `cmp` instead of 0, 1, -1 for easy understanding
     require(_tipFee.cmp(minimumTipFee) !=  -1, 'Just the tip! Tip is below minimum tip fee');
     //Check on the smart wallet factory whether this trader has a smart wallet
     require(factory.getSmartWallet(msg.sender) != address(0), 'Need smart wallet');

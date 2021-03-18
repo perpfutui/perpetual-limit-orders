@@ -20,7 +20,7 @@ import { IClearingHouse } from "./interface/IClearingHouse.sol";
 contract SmartWallet is Ownable {
 
   // Store addresses of smart contracts that we will be interacting with
-  // @audit recommendation: naming convention, we usually use CAPITAL for constant, but others are not.
+  // @audit recommendation: naming convention, we usually use ALL CAPITAL for constant, but others are not.
   LimitOrderBook public LOB;
   SmartWalletFactory public factory;
   address constant USDC = 0xDDAfbb505ad214D7b80b1f830fcCc89B60fb7A83;
@@ -69,6 +69,7 @@ contract SmartWallet is Ownable {
 
   //Initialisation function to set factory
   // @audit recommendation: can use constructor to init `factory`
+  // @audit use external visibility instead if no other functions call it
   function setFactory(
     SmartWalletFactory _addr
   ) public {
@@ -76,6 +77,7 @@ contract SmartWallet is Ownable {
     factory = SmartWalletFactory(_addr);
   }
 
+// @audit use external visibility instead if no other functions call it
   function executeMarketOrder(
     IAmm _asset,
     SignedDecimal.signedDecimal memory _orderSize,
@@ -86,6 +88,7 @@ contract SmartWallet is Ownable {
     _handleOpenPositionWithApproval(_asset, _orderSize, _collateral, _leverage, _slippage);
   }
 
+// @audit use external visibility instead if no other functions call it
   function executeClosePosition(
     IAmm _asset,
     Decimal.decimal memory _slippage
@@ -98,6 +101,7 @@ contract SmartWallet is Ownable {
    *  way to call this function is via the LimitOrderBook where you call execute().
    * @param order_id is the ID of the order to execute
    */
+   // @audit use external visibility instead if no other functions call it
   function executeOrder(
     uint order_id
   ) public returns (bool) {
@@ -145,7 +149,7 @@ contract SmartWallet is Ownable {
     Decimal.decimal memory _leverage,
     Decimal.decimal memory _slippage
   ) internal {
-    // @audit should remove before launch
+    // @audit logs should remove before launch
     console.log('OPEN POSITION');
     console.log('ORDER SIZE', _orderSize.abs().toUint());
     console.log('SLIPPAGEEE', _slippage.toUint());
@@ -155,6 +159,7 @@ contract SmartWallet is Ownable {
     (Decimal.decimal memory toll, Decimal.decimal memory spread) = _asset
       .calcFee(_collateral.mulD(_leverage));
     Decimal.decimal memory totalCost = _collateral.addD(toll).addD(spread);
+    // @audit it's safer to have a decimal conversion function to handle this and use SafeMath
     IERC20(USDC).safeIncreaseAllowance(ClearingHouse,(totalCost.toUint()/(10**12)));
 
     //Establish how much leverage will be needed for that order based on the
@@ -244,6 +249,7 @@ contract SmartWallet is Ownable {
     (Decimal.decimal memory toll, Decimal.decimal memory spread) = _asset
       .calcFee(_quoteAsset);
     Decimal.decimal memory totalCost = toll.addD(spread);
+    // @audit it's safer to have a decimal conversion function to handle this and use SafeMath
     IERC20(USDC).safeIncreaseAllowance(ClearingHouse,(totalCost.toUint()/(10**12)));
 
     IClearingHouse(ClearingHouse).closePosition(
@@ -293,6 +299,12 @@ contract SmartWallet is Ownable {
     }
   }
 
+  //  @audit recommendation, 
+  // `_executeXXX` series functions have the same pre condition check, can merge into a checking function 
+  // and return necessary values for later usage to reduce redunant code.
+  // even more, have a function to determine `priceCheck` in different situations and 
+  // the code are highly similiar after price check, might be possible to merge into 
+  // `_handleOpenPositionWithApproval` and `_handleClosePositionWithApproval`
   /*
    * @notice internal position to execute limit order - note that you need to
    *  check that this is a limit order before calling this function
@@ -306,6 +318,9 @@ contract SmartWallet is Ownable {
       Decimal.decimal memory _collateral,
       Decimal.decimal memory _leverage,
       Decimal.decimal memory _slippage,) = LOB.getLimitOrderPrices(order_id);
+      // @audit only see two use cases, one is in `executeOrder` the others are in `_executeXXX` functions.
+      // suggest to move `_asset` and `_reduceOnly` to `getLimitOrderPrices` to reduce external function call
+      // for gas saving.
     (address _asset,,,bool _reduceOnly,,) = LOB.getLimitOrderParams(order_id);
 
     //Check whether we need to close position or open position
@@ -324,6 +339,7 @@ contract SmartWallet is Ownable {
     bool priceCheck = (_limitPrice.cmp(_markPrice)) == (isLong ? int128(1) : -1);
     if(priceCheck) {
       if(closePosition) {
+        // @audit sorry for being confusing, should use `getPosition()`
         IClearingHouse.Position memory oldPosition = IClearingHouse(ClearingHouse)
           .getUnadjustedPosition(IAmm(_asset), address(this));
         SignedDecimal.signedDecimal memory oldPositionSize = oldPosition.size;
@@ -466,6 +482,9 @@ contract SmartWallet is Ownable {
 
 contract SmartWalletFactory {
   event Created(address indexed owner, address indexed smartWallet);
+  // @audit better to use an interface to repersent smartWallet, 
+  // it'll be easier for coding and finding error at compiling time
+  // For example, `SmartWallet(smartWallet).setFactory(this);` can be `smartWallet.setFactory(this);`
   mapping (address => address) public getSmartWallet;
 
   address public LimitOrderBook;

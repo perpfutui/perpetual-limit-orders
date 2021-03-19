@@ -59,7 +59,9 @@ contract SmartWallet is Ownable {
   }
 
   //Initialisation function to set LOB
+  // @audit should have permission control
   // @audit recommendation: can use constructor to init `LOB` or invoke factory.LimitOrderBook()
+  // @audit use external visibility instead if no other functions call it
   function setOrderBook(
     address _addr
   ) public {
@@ -68,6 +70,7 @@ contract SmartWallet is Ownable {
   }
 
   //Initialisation function to set factory
+  // @audit should have permission control
   // @audit recommendation: can use constructor to init `factory`
   // @audit use external visibility instead if no other functions call it
   function setFactory(
@@ -101,7 +104,9 @@ contract SmartWallet is Ownable {
    *  way to call this function is via the LimitOrderBook where you call execute().
    * @param order_id is the ID of the order to execute
    */
-   // @audit use external visibility instead if no other functions call it
+  // @audit all your `_executeXXX` series functions seems return true directly if no any revert happened. 
+  // can consider not return bool, revert if it failed somewhere.
+  // @audit use external visibility instead if no other functions call it
   function executeOrder(
     uint order_id
   ) public returns (bool) {
@@ -160,6 +165,9 @@ contract SmartWallet is Ownable {
       .calcFee(_collateral.mulD(_leverage));
     Decimal.decimal memory totalCost = _collateral.addD(toll).addD(spread);
     // @audit it's safer to have a decimal conversion function to handle this and use SafeMath
+    // @audit question, I must miss something, where the fund comes from? 
+    // Didn't see any transferFrom(owner, this). Did you transfer to this contract directly? 
+    // It's too dangerous if doing so.
     IERC20(USDC).safeIncreaseAllowance(ClearingHouse,(totalCost.toUint()/(10**12)));
 
     //Establish how much leverage will be needed for that order based on the
@@ -301,7 +309,7 @@ contract SmartWallet is Ownable {
 
   //  @audit recommendation, 
   // `_executeXXX` series functions have the same pre condition check, can merge into a checking function 
-  // and return necessary values for later usage to reduce redunant code.
+  // and return necessary values for later usage to reduce redundant code.
   // even more, have a function to determine `priceCheck` in different situations and 
   // the code are highly similiar after price check, might be possible to merge into 
   // `_handleOpenPositionWithApproval` and `_handleClosePositionWithApproval`
@@ -333,6 +341,8 @@ contract SmartWallet is Ownable {
     bool isLong = _orderSize.isNegative() ? false : true;
     //Get the current spot price of the asset
     Decimal.decimal memory _markPrice = IAmm(_asset).getSpotPrice();
+    // @audit can add a check `_markPrice > 0` in case anything goes wrong, like Amm is stopped after the order created
+
     //Check whether price conditions have been met:
     //  LIMIT BUY: mark price < limit price
     //  LIMIT SELL: mark price > limit price
@@ -502,7 +512,7 @@ contract SmartWalletFactory {
 
     bytes memory bytecode = type(SmartWallet).creationCode;
     // @audit suggest to have an parameter input frome the user or block number as part of salt
-    // in case that the user needs to have another smartWallet 
+    // in case that the user needs to have another smartWallet or the address could be occupied by attackers
     bytes32 salt = keccak256(abi.encodePacked(msg.sender));
     assembly {
       smartWallet := create2(0, add(bytecode, 0x20), mload(bytecode), salt)

@@ -135,7 +135,7 @@ contract LimitOrderBook is Ownable, DecimalERC20{
   }
   /* Utilising mapping here to ensure order_id is the same for LimitOrder struct and
   TrailingOrderData struct */
-  // @audit recommendation, better to add a visibility
+  // @audit better to have a visibility specifier 
   mapping (uint256 => TrailingOrderData) trailingOrders;
 
   /*
@@ -173,6 +173,7 @@ contract LimitOrderBook is Ownable, DecimalERC20{
     * @notice This function will create a limit order and store it within the contract.
     * Please see documentation for _createOrder()
     */
+    // @audit use external visibility instead if no other functions call it
   function addLimitOrder(
     address _asset,
     Decimal.decimal memory _limitPrice,
@@ -193,6 +194,7 @@ contract LimitOrderBook is Ownable, DecimalERC20{
    * @notice This function will create a stop market order and store it within the contract.
    * Please see documentation for _createOrder()
    */
+   // @audit use external visibility instead if no other functions call it
   function addStopOrder(
     address _asset,
     Decimal.decimal memory _stopPrice,
@@ -213,6 +215,7 @@ contract LimitOrderBook is Ownable, DecimalERC20{
    * @notice This function will create a stop limit order and store it within the contract.
    * Please see documentation for _createOrder()
    */
+   // @audit use external visibility instead if no other functions call it
   function addStopLimitOrder(
     address _asset,
     Decimal.decimal memory _stopPrice,
@@ -236,6 +239,7 @@ contract LimitOrderBook is Ownable, DecimalERC20{
    * Please see documentation for _createOrder() and _createTrailingOrder()
    * Abs is absolute value
    */
+   // @audit use external visibility instead if no other functions call it
   function addTrailingStopMarketOrderAbs(
     address _asset,
     Decimal.decimal memory _trail,
@@ -257,6 +261,7 @@ contract LimitOrderBook is Ownable, DecimalERC20{
    * Please see documentation for _createOrder() and _createTrailingOrder()
    * Pct is relative value (will calculate trigger price as percentage)
    */
+   // @audit use external visibility instead if no other functions call it
   function addTrailingStopMarketOrderPct(
     address _asset,
     Decimal.decimal memory _trailPct,
@@ -278,6 +283,7 @@ contract LimitOrderBook is Ownable, DecimalERC20{
    * Please see documentation for _createOrder() and _createTrailingOrder()
    * Abs is absolute value
    */
+   // @audit use external visibility instead if no other functions call it
   function addTrailingStopLimitOrderAbs(
     address _asset,
     Decimal.decimal memory _trail,
@@ -302,6 +308,7 @@ contract LimitOrderBook is Ownable, DecimalERC20{
    * Please see documentation for _createOrder() and _createTrailingOrder()
    * Pct is relative value (will calculate trigger price as percentage)
    */
+   // @audit use external visibility instead if no other functions call it
   function addTrailingStopLimitOrderPct(
     address _asset,
     Decimal.decimal memory _trailPct,
@@ -343,6 +350,7 @@ contract LimitOrderBook is Ownable, DecimalERC20{
    * @param _expiry when the order expires (block timestamp). If this variable is
    *    0 then it will never expire.
    */
+   // @audit recommendation, `address _asset` --> `IAmm _asset` for easy understanding
   function _createOrder(
     address _asset,
     OrderType _orderType,
@@ -362,6 +370,7 @@ contract LimitOrderBook is Ownable, DecimalERC20{
     // @audit recommendation, better to use > = < for `cmp` instead of 0, 1, -1 for easy understanding
     require(_tipFee.cmp(minimumTipFee) !=  -1, 'Just the tip! Tip is below minimum tip fee');
     //Check on the smart wallet factory whether this trader has a smart wallet
+    // @audit assign the value of `factory.getSmartWallet()` to a variable to reduce external function call
     require(factory.getSmartWallet(msg.sender) != address(0), 'Need smart wallet');
     //Need to make sure the asset is actually a PERP asset
     require(IInsuranceFund(insurancefund).isExistedAmm(IAmm(_asset)), "amm not found");
@@ -411,6 +420,7 @@ contract LimitOrderBook is Ownable, DecimalERC20{
     //Get the current index of AMM ReserveSnapshotted
     uint _currSnapshot = IAmm(_asset).getSnapshotLen()-1;
     //Emit event
+    // @audit better to assign orders.length to a variable to reduce state variable reading for gas saving
     emit TrailingOrderCreated(orders.length-1, _currSnapshot);
     //Get the current spot price of the asset
     Decimal.decimal memory _initPrice = IAmm(_asset).getSpotPrice();
@@ -461,6 +471,7 @@ contract LimitOrderBook is Ownable, DecimalERC20{
    *    described above.
    *  Note: there is a separate function to modify trailing orders
    */
+   // @audit use external visibility instead if no other functions call it
   function modifyOrder(
     uint order_id,
     Decimal.decimal memory _stopPrice,
@@ -474,6 +485,7 @@ contract LimitOrderBook is Ownable, DecimalERC20{
       //Ensure that you don't set an order that expires in the past
       require(((_expiry == 0 ) || (block.timestamp<_expiry)), 'Event will expire in past');
       //Can only modify non-trailing orders with this function
+      // @audit better to assign `orders[order_id].orderType` to a variable to reduce state variable reading
       require(orders[order_id].orderType == OrderType.LIMIT ||
         orders[order_id].orderType == OrderType.STOPMARKET ||
         orders[order_id].orderType == OrderType.STOPLIMIT,
@@ -503,6 +515,7 @@ contract LimitOrderBook is Ownable, DecimalERC20{
      *  Note: this function can only modify trailing orders. It is not possible to
      *  change the type of trailing order (eg relative vs absolute)
      */
+     // @audit use external visibility instead if no other functions call it
   function modifyTrailingOrder(
     uint order_id,
     Decimal.decimal memory _newStop,
@@ -516,6 +529,7 @@ contract LimitOrderBook is Ownable, DecimalERC20{
       //Check order doesn't expire in the past
       require(((_expiry == 0 ) || (block.timestamp<_expiry)), 'Event will expire in past');
       //Can only modify trailing orders with this function
+      // @audit better to assign `orders[order_id].orderType` to a variable to reduce state variable reading
       require(orders[order_id].orderType == OrderType.TRAILINGSTOPMARKET ||
         orders[order_id].orderType == OrderType.TRAILINGSTOPLIMIT,
         "Can only modify trailing orders");
@@ -551,6 +565,7 @@ contract LimitOrderBook is Ownable, DecimalERC20{
   /*
    * @notice Delete an order
    */
+   // @audit use external visibility instead if no other functions call it
   function deleteOrder(
     uint order_id
   ) public onlyMyOrder(order_id) onlyValidOrder(order_id){
@@ -562,8 +577,10 @@ contract LimitOrderBook is Ownable, DecimalERC20{
    * @notice Execute an order using the order_id
    * All the logic verifying the order can be successfully executed occurs on the SmartWallet.sol contract
    */
+   // @audit use external visibility instead if no other functions call it
   function execute(uint order_id) public onlyValidOrder(order_id) {
     //First check that the order hasn't been cancelled/already been executed
+    // @audit better to assign `orders[order_id]` to a variable to reduce state variable reading
     require(orders[order_id].stillValid, 'No longer valid');
     //Get the smart wallet of the trader from the factory contract
     address _smartwallet = factory.getSmartWallet(orders[order_id].trader);
@@ -576,9 +593,13 @@ contract LimitOrderBook is Ownable, DecimalERC20{
         //executed the transaction, and the last keeper to update the price
           if(trailingOrders[order_id].lastUpdatedKeeper != address(0)) {
             //Making sure that a keeper has actually updated the price, otherwise the executor gets full fee
+            // @audit question, 
+            // will it be less incentive for keeperbot to execute an updated trailing order since tip is less?
+            // @audit if the sender is this contract, can use `_transfer` directly
             _transferFrom(IERC20(USDC), address(this), msg.sender, orders[order_id].tipFee.divScalar(2));
             _transferFrom(IERC20(USDC), address(this), trailingOrders[order_id].lastUpdatedKeeper,
               orders[order_id].tipFee.divScalar(2));
+            // @audit why does this work without keyword `emit`? suggest to add `emit` when emitting an event
             TrailingOrderFilled(order_id);
             delete trailingOrders[order_id];
           } else {
@@ -586,6 +607,9 @@ contract LimitOrderBook is Ownable, DecimalERC20{
             TrailingOrderFilled(order_id);
             delete trailingOrders[order_id];
           }
+          // @audit can move these two line to here to reduce redundant code
+          // TrailingOrderFilled(order_id);
+          // delete trailingOrders[order_id];
     } else {
       //Fee goes to executor
       _transferFrom(IERC20(USDC), address(this), msg.sender, orders[order_id].tipFee);
@@ -648,6 +672,7 @@ contract LimitOrderBook is Ownable, DecimalERC20{
     uint _reserveIndex
   ) public {
     //Can only poke for orders that are trailing orders
+    // @audit better to assign `orders[order_id]` to a variable to reduce state variable reading
     require(orders[order_id].orderType == OrderType.TRAILINGSTOPMARKET ||
       orders[order_id].orderType == OrderType.TRAILINGSTOPLIMIT, "Can only poke trailing orders");
     //You cannot update the price with values that were accurate before the order was created
@@ -655,6 +680,8 @@ contract LimitOrderBook is Ownable, DecimalERC20{
 
     //check whether A. there is a higher/lower price that occurred before the current updated value or
     // B. if it has been more than 15 minutes since the last update after the current updated value
+    // @audit question, why does _reserveIndex need to be less than trailingOrders[order_id].snapshotLastUpdated? 
+    // Should be greater than, isn't it?
     require(_reserveIndex < trailingOrders[order_id].snapshotLastUpdated ||
       (block.timestamp - trailingOrders[order_id].snapshotTimestamp > pokeContractDelay), "Can only be updated every 15 minutes");
     trailingOrders[order_id].snapshotTimestamp = block.timestamp;
@@ -695,6 +722,7 @@ contract LimitOrderBook is Ownable, DecimalERC20{
     IAmm _asset,
     uint256 _snapshotIndex
   ) public view returns (Decimal.decimal memory) {
+    // @audit should check `_snapshotIndex < amm.getSnapshotLen()`
     IAmm.ReserveSnapshot memory snap = _asset.reserveSnapshots(_snapshotIndex);
     return snap.quoteAssetReserve.divD(snap.baseAssetReserve);
   }

@@ -2,8 +2,8 @@
   "_format": "hh-sol-cache-2",
   "files": {
     "/Users/abdullaalkamil/Coding/PERP/contracts/LimitOrderBook.sol": {
-      "lastModificationDate": 1615935353942,
-      "contentHash": "bf2e9c81709a5851898ec0981c37004f",
+      "lastModificationDate": 1616361854644,
+      "contentHash": "8047c2c0a333675dc970e6d917d0fb7a",
       "sourceName": "contracts/LimitOrderBook.sol",
       "solcConfig": {
         "version": "0.6.9",
@@ -149,8 +149,8 @@
       ]
     },
     "/Users/abdullaalkamil/Coding/PERP/contracts/SmartWallet.sol": {
-      "lastModificationDate": 1615935385243,
-      "contentHash": "2d1b99d364bfe640256805e24a3eefc6",
+      "lastModificationDate": 1616362325503,
+      "contentHash": "5500d189174e720737d03f30e972cc32",
       "sourceName": "contracts/SmartWallet.sol",
       "solcConfig": {
         "version": "0.6.9",
@@ -176,15 +176,18 @@
       },
       "imports": [
         "./LimitOrderBook.sol",
-        "@openzeppelin/contracts/access/Ownable.sol",
         "@openzeppelin/contracts/token/ERC20/IERC20.sol",
         "@openzeppelin/contracts/utils/Address.sol",
         "@openzeppelin/contracts/token/ERC20/SafeERC20.sol",
-        "hardhat/console.sol",
+        "@openzeppelin/contracts/proxy/Initializable.sol",
+        "@openzeppelin/contracts/access/Ownable.sol",
+        "@openzeppelin/contracts/utils/Pausable.sol",
         "./utils/Decimal.sol",
         "./utils/SignedDecimal.sol",
+        "./utils/DecimalERC20.sol",
         "./interface/IAmm.sol",
-        "./interface/IClearingHouse.sol"
+        "./interface/IClearingHouse.sol",
+        "./interface/ISmartWallet.sol"
       ],
       "versionPragmas": [
         "0.6.9"
@@ -1407,6 +1410,116 @@
     },
     "/Users/abdullaalkamil/Coding/perpetual-limit-orders/contracts/interface/ISmartWallet.sol": {
       "lastModificationDate": 1616353969778,
+      "contentHash": "0beb75fb6a14dbc919b164b50be4bdce",
+      "sourceName": "contracts/interface/ISmartWallet.sol",
+      "solcConfig": {
+        "version": "0.6.9",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 2000
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./IAmm.sol",
+        "../utils/Decimal.sol",
+        "../utils/SignedDecimal.sol"
+      ],
+      "versionPragmas": [
+        "0.6.9"
+      ],
+      "artifacts": [
+        "ISmartWallet"
+      ]
+    },
+    "/Users/abdullaalkamil/Coding/PERP/node_modules/@openzeppelin/contracts/proxy/Initializable.sol": {
+      "lastModificationDate": 1612377914865,
+      "contentHash": "1efacd801320f8f9413700ddbcf00647",
+      "sourceName": "@openzeppelin/contracts/proxy/Initializable.sol",
+      "solcConfig": {
+        "version": "0.6.9",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 2000
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "../utils/Address.sol"
+      ],
+      "versionPragmas": [
+        ">=0.4.24 <0.8.0"
+      ],
+      "artifacts": [
+        "Initializable"
+      ]
+    },
+    "/Users/abdullaalkamil/Coding/PERP/node_modules/@openzeppelin/contracts/utils/Pausable.sol": {
+      "lastModificationDate": 1612377914866,
+      "contentHash": "6960b40911542e6004ab95031ef9c3b9",
+      "sourceName": "@openzeppelin/contracts/utils/Pausable.sol",
+      "solcConfig": {
+        "version": "0.6.9",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 2000
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./Context.sol"
+      ],
+      "versionPragmas": [
+        ">=0.6.0 <0.8.0"
+      ],
+      "artifacts": [
+        "Pausable"
+      ]
+    },
+    "/Users/abdullaalkamil/Coding/PERP/contracts/interface/ISmartWallet.sol": {
+      "lastModificationDate": 1616361854644,
       "contentHash": "0beb75fb6a14dbc919b164b50be4bdce",
       "sourceName": "contracts/interface/ISmartWallet.sol",
       "solcConfig": {

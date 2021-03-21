@@ -10,6 +10,7 @@ import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "@openzeppelin/contracts/proxy/Initializable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/utils/Pausable.sol";
 
 import { Decimal } from "./utils/Decimal.sol";
 import { SignedDecimal } from "./utils/SignedDecimal.sol";
@@ -19,7 +20,7 @@ import { IAmm } from "./interface/IAmm.sol";
 import { IClearingHouse } from "./interface/IClearingHouse.sol";
 import { ISmartWallet } from "./interface/ISmartWallet.sol";
 
-contract SmartWallet is DecimalERC20, Initializable, ISmartWallet {
+contract SmartWallet is DecimalERC20, Initializable, ISmartWallet, Pausable {
 
   // Store addresses of smart contracts that we will be interacting with
   LimitOrderBook public OrderBook;
@@ -67,15 +68,23 @@ contract SmartWallet is DecimalERC20, Initializable, ISmartWallet {
     Decimal.decimal memory _collateral,
     Decimal.decimal memory _leverage,
     Decimal.decimal memory _slippage
-  ) external override onlyOwner(){
+  ) external override onlyOwner() whenNotPaused() {
     _handleOpenPositionWithApproval(_asset, _orderSize, _collateral, _leverage, _slippage);
   }
 
   function executeClosePosition(
     IAmm _asset,
     Decimal.decimal memory _slippage
-  ) external override onlyOwner() {
+  ) external override onlyOwner() whenNotPaused() {
     _handleClosePositionWithApproval(_asset, _slippage);
+  }
+
+  function pauseWallet() external onlyOwner() {
+    _pause();
+  }
+
+  function unpauseWallet() external onlyOwner() {
+    _unpause();
   }
 
   /*
@@ -87,7 +96,7 @@ contract SmartWallet is DecimalERC20, Initializable, ISmartWallet {
   // can consider not return bool, revert if it failed somewhere.
   function executeOrder(
     uint order_id
-  ) external override returns (bool) {
+  ) external override whenNotPaused() returns (bool) {
     //Only the LimitOrderBook can call this function
     require(msg.sender == address(OrderBook), 'Only execute from the order book');
     //Get some of the parameters

@@ -92,8 +92,6 @@ contract SmartWallet is DecimalERC20, Initializable, ISmartWallet, Pausable {
    *  way to call this function is via the LimitOrderBook where you call execute().
    * @param order_id is the ID of the order to execute
    */
-  // @audit all your `_executeXXX` series functions seems return true directly if no any revert happened.
-  // can consider not return bool, revert if it failed somewhere.
   function executeOrder(
     uint order_id
   ) external override whenNotPaused() {

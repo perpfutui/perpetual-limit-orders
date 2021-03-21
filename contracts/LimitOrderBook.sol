@@ -648,8 +648,6 @@ contract LimitOrderBook is Ownable, DecimalERC20{
 
     //check whether A. there is a higher/lower price that occurred before the current updated value or
     // B. if it has been more than 15 minutes since the last update after the current updated value
-    // @audit question, why does _reserveIndex need to be less than trailingOrders[order_id].snapshotLastUpdated?
-    // Should be greater than, isn't it?
     require(_reserveIndex < trailingOrders[order_id].snapshotLastUpdated ||
       (block.timestamp - trailingOrders[order_id].snapshotTimestamp > pokeContractDelay), "Can only be updated every 10 minutes");
     trailingOrders[order_id].snapshotTimestamp = block.timestamp;

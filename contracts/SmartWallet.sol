@@ -1,29 +1,33 @@
-//SPDX-License-Identifier: UNLICENSED
+//SPDX-License-Identifier: MIT
+
 pragma solidity 0.6.9;
 pragma experimental ABIEncoderV2;
 
 import "./LimitOrderBook.sol";
 
-import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
-
-import "hardhat/console.sol";
+import "@openzeppelin/contracts/proxy/Initializable.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
 import { Decimal } from "./utils/Decimal.sol";
 import { SignedDecimal } from "./utils/SignedDecimal.sol";
+import { DecimalERC20 } from "./utils/DecimalERC20.sol";
 
 import { IAmm } from "./interface/IAmm.sol";
 import { IClearingHouse } from "./interface/IClearingHouse.sol";
+import { ISmartWallet } from "./interface/ISmartWallet.sol";
 
-contract SmartWallet is Ownable {
+contract SmartWallet is DecimalERC20, Initializable, ISmartWallet {
 
   // Store addresses of smart contracts that we will be interacting with
-  LimitOrderBook public LOB;
+  LimitOrderBook public OrderBook;
   SmartWalletFactory public factory;
   address constant USDC = 0xDDAfbb505ad214D7b80b1f830fcCc89B60fb7A83;
-  address constant ClearingHouse = 0x5d9593586b4B5edBd23E7Eba8d88FD8F09D83EBd;
+  address constant CLEARINGHOUSE = 0x5d9593586b4B5edBd23E7Eba8d88FD8F09D83EBd;
+
+  address private owner;
 
   using Decimal for Decimal.decimal;
   using SignedDecimal for SignedDecimal.signedDecimal;
@@ -41,29 +45,20 @@ contract SmartWallet is Ownable {
    * @param callData the data bytes of the function and parameters to execute
    *    Can use encodeFunctionData() from ethers.js
    */
+
   function executeCall(
     address target,
     bytes calldata callData
-  ) external onlyOwner() returns (bytes memory) {
+  ) external override onlyOwner() returns (bytes memory) {
     require(target.isContract(), 'call to non-contract');
-    //require(factory.isWhitelisted(target), 'Invalid target contract');
+    require(factory.isWhitelisted(target), 'Invalid target contract');
     return target.functionCall(callData);
   }
 
-  //Initialisation function to set LOB
-  function setOrderBook(
-    address _addr
-  ) public {
-    require(address(LOB) == address(0), 'LOB has already been set');
-    LOB = LimitOrderBook(_addr);
-  }
-
-  //Initialisation function to set factory
-  function setFactory(
-    SmartWalletFactory _addr
-  ) public {
-    require(address(factory) == address(0), 'SWF has already been set');
-    factory = SmartWalletFactory(_addr);
+  function initialize(address _lob, address _trader) initializer external override{
+    OrderBook = LimitOrderBook(_lob);
+    factory = SmartWalletFactory(msg.sender);
+    owner = _trader;
   }
 
   function executeMarketOrder(
@@ -72,14 +67,14 @@ contract SmartWallet is Ownable {
     Decimal.decimal memory _collateral,
     Decimal.decimal memory _leverage,
     Decimal.decimal memory _slippage
-  ) public onlyOwner(){
+  ) external override onlyOwner(){
     _handleOpenPositionWithApproval(_asset, _orderSize, _collateral, _leverage, _slippage);
   }
 
   function executeClosePosition(
     IAmm _asset,
     Decimal.decimal memory _slippage
-  ) public onlyOwner() {
+  ) external override onlyOwner() {
     _handleClosePositionWithApproval(_asset, _slippage);
   }
 
@@ -88,16 +83,18 @@ contract SmartWallet is Ownable {
    *  way to call this function is via the LimitOrderBook where you call execute().
    * @param order_id is the ID of the order to execute
    */
+  // @audit all your `_executeXXX` series functions seems return true directly if no any revert happened.
+  // can consider not return bool, revert if it failed somewhere.
   function executeOrder(
     uint order_id
-  ) public returns (bool) {
+  ) external override returns (bool) {
     //Only the LimitOrderBook can call this function
-    require(msg.sender == address(LOB), 'Only execute from the order book');
+    require(msg.sender == address(OrderBook), 'Only execute from the order book');
     //Get some of the parameters
     (,address _trader,
       LimitOrderBook.OrderType _orderType,
       ,bool _stillValid, uint _expiry) =
-      LOB.getLimitOrderParams(order_id);
+      OrderBook.getLimitOrderParams(order_id);
     //Make sure that the order belongs to this smart wallet
     require(factory.getSmartWallet(_trader) == address(this), 'Incorrect smart wallet');
     //Make sure that the order hasn't expired
@@ -121,9 +118,9 @@ contract SmartWallet is Ownable {
     return false;
   }
 
-  function minD(Decimal.decimal memory a, Decimal.decimal memory b) public pure
+  function minD(Decimal.decimal memory a, Decimal.decimal memory b) internal pure
   returns (Decimal.decimal memory){
-    return (a.cmp(b) == 1) ? b : a;
+    return (a.cmp(b) >= 1) ? b : a;
   }
 
   function _handleOpenPositionWithApproval(
@@ -133,16 +130,12 @@ contract SmartWallet is Ownable {
     Decimal.decimal memory _leverage,
     Decimal.decimal memory _slippage
   ) internal {
-    console.log('OPEN POSITION');
-    console.log('ORDER SIZE', _orderSize.abs().toUint());
-    console.log('SLIPPAGEEE', _slippage.toUint());
-    console.log('---');
-
     //Get cost of placing order (fees)
     (Decimal.decimal memory toll, Decimal.decimal memory spread) = _asset
       .calcFee(_collateral.mulD(_leverage));
     Decimal.decimal memory totalCost = _collateral.addD(toll).addD(spread);
-    IERC20(USDC).safeIncreaseAllowance(ClearingHouse,(totalCost.toUint()/(10**12)));
+
+    IERC20(USDC).safeIncreaseAllowance(CLEARINGHOUSE, _toUint(IERC20(USDC), totalCost));
 
     //Establish how much leverage will be needed for that order based on the
     //amount of collateral and the maximum leverage the user was happy with.
@@ -154,7 +147,7 @@ contract SmartWallet is Ownable {
     Decimal.decimal memory _offset = Decimal.decimal(1); //Need to add one wei for rounding
     _leverage = minD(_quote.divD(_collateral).addD(_offset),_leverage);
 
-    IClearingHouse(ClearingHouse).openPosition(
+    IClearingHouse(CLEARINGHOUSE).openPosition(
       _asset,
       _isLong ? IClearingHouse.Side.BUY : IClearingHouse.Side.SELL,
       _collateral,
@@ -197,10 +190,15 @@ contract SmartWallet is Ownable {
   */
 
   function _calcQuoteAssetAmountLimit(
-    Decimal.decimal memory _positionValue,
+    IAmm _asset,
+    Decimal.decimal memory _targetPrice,
     bool _isLong,
     Decimal.decimal memory _slippage
-  ) internal pure returns (Decimal.decimal memory){
+  ) internal view returns (Decimal.decimal memory){
+    IClearingHouse.Position memory oldPosition = IClearingHouse(CLEARINGHOUSE)
+      .getPosition(_asset, address(this));
+    SignedDecimal.signedDecimal memory oldPositionSize = oldPosition.size;
+    Decimal.decimal memory value = oldPositionSize.abs().mulD(_targetPrice);
     Decimal.decimal memory factor;
     require(_slippage.cmp(Decimal.one()) == -1, 'Slippage must be %');
     if (_isLong) {
@@ -210,19 +208,16 @@ contract SmartWallet is Ownable {
       //quote amount must be greater than quote amount limit
       factor = Decimal.one().addD(_slippage);
     }
-    return factor.mulD(_positionValue);
+    return factor.mulD(value);
   }
 
   function _handleClosePositionWithApproval(
     IAmm _asset,
     Decimal.decimal memory _slippage
   ) internal {
-    console.log('CLOSE POSITION');
-    console.log('SLIPPAGE', _slippage.toUint());
-    console.log('---');
     //Need to calculate trading fees to close position (no margin required)
-    IClearingHouse.Position memory oldPosition = IClearingHouse(ClearingHouse)
-      .getUnadjustedPosition(_asset, address(this));
+    IClearingHouse.Position memory oldPosition = IClearingHouse(CLEARINGHOUSE)
+      .getPosition(_asset, address(this));
     SignedDecimal.signedDecimal memory oldPositionSize = oldPosition.size;
     Decimal.decimal memory _quoteAsset = _asset.getOutputPrice(
       oldPositionSize.toInt() > 0 ? IAmm.Dir.ADD_TO_AMM : IAmm.Dir.REMOVE_FROM_AMM,
@@ -231,9 +226,9 @@ contract SmartWallet is Ownable {
     (Decimal.decimal memory toll, Decimal.decimal memory spread) = _asset
       .calcFee(_quoteAsset);
     Decimal.decimal memory totalCost = toll.addD(spread);
-    IERC20(USDC).safeIncreaseAllowance(ClearingHouse,(totalCost.toUint()/(10**12)));
+    IERC20(USDC).safeIncreaseAllowance(CLEARINGHOUSE, _toUint(IERC20(USDC), totalCost));
 
-    IClearingHouse(ClearingHouse).closePosition(
+    IClearingHouse(CLEARINGHOUSE).closePosition(
       _asset,
       _slippage
       );
@@ -252,7 +247,7 @@ contract SmartWallet is Ownable {
     SignedDecimal.signedDecimal memory _orderSize
   ) internal view returns (bool) {
     //Get the size of the users current position
-    IClearingHouse.Position memory _currentPosition = IClearingHouse(ClearingHouse)
+    IClearingHouse.Position memory _currentPosition = IClearingHouse(CLEARINGHOUSE)
       .getPosition(IAmm(_asset), address(this));
     SignedDecimal.signedDecimal memory _currentSize = _currentPosition.size;
     //If the user has no position for this asset, then cannot execute a reduceOnly order
@@ -292,8 +287,8 @@ contract SmartWallet is Ownable {
       SignedDecimal.signedDecimal memory _orderSize,
       Decimal.decimal memory _collateral,
       Decimal.decimal memory _leverage,
-      Decimal.decimal memory _slippage,) = LOB.getLimitOrderPrices(order_id);
-    (address _asset,,,bool _reduceOnly,,) = LOB.getLimitOrderParams(order_id);
+      Decimal.decimal memory _slippage,,
+      address _asset, bool _reduceOnly) = OrderBook.getLimitOrderPrices(order_id);
 
     //Check whether we need to close position or open position
     bool closePosition = false;
@@ -305,38 +300,22 @@ contract SmartWallet is Ownable {
     bool isLong = _orderSize.isNegative() ? false : true;
     //Get the current spot price of the asset
     Decimal.decimal memory _markPrice = IAmm(_asset).getSpotPrice();
+    require(_markPrice.cmp(Decimal.zero()) >= 1, 'Error getting mark price');
+
     //Check whether price conditions have been met:
     //  LIMIT BUY: mark price < limit price
     //  LIMIT SELL: mark price > limit price
-    bool priceCheck = (_limitPrice.cmp(_markPrice)) == (isLong ? int128(1) : -1);
-    if(priceCheck) {
-      if(closePosition) {
-        IClearingHouse.Position memory oldPosition = IClearingHouse(ClearingHouse)
-          .getUnadjustedPosition(IAmm(_asset), address(this));
-        SignedDecimal.signedDecimal memory oldPositionSize = oldPosition.size;
-        Decimal.decimal memory value = oldPositionSize.abs().mulD(_limitPrice);
-        Decimal.decimal memory quoteAssetLimit = _calcQuoteAssetAmountLimit(
-          value,
-          isLong,
-          _slippage);
-        _handleClosePositionWithApproval(
-          IAmm(_asset),
-          quoteAssetLimit
-          );
-      } else {
-        //openPosition using the values calculated above
-        Decimal.decimal memory baseAssetLimit = _calcBaseAssetAmountLimit(_orderSize.abs(), isLong, _slippage);
-        _handleOpenPositionWithApproval(
-          IAmm(_asset),
-          _orderSize,
-          _collateral,
-          _leverage,
-          baseAssetLimit
-          );
-      }
+    require((_limitPrice.cmp(_markPrice)) == (isLong ? int128(1) : -1), 'Invalid limit order condition');
+
+    if(closePosition) {
+      Decimal.decimal memory quoteAssetLimit = _calcQuoteAssetAmountLimit(IAmm(_asset), _limitPrice, isLong, _slippage);
+      _handleClosePositionWithApproval(IAmm(_asset), quoteAssetLimit);
     } else {
-      revert('Price has not hit limit price');
+      //openPosition using the values calculated above
+      Decimal.decimal memory baseAssetLimit = _calcBaseAssetAmountLimit(_orderSize.abs(), isLong, _slippage);
+      _handleOpenPositionWithApproval(IAmm(_asset), _orderSize, _collateral, _leverage, baseAssetLimit);
     }
+
     return true;
   }
 
@@ -347,8 +326,8 @@ contract SmartWallet is Ownable {
     (Decimal.decimal memory _stopPrice,,
       SignedDecimal.signedDecimal memory _orderSize,
       Decimal.decimal memory _collateral,
-      Decimal.decimal memory _leverage,,) = LOB.getLimitOrderPrices(order_id);
-    (address _asset,,,bool _reduceOnly,,) = LOB.getLimitOrderParams(order_id);
+      Decimal.decimal memory _leverage,,,
+      address _asset, bool _reduceOnly) = OrderBook.getLimitOrderPrices(order_id);
 
     //Check whether we need to close position or open position
     bool closePosition = false;
@@ -360,34 +339,23 @@ contract SmartWallet is Ownable {
     bool isLong = _orderSize.isNegative() ? false : true;
     //Get the current spot price of the asset
     Decimal.decimal memory _markPrice = IAmm(_asset).getSpotPrice();
+    require(_markPrice.cmp(Decimal.zero()) >= 1, 'Error getting mark price');
     //Check whether price conditions have been met:
     //  STOP BUY: mark price > stop price
     //  STOP SELL: mark price < stop price
-    bool priceCheck = (_markPrice.cmp(_stopPrice)) == (isLong ? int128(1) : -1);
-    if(priceCheck) {
-      if(closePosition) {
-        //Strictly speaking, stop orders cannot have slippage as by definition they
-        //will get executed at the next available price. Restricting them with slippage
-        //will turn them into stop limit orders.
-        _handleClosePositionWithApproval(
-          IAmm(_asset),
-          Decimal.decimal(0)
-          );
-      } else {
-        //Strictly speaking, stop orders cannot have slippage as by definition they
-        //will get executed at the next available price. Restricting them with slippage
-        //will turn them into stop limit orders.
-        _handleOpenPositionWithApproval(
-          IAmm(_asset),
-          _orderSize,
-          _collateral,
-          _leverage,
-          Decimal.decimal(0)
-          );
-      }
+    require((_markPrice.cmp(_stopPrice)) == (isLong ? int128(1) : -1), 'Invalid stop order conditions');
+    if(closePosition) {
+      //Strictly speaking, stop orders cannot have slippage as by definition they
+      //will get executed at the next available price. Restricting them with slippage
+      //will turn them into stop limit orders.
+      _handleClosePositionWithApproval(IAmm(_asset), Decimal.decimal(0));
     } else {
-      revert('Price has not hit stop price');
+      //Strictly speaking, stop orders cannot have slippage as by definition they
+      //will get executed at the next available price. Restricting them with slippage
+      //will turn them into stop limit orders.
+      _handleOpenPositionWithApproval(IAmm(_asset), _orderSize, _collateral, _leverage, Decimal.decimal(0));
     }
+
     return true;
   }
 
@@ -400,8 +368,8 @@ contract SmartWallet is Ownable {
       SignedDecimal.signedDecimal memory _orderSize,
       Decimal.decimal memory _collateral,
       Decimal.decimal memory _leverage,
-      Decimal.decimal memory _slippage,) = LOB.getLimitOrderPrices(order_id);
-    (address _asset,,,bool _reduceOnly,,) = LOB.getLimitOrderParams(order_id);
+      Decimal.decimal memory _slippage,,
+      address _asset, bool _reduceOnly) = OrderBook.getLimitOrderPrices(order_id);
 
     //Check whether we need to close position or open position
     bool closePosition = false;
@@ -413,47 +381,35 @@ contract SmartWallet is Ownable {
     bool isLong = _orderSize.isNegative() ? false : true;
     //Get the current spot price of the asset
     Decimal.decimal memory _markPrice = IAmm(_asset).getSpotPrice();
+    require(_markPrice.cmp(Decimal.zero()) >= 1, 'Error getting mark price');
     //Check whether price conditions have been met:
     //  STOP LIMIT BUY: limit price > mark price > stop price
     //  STOP LIMIT SELL: limit price < mark price < stop price
-    bool priceCheck = (_limitPrice.cmp(_markPrice)) == (isLong ? int128(1) : -1) &&
-      (_markPrice.cmp(_stopPrice)) == (isLong ? int128(1) : -1);
-    if(priceCheck) {
-      if(closePosition) {
-        IClearingHouse.Position memory oldPosition = IClearingHouse(ClearingHouse)
-          .getUnadjustedPosition(IAmm(_asset), address(this));
-        SignedDecimal.signedDecimal memory oldPositionSize = oldPosition.size;
-        Decimal.decimal memory value = oldPositionSize.abs().mulD(_limitPrice);
-        Decimal.decimal memory quoteAssetLimit = _calcQuoteAssetAmountLimit(
-          value,
-          isLong,
-          _slippage);
-        _handleClosePositionWithApproval(
-          IAmm(_asset),
-          quoteAssetLimit
-          );
-      } else {
-        //openPosition using the values calculated above
-        Decimal.decimal memory baseAssetLimit = _calcBaseAssetAmountLimit(_orderSize.abs(), isLong, _slippage);
-        _handleOpenPositionWithApproval(
-          IAmm(_asset),
-          _orderSize,
-          _collateral,
-          _leverage,
-          baseAssetLimit
-          );
-      }
+    require((_limitPrice.cmp(_markPrice)) == (isLong ? int128(1) : -1) &&
+      (_markPrice.cmp(_stopPrice)) == (isLong ? int128(1) : -1), 'Invalid stop-limit condition');
+    if(closePosition) {
+      Decimal.decimal memory quoteAssetLimit = _calcQuoteAssetAmountLimit(IAmm(_asset), _limitPrice, isLong, _slippage);
+      _handleClosePositionWithApproval(IAmm(_asset), quoteAssetLimit);
     } else {
-      revert('Price has not hit stoplimit price');
+      //openPosition using the values calculated above
+      Decimal.decimal memory baseAssetLimit = _calcBaseAssetAmountLimit(_orderSize.abs(), isLong, _slippage);
+      _handleOpenPositionWithApproval(IAmm(_asset), _orderSize, _collateral, _leverage, baseAssetLimit);
     }
     return true;
   }
 
+  modifier onlyOwner() {
+      require(owner == msg.sender, "Ownable: caller is not the owner");
+      _;
+  }
+
 }
 
-contract SmartWalletFactory {
+contract SmartWalletFactory is Ownable{
   event Created(address indexed owner, address indexed smartWallet);
+
   mapping (address => address) public getSmartWallet;
+  mapping (address => bool) public isWhitelisted;
 
   address public LimitOrderBook;
 
@@ -464,7 +420,7 @@ contract SmartWalletFactory {
   /*
    * @notice Create and deploy a smart wallet for the user and stores the address
    */
-  function spawn() public returns (address smartWallet) {
+  function spawn() external returns (address smartWallet) {
     require(getSmartWallet[msg.sender] == address(0), 'Already has smart wallet');
 
     bytes memory bytecode = type(SmartWallet).creationCode;
@@ -473,11 +429,17 @@ contract SmartWalletFactory {
       smartWallet := create2(0, add(bytecode, 0x20), mload(bytecode), salt)
     }
 
-    emit Created(msg.sender, address(smartWallet));
-    SmartWallet(smartWallet).setOrderBook(LimitOrderBook);
-    SmartWallet(smartWallet).setFactory(this);
-    SmartWallet(smartWallet).transferOwnership(msg.sender);
+    emit Created(msg.sender, smartWallet);
+    ISmartWallet(smartWallet).initialize(LimitOrderBook, msg.sender);
     getSmartWallet[msg.sender] = smartWallet;
+  }
+
+  function addToWhitelist(address _contract) external onlyOwner{
+    isWhitelisted[_contract] = true;
+  }
+
+  function removeFromWhitelist(address _contract) external onlyOwner{
+    isWhitelisted[_contract] = false;
   }
 
 }

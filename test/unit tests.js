@@ -103,7 +103,11 @@ abiDecoder.addABI(AMM_ABI)
     })
 
     it("Smart wallet needs to have limit order book", async function() {
-      expect(await AliceSWC.LOB()).to.equal(lob.address)
+      expect(await AliceSWC.OrderBook()).to.equal(lob.address)
+    })
+
+    it("Allowing USDC on SmartWalletFactory", async function() {
+      await swf.addToWhitelist(USDC_Address)
     })
 /*
     it("Checking approval of USDC", async function() {

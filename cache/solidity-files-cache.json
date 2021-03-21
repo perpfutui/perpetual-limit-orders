@@ -989,8 +989,8 @@
       ]
     },
     "/Users/abdullaalkamil/Coding/perpetual-limit-orders/contracts/SmartWallet.sol": {
-      "lastModificationDate": 1616352067143,
-      "contentHash": "dd26e3ba104e099e9dd3046d729dbc1c",
+      "lastModificationDate": 1616356239855,
+      "contentHash": "ace5d3adf5d1067ff19d57cdbdf0ef76",
       "sourceName": "contracts/SmartWallet.sol",
       "solcConfig": {
         "version": "0.6.9",
@@ -1021,12 +1021,12 @@
         "@openzeppelin/contracts/token/ERC20/SafeERC20.sol",
         "@openzeppelin/contracts/proxy/Initializable.sol",
         "@openzeppelin/contracts/access/Ownable.sol",
-        "hardhat/console.sol",
         "./utils/Decimal.sol",
         "./utils/SignedDecimal.sol",
         "./utils/DecimalERC20.sol",
         "./interface/IAmm.sol",
-        "./interface/IClearingHouse.sol"
+        "./interface/IClearingHouse.sol",
+        "./interface/ISmartWallet.sol"
       ],
       "versionPragmas": [
         "0.6.9"
@@ -1037,8 +1037,8 @@
       ]
     },
     "/Users/abdullaalkamil/Coding/perpetual-limit-orders/contracts/LimitOrderBook.sol": {
-      "lastModificationDate": 1616351708521,
-      "contentHash": "267cc30b6efc52a3dc6cda8379ddf162",
+      "lastModificationDate": 1616354863467,
+      "contentHash": "8047c2c0a333675dc970e6d917d0fb7a",
       "sourceName": "contracts/LimitOrderBook.sol",
       "solcConfig": {
         "version": "0.6.9",
@@ -1403,6 +1403,44 @@
       ],
       "artifacts": [
         "Initializable"
+      ]
+    },
+    "/Users/abdullaalkamil/Coding/perpetual-limit-orders/contracts/interface/ISmartWallet.sol": {
+      "lastModificationDate": 1616353969778,
+      "contentHash": "0beb75fb6a14dbc919b164b50be4bdce",
+      "sourceName": "contracts/interface/ISmartWallet.sol",
+      "solcConfig": {
+        "version": "0.6.9",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 2000
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./IAmm.sol",
+        "../utils/Decimal.sol",
+        "../utils/SignedDecimal.sol"
+      ],
+      "versionPragmas": [
+        "0.6.9"
+      ],
+      "artifacts": [
+        "ISmartWallet"
       ]
     }
   }

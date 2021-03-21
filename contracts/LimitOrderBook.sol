@@ -712,7 +712,8 @@ contract LimitOrderBook is Ownable, DecimalERC20{
       Decimal.decimal memory,
       Decimal.decimal memory,
       Decimal.decimal memory,
-      Decimal.decimal memory) {
+      Decimal.decimal memory,
+      address, bool) {
     LimitOrder memory order = orders[id];
     return (order.stopPrice,
       order.limitPrice,
@@ -720,7 +721,9 @@ contract LimitOrderBook is Ownable, DecimalERC20{
       order.collateral,
       order.leverage,
       order.slippage,
-      order.tipFee);
+      order.tipFee,
+      order.asset,
+      order.reduceOnly);
   }
 
   function getLimitOrderParams(

@@ -11,16 +11,15 @@ import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "@openzeppelin/contracts/proxy/Initializable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-import "hardhat/console.sol";
-
 import { Decimal } from "./utils/Decimal.sol";
 import { SignedDecimal } from "./utils/SignedDecimal.sol";
 import { DecimalERC20 } from "./utils/DecimalERC20.sol";
 
 import { IAmm } from "./interface/IAmm.sol";
 import { IClearingHouse } from "./interface/IClearingHouse.sol";
+import { ISmartWallet } from "./interface/ISmartWallet.sol";
 
-contract SmartWallet is DecimalERC20, Initializable {
+contract SmartWallet is DecimalERC20, Initializable, ISmartWallet {
 
   // Store addresses of smart contracts that we will be interacting with
   LimitOrderBook public OrderBook;
@@ -46,23 +45,17 @@ contract SmartWallet is DecimalERC20, Initializable {
    * @param callData the data bytes of the function and parameters to execute
    *    Can use encodeFunctionData() from ethers.js
    */
-  // @audit it's too danger without any limitations. If attacker changes the `target` or `callData`,
-  // users are hard to regconize what happen. For example, if `target` is `this` and `callData`
-  // is OPCODE of `selfdestruct`, this contract will be destroyed and user may loss their fund.
-  // suggest that
-  // 1. have a whitelisting for `target`, only `target` in the whitelisting can be executed
-  // 2. have an allow-list(like EIP-165) for `callData`, only allowed functions can be executed
 
   function executeCall(
     address target,
     bytes calldata callData
-  ) external onlyOwner() returns (bytes memory) {
+  ) external override onlyOwner() returns (bytes memory) {
     require(target.isContract(), 'call to non-contract');
     require(factory.isWhitelisted(target), 'Invalid target contract');
     return target.functionCall(callData);
   }
 
-  function initialize(address _lob, address _trader) initializer public {
+  function initialize(address _lob, address _trader) initializer external override{
     OrderBook = LimitOrderBook(_lob);
     factory = SmartWalletFactory(msg.sender);
     owner = _trader;
@@ -74,14 +67,14 @@ contract SmartWallet is DecimalERC20, Initializable {
     Decimal.decimal memory _collateral,
     Decimal.decimal memory _leverage,
     Decimal.decimal memory _slippage
-  ) external onlyOwner(){
+  ) external override onlyOwner(){
     _handleOpenPositionWithApproval(_asset, _orderSize, _collateral, _leverage, _slippage);
   }
 
   function executeClosePosition(
     IAmm _asset,
     Decimal.decimal memory _slippage
-  ) external onlyOwner() {
+  ) external override onlyOwner() {
     _handleClosePositionWithApproval(_asset, _slippage);
   }
 
@@ -94,7 +87,7 @@ contract SmartWallet is DecimalERC20, Initializable {
   // can consider not return bool, revert if it failed somewhere.
   function executeOrder(
     uint order_id
-  ) external returns (bool) {
+  ) external override returns (bool) {
     //Only the LimitOrderBook can call this function
     require(msg.sender == address(OrderBook), 'Only execute from the order book');
     //Get some of the parameters
@@ -125,7 +118,7 @@ contract SmartWallet is DecimalERC20, Initializable {
     return false;
   }
 
-  function minD(Decimal.decimal memory a, Decimal.decimal memory b) public pure
+  function minD(Decimal.decimal memory a, Decimal.decimal memory b) internal pure
   returns (Decimal.decimal memory){
     return (a.cmp(b) >= 1) ? b : a;
   }
@@ -197,10 +190,15 @@ contract SmartWallet is DecimalERC20, Initializable {
   */
 
   function _calcQuoteAssetAmountLimit(
-    Decimal.decimal memory _positionValue,
+    IAmm _asset,
+    Decimal.decimal memory _targetPrice,
     bool _isLong,
     Decimal.decimal memory _slippage
-  ) internal pure returns (Decimal.decimal memory){
+  ) internal view returns (Decimal.decimal memory){
+    IClearingHouse.Position memory oldPosition = IClearingHouse(CLEARINGHOUSE)
+      .getPosition(_asset, address(this));
+    SignedDecimal.signedDecimal memory oldPositionSize = oldPosition.size;
+    Decimal.decimal memory value = oldPositionSize.abs().mulD(_targetPrice);
     Decimal.decimal memory factor;
     require(_slippage.cmp(Decimal.one()) == -1, 'Slippage must be %');
     if (_isLong) {
@@ -210,7 +208,7 @@ contract SmartWallet is DecimalERC20, Initializable {
       //quote amount must be greater than quote amount limit
       factor = Decimal.one().addD(_slippage);
     }
-    return factor.mulD(_positionValue);
+    return factor.mulD(value);
   }
 
   function _handleClosePositionWithApproval(
@@ -277,12 +275,6 @@ contract SmartWallet is DecimalERC20, Initializable {
     }
   }
 
-  //  @audit recommendation,
-  // `_executeXXX` series functions have the same pre condition check, can merge into a checking function
-  // and return necessary values for later usage to reduce redundant code.
-  // even more, have a function to determine `priceCheck` in different situations and
-  // the code are highly similiar after price check, might be possible to merge into
-  // `_handleOpenPositionWithApproval` and `_handleClosePositionWithApproval`
   /*
    * @notice internal position to execute limit order - note that you need to
    *  check that this is a limit order before calling this function
@@ -295,11 +287,8 @@ contract SmartWallet is DecimalERC20, Initializable {
       SignedDecimal.signedDecimal memory _orderSize,
       Decimal.decimal memory _collateral,
       Decimal.decimal memory _leverage,
-      Decimal.decimal memory _slippage,) = OrderBook.getLimitOrderPrices(order_id);
-      // @audit only see two use cases, one is in `executeOrder` the others are in `_executeXXX` functions.
-      // suggest to move `_asset` and `_reduceOnly` to `getLimitOrderPrices` to reduce external function call
-      // for gas saving.
-    (address _asset,,,bool _reduceOnly,,) = OrderBook.getLimitOrderParams(order_id);
+      Decimal.decimal memory _slippage,,
+      address _asset, bool _reduceOnly) = OrderBook.getLimitOrderPrices(order_id);
 
     //Check whether we need to close position or open position
     bool closePosition = false;
@@ -311,40 +300,22 @@ contract SmartWallet is DecimalERC20, Initializable {
     bool isLong = _orderSize.isNegative() ? false : true;
     //Get the current spot price of the asset
     Decimal.decimal memory _markPrice = IAmm(_asset).getSpotPrice();
-    // @audit can add a check `_markPrice > 0` in case anything goes wrong, like Amm is stopped after the order created
+    require(_markPrice.cmp(Decimal.zero()) >= 1, 'Error getting mark price');
 
     //Check whether price conditions have been met:
     //  LIMIT BUY: mark price < limit price
     //  LIMIT SELL: mark price > limit price
-    bool priceCheck = (_limitPrice.cmp(_markPrice)) == (isLong ? int128(1) : -1);
-    if(priceCheck) {
-      if(closePosition) {
-        IClearingHouse.Position memory oldPosition = IClearingHouse(CLEARINGHOUSE)
-          .getPosition(IAmm(_asset), address(this));
-        SignedDecimal.signedDecimal memory oldPositionSize = oldPosition.size;
-        Decimal.decimal memory value = oldPositionSize.abs().mulD(_limitPrice);
-        Decimal.decimal memory quoteAssetLimit = _calcQuoteAssetAmountLimit(
-          value,
-          isLong,
-          _slippage);
-        _handleClosePositionWithApproval(
-          IAmm(_asset),
-          quoteAssetLimit
-          );
-      } else {
-        //openPosition using the values calculated above
-        Decimal.decimal memory baseAssetLimit = _calcBaseAssetAmountLimit(_orderSize.abs(), isLong, _slippage);
-        _handleOpenPositionWithApproval(
-          IAmm(_asset),
-          _orderSize,
-          _collateral,
-          _leverage,
-          baseAssetLimit
-          );
-      }
+    require((_limitPrice.cmp(_markPrice)) == (isLong ? int128(1) : -1), 'Invalid limit order condition');
+
+    if(closePosition) {
+      Decimal.decimal memory quoteAssetLimit = _calcQuoteAssetAmountLimit(IAmm(_asset), _limitPrice, isLong, _slippage);
+      _handleClosePositionWithApproval(IAmm(_asset), quoteAssetLimit);
     } else {
-      revert('Price has not hit limit price');
+      //openPosition using the values calculated above
+      Decimal.decimal memory baseAssetLimit = _calcBaseAssetAmountLimit(_orderSize.abs(), isLong, _slippage);
+      _handleOpenPositionWithApproval(IAmm(_asset), _orderSize, _collateral, _leverage, baseAssetLimit);
     }
+
     return true;
   }
 
@@ -355,8 +326,8 @@ contract SmartWallet is DecimalERC20, Initializable {
     (Decimal.decimal memory _stopPrice,,
       SignedDecimal.signedDecimal memory _orderSize,
       Decimal.decimal memory _collateral,
-      Decimal.decimal memory _leverage,,) = OrderBook.getLimitOrderPrices(order_id);
-    (address _asset,,,bool _reduceOnly,,) = OrderBook.getLimitOrderParams(order_id);
+      Decimal.decimal memory _leverage,,,
+      address _asset, bool _reduceOnly) = OrderBook.getLimitOrderPrices(order_id);
 
     //Check whether we need to close position or open position
     bool closePosition = false;
@@ -368,34 +339,23 @@ contract SmartWallet is DecimalERC20, Initializable {
     bool isLong = _orderSize.isNegative() ? false : true;
     //Get the current spot price of the asset
     Decimal.decimal memory _markPrice = IAmm(_asset).getSpotPrice();
+    require(_markPrice.cmp(Decimal.zero()) >= 1, 'Error getting mark price');
     //Check whether price conditions have been met:
     //  STOP BUY: mark price > stop price
     //  STOP SELL: mark price < stop price
-    bool priceCheck = (_markPrice.cmp(_stopPrice)) == (isLong ? int128(1) : -1);
-    if(priceCheck) {
-      if(closePosition) {
-        //Strictly speaking, stop orders cannot have slippage as by definition they
-        //will get executed at the next available price. Restricting them with slippage
-        //will turn them into stop limit orders.
-        _handleClosePositionWithApproval(
-          IAmm(_asset),
-          Decimal.decimal(0)
-          );
-      } else {
-        //Strictly speaking, stop orders cannot have slippage as by definition they
-        //will get executed at the next available price. Restricting them with slippage
-        //will turn them into stop limit orders.
-        _handleOpenPositionWithApproval(
-          IAmm(_asset),
-          _orderSize,
-          _collateral,
-          _leverage,
-          Decimal.decimal(0)
-          );
-      }
+    require((_markPrice.cmp(_stopPrice)) == (isLong ? int128(1) : -1), 'Invalid stop order conditions');
+    if(closePosition) {
+      //Strictly speaking, stop orders cannot have slippage as by definition they
+      //will get executed at the next available price. Restricting them with slippage
+      //will turn them into stop limit orders.
+      _handleClosePositionWithApproval(IAmm(_asset), Decimal.decimal(0));
     } else {
-      revert('Price has not hit stop price');
+      //Strictly speaking, stop orders cannot have slippage as by definition they
+      //will get executed at the next available price. Restricting them with slippage
+      //will turn them into stop limit orders.
+      _handleOpenPositionWithApproval(IAmm(_asset), _orderSize, _collateral, _leverage, Decimal.decimal(0));
     }
+
     return true;
   }
 
@@ -408,8 +368,8 @@ contract SmartWallet is DecimalERC20, Initializable {
       SignedDecimal.signedDecimal memory _orderSize,
       Decimal.decimal memory _collateral,
       Decimal.decimal memory _leverage,
-      Decimal.decimal memory _slippage,) = OrderBook.getLimitOrderPrices(order_id);
-    (address _asset,,,bool _reduceOnly,,) = OrderBook.getLimitOrderParams(order_id);
+      Decimal.decimal memory _slippage,,
+      address _asset, bool _reduceOnly) = OrderBook.getLimitOrderPrices(order_id);
 
     //Check whether we need to close position or open position
     bool closePosition = false;
@@ -421,38 +381,19 @@ contract SmartWallet is DecimalERC20, Initializable {
     bool isLong = _orderSize.isNegative() ? false : true;
     //Get the current spot price of the asset
     Decimal.decimal memory _markPrice = IAmm(_asset).getSpotPrice();
+    require(_markPrice.cmp(Decimal.zero()) >= 1, 'Error getting mark price');
     //Check whether price conditions have been met:
     //  STOP LIMIT BUY: limit price > mark price > stop price
     //  STOP LIMIT SELL: limit price < mark price < stop price
-    bool priceCheck = (_limitPrice.cmp(_markPrice)) == (isLong ? int128(1) : -1) &&
-      (_markPrice.cmp(_stopPrice)) == (isLong ? int128(1) : -1);
-    if(priceCheck) {
-      if(closePosition) {
-        IClearingHouse.Position memory oldPosition = IClearingHouse(CLEARINGHOUSE)
-          .getUnadjustedPosition(IAmm(_asset), address(this));
-        SignedDecimal.signedDecimal memory oldPositionSize = oldPosition.size;
-        Decimal.decimal memory value = oldPositionSize.abs().mulD(_limitPrice);
-        Decimal.decimal memory quoteAssetLimit = _calcQuoteAssetAmountLimit(
-          value,
-          isLong,
-          _slippage);
-        _handleClosePositionWithApproval(
-          IAmm(_asset),
-          quoteAssetLimit
-          );
-      } else {
-        //openPosition using the values calculated above
-        Decimal.decimal memory baseAssetLimit = _calcBaseAssetAmountLimit(_orderSize.abs(), isLong, _slippage);
-        _handleOpenPositionWithApproval(
-          IAmm(_asset),
-          _orderSize,
-          _collateral,
-          _leverage,
-          baseAssetLimit
-          );
-      }
+    require((_limitPrice.cmp(_markPrice)) == (isLong ? int128(1) : -1) &&
+      (_markPrice.cmp(_stopPrice)) == (isLong ? int128(1) : -1), 'Invalid stop-limit condition');
+    if(closePosition) {
+      Decimal.decimal memory quoteAssetLimit = _calcQuoteAssetAmountLimit(IAmm(_asset), _limitPrice, isLong, _slippage);
+      _handleClosePositionWithApproval(IAmm(_asset), quoteAssetLimit);
     } else {
-      revert('Price has not hit stoplimit price');
+      //openPosition using the values calculated above
+      Decimal.decimal memory baseAssetLimit = _calcBaseAssetAmountLimit(_orderSize.abs(), isLong, _slippage);
+      _handleOpenPositionWithApproval(IAmm(_asset), _orderSize, _collateral, _leverage, baseAssetLimit);
     }
     return true;
   }
@@ -466,9 +407,7 @@ contract SmartWallet is DecimalERC20, Initializable {
 
 contract SmartWalletFactory is Ownable{
   event Created(address indexed owner, address indexed smartWallet);
-  // @audit better to use an interface to repersent smartWallet,
-  // it'll be easier for coding and finding error at compiling time
-  // For example, `SmartWallet(smartWallet).setFactory(this);` can be `smartWallet.setFactory(this);`
+
   mapping (address => address) public getSmartWallet;
   mapping (address => bool) public isWhitelisted;
 
@@ -491,7 +430,7 @@ contract SmartWalletFactory is Ownable{
     }
 
     emit Created(msg.sender, smartWallet);
-    SmartWallet(smartWallet).initialize(LimitOrderBook, msg.sender);
+    ISmartWallet(smartWallet).initialize(LimitOrderBook, msg.sender);
     getSmartWallet[msg.sender] = smartWallet;
   }
 

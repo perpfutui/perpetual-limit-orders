@@ -96,7 +96,7 @@ contract SmartWallet is DecimalERC20, Initializable, ISmartWallet, Pausable {
   // can consider not return bool, revert if it failed somewhere.
   function executeOrder(
     uint order_id
-  ) external override whenNotPaused() returns (bool) {
+  ) external override whenNotPaused() {
     //Only the LimitOrderBook can call this function
     require(msg.sender == address(OrderBook), 'Only execute from the order book');
     //Get some of the parameters
@@ -113,18 +113,16 @@ contract SmartWallet is DecimalERC20, Initializable, ISmartWallet, Pausable {
     //Perform function depending on the type of order
 
     if(_orderType == LimitOrderBook.OrderType.LIMIT) {
-      return _executeLimitOrder(order_id);
+        _executeLimitOrder(order_id);
     } else if(_orderType == LimitOrderBook.OrderType.STOPMARKET) {
-      return _executeStopOrder(order_id);
+        _executeStopOrder(order_id);
     } else if(_orderType == LimitOrderBook.OrderType.STOPLIMIT) {
-      return _executeStopLimitOrder(order_id);
+        _executeStopLimitOrder(order_id);
     } else if (_orderType == LimitOrderBook.OrderType.TRAILINGSTOPMARKET) {
-      return _executeStopOrder(order_id);
+        _executeStopOrder(order_id);
     } else if (_orderType == LimitOrderBook.OrderType.TRAILINGSTOPLIMIT) {
-      return _executeStopLimitOrder(order_id);
+        _executeStopLimitOrder(order_id);
     }
-    //If the ordertype isn't valid ??how?? then this will return false
-    return false;
   }
 
   function minD(Decimal.decimal memory a, Decimal.decimal memory b) internal pure
@@ -290,7 +288,7 @@ contract SmartWallet is DecimalERC20, Initializable, ISmartWallet, Pausable {
    */
   function _executeLimitOrder(
     uint order_id
-  ) internal returns (bool) {
+  ) internal {
     //Get information of limit order
     (,Decimal.decimal memory _limitPrice,
       SignedDecimal.signedDecimal memory _orderSize,
@@ -325,12 +323,11 @@ contract SmartWallet is DecimalERC20, Initializable, ISmartWallet, Pausable {
       _handleOpenPositionWithApproval(IAmm(_asset), _orderSize, _collateral, _leverage, baseAssetLimit);
     }
 
-    return true;
   }
 
   function _executeStopOrder(
     uint order_id
-  ) internal returns (bool) {
+  ) internal {
     //Get information of stop order
     (Decimal.decimal memory _stopPrice,,
       SignedDecimal.signedDecimal memory _orderSize,
@@ -353,24 +350,21 @@ contract SmartWallet is DecimalERC20, Initializable, ISmartWallet, Pausable {
     //  STOP BUY: mark price > stop price
     //  STOP SELL: mark price < stop price
     require((_markPrice.cmp(_stopPrice)) == (isLong ? int128(1) : -1), 'Invalid stop order conditions');
+
+    //Strictly speaking, stop orders cannot have slippage as by definition they
+    //will get executed at the next available price. Restricting them with slippage
+    //will turn them into stop limit orders.
     if(closePosition) {
-      //Strictly speaking, stop orders cannot have slippage as by definition they
-      //will get executed at the next available price. Restricting them with slippage
-      //will turn them into stop limit orders.
       _handleClosePositionWithApproval(IAmm(_asset), Decimal.decimal(0));
     } else {
-      //Strictly speaking, stop orders cannot have slippage as by definition they
-      //will get executed at the next available price. Restricting them with slippage
-      //will turn them into stop limit orders.
       _handleOpenPositionWithApproval(IAmm(_asset), _orderSize, _collateral, _leverage, Decimal.decimal(0));
     }
 
-    return true;
   }
 
   function _executeStopLimitOrder(
     uint order_id
-  ) internal returns (bool) {
+  ) internal {
     //Get information of stop limit order
     (Decimal.decimal memory _stopPrice,
       Decimal.decimal memory _limitPrice,
@@ -404,7 +398,6 @@ contract SmartWallet is DecimalERC20, Initializable, ISmartWallet, Pausable {
       Decimal.decimal memory baseAssetLimit = _calcBaseAssetAmountLimit(_orderSize.abs(), isLong, _slippage);
       _handleOpenPositionWithApproval(IAmm(_asset), _orderSize, _collateral, _leverage, baseAssetLimit);
     }
-    return true;
   }
 
   modifier onlyOwner() {

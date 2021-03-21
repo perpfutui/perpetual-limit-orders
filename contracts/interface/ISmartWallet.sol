@@ -31,6 +31,6 @@ interface ISmartWallet {
 
   function executeOrder(
     uint order_id
-  ) external returns (bool);
+  ) external;
 
 }

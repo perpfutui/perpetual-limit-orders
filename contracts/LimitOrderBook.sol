@@ -558,12 +558,12 @@ contract LimitOrderBook is Ownable, DecimalERC20{
   function execute(uint order_id) external onlyValidOrder(order_id) {
     //First check that the order hasn't been cancelled/already been executed
     LimitOrder memory order = orders[order_id];
+    address _trader = order.trader;
     require(order.stillValid, 'No longer valid');
     //Get the smart wallet of the trader from the factory contract
     address _smartwallet = factory.getSmartWallet(order.trader);
     //Try and execute the order (should return true if successful)
-    bool success = SmartWallet(_smartwallet).executeOrder(order_id);
-    require(success, "Error executing order");
+    SmartWallet(_smartwallet).executeOrder(order_id);
     if((order.orderType == OrderType.TRAILINGSTOPMARKET ||
         order.orderType == OrderType.TRAILINGSTOPLIMIT)) {
         //If this is a trailing order, then the botFee gets split between the keeper that
@@ -585,7 +585,7 @@ contract LimitOrderBook is Ownable, DecimalERC20{
     //Invalidate order to prevent double spend
     delete orders[order_id];
     //emit event
-    emit OrderFilled(order.trader, order_id); //TODO: double check that this event is accurate
+    emit OrderFilled(_trader, order_id);
   }
 
   /*

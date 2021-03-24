@@ -27,9 +27,9 @@ async function main() {
   // var sfl = await setfac.wait()
   // console.log('Setting factory at tx: '+sfl.transactionHash)
 
-  var setfee = await lob.changeMinimumFee({d: MINIMUM_FEE})
-  var setfeetx = await setfee.wait()
-  console.log('Fee set at tx: '+setfeetx.transactionHash)
+  // var setfee = await lob.changeMinimumFee({d: MINIMUM_FEE})
+  // var setfeetx = await setfee.wait()
+  // console.log('Fee set at tx: '+setfeetx.transactionHash)
 
 }
 

@@ -1,11 +1,12 @@
-require("@nomiclabs/hardhat-waffle");
-
-const PRIVATE_KEY = "";
+require('dotenv').config();
 
 /**
  * @type import('hardhat/config').HardhatUserConfig
  */
 module.exports = {
+  etherscan: {
+    apiKey: `${process.env.ETHERSCAN}`
+  },
   solidity: {
     compilers: [
       {
@@ -13,17 +14,17 @@ module.exports = {
         settings: {
           optimizer: {
             enabled: true,
-            runs: 2000
+            runs: 200
           }
         }
       }
     ]
   },
   networks: {
-    // xdai: {
-    //   url: 'https://dai.poa.network/',
-    //   accounts: [`0x${PRIVATE_KEY}`]
-    // },
+    xdai: {
+      url: 'https://dai.poa.network/',
+      accounts: [`0x${process.env.DEPLOYER}`]
+    },
     hardhat: {
       forking: {
         url: "https://xdai-archive.blockscout.com/",

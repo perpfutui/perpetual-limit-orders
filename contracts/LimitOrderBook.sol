@@ -2,8 +2,6 @@
 pragma solidity 0.6.9;
 pragma experimental ABIEncoderV2;
 
-import "./SmartWallet.sol";
-
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
@@ -13,6 +11,7 @@ import { DecimalERC20 } from "./utils/DecimalERC20.sol";
 
 import { IAmm } from "./interface/IAmm.sol";
 import { IInsuranceFund } from "./interface/IInsuranceFund.sol";
+import { ISmartWallet } from "./interface/ISmartWallet.sol";
 
 contract LimitOrderBook is Ownable, DecimalERC20{
 

@@ -19,6 +19,7 @@ import { DecimalERC20 } from "./utils/DecimalERC20.sol";
 import { IAmm } from "./interface/IAmm.sol";
 import { IClearingHouse } from "./interface/IClearingHouse.sol";
 import { ISmartWallet } from "./interface/ISmartWallet.sol";
+import { ISmartWalletFactory } from "./interface/ISmartWalletFactory.sol";
 
 contract SmartWallet is DecimalERC20, Initializable, ISmartWallet, Pausable {
 
@@ -405,10 +406,10 @@ contract SmartWallet is DecimalERC20, Initializable, ISmartWallet, Pausable {
 
 }
 
-contract SmartWalletFactory is Ownable{
+contract SmartWalletFactory is ISmartWalletFactory, Ownable{
   event Created(address indexed owner, address indexed smartWallet);
 
-  mapping (address => address) public getSmartWallet;
+  mapping (address => address) public override getSmartWallet;
   mapping (address => bool) public isWhitelisted;
 
   address public LimitOrderBook;

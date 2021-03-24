@@ -12,6 +12,7 @@ import { DecimalERC20 } from "./utils/DecimalERC20.sol";
 import { IAmm } from "./interface/IAmm.sol";
 import { IInsuranceFund } from "./interface/IInsuranceFund.sol";
 import { ISmartWallet } from "./interface/ISmartWallet.sol";
+import { ISmartWalletFactory } from "./interface/ISmartWalletFactory.sol";
 
 contract LimitOrderBook is Ownable, DecimalERC20{
 
@@ -137,7 +138,7 @@ contract LimitOrderBook is Ownable, DecimalERC20{
 
   /* All smart wallets will be deployed by the factory - this allows you to get the
   contract address of the smart wallet for any trader */
-  SmartWalletFactory public factory;
+  ISmartWalletFactory public factory;
 
   /* Other smart contracts that we interact with */
   address constant USDC = 0xDDAfbb505ad214D7b80b1f830fcCc89B60fb7A83;
@@ -562,7 +563,7 @@ contract LimitOrderBook is Ownable, DecimalERC20{
     //Get the smart wallet of the trader from the factory contract
     address _smartwallet = factory.getSmartWallet(order.trader);
     //Try and execute the order (should return true if successful)
-    SmartWallet(_smartwallet).executeOrder(order_id);
+    ISmartWallet(_smartwallet).executeOrder(order_id);
     if((order.orderType == OrderType.TRAILINGSTOPMARKET ||
         order.orderType == OrderType.TRAILINGSTOPLIMIT)) {
         //If this is a trailing order, then the botFee gets split between the keeper that
@@ -747,7 +748,7 @@ contract LimitOrderBook is Ownable, DecimalERC20{
    */
 
   function setFactory(address _addr) public onlyOwner{
-    factory = SmartWalletFactory(_addr);
+    factory = ISmartWalletFactory(_addr);
   }
 
   function changeMinimumFee(Decimal.decimal memory _fee) public onlyOwner {

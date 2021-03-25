@@ -1,6 +1,0 @@
-console.log(await web3.eth.getBalance())
-hardhat
-const hardhat = require("hardhat")
-ethers
-config
-.help

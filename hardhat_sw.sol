@@ -1,8 +1,107 @@
 // Sources flattened with hardhat v2.1.1 https://hardhat.org
 
+// File @openzeppelin/contracts/utils/Context.sol@v3.4.0
+
+// SPDX-License-Identifier: MIT
+
+pragma solidity >=0.6.0 <0.8.0;
+
+/*
+ * @dev Provides information about the current execution context, including the
+ * sender of the transaction and its data. While these are generally available
+ * via msg.sender and msg.data, they should not be accessed in such a direct
+ * manner, since when dealing with GSN meta-transactions the account sending and
+ * paying for execution may not be the actual sender (as far as an application
+ * is concerned).
+ *
+ * This contract is only required for intermediate, library-like contracts.
+ */
+abstract contract Context {
+    function _msgSender() internal view virtual returns (address payable) {
+        return msg.sender;
+    }
+
+    function _msgData() internal view virtual returns (bytes memory) {
+        this; // silence state mutability warning without generating bytecode - see https://github.com/ethereum/solidity/issues/2691
+        return msg.data;
+    }
+}
+
+
+// File @openzeppelin/contracts/access/Ownable.sol@v3.4.0
+
+// SPDX-License-Identifier: MIT
+
+pragma solidity >=0.6.0 <0.8.0;
+
+/**
+ * @dev Contract module which provides a basic access control mechanism, where
+ * there is an account (an owner) that can be granted exclusive access to
+ * specific functions.
+ *
+ * By default, the owner account will be the one that deploys the contract. This
+ * can later be changed with {transferOwnership}.
+ *
+ * This module is used through inheritance. It will make available the modifier
+ * `onlyOwner`, which can be applied to your functions to restrict their use to
+ * the owner.
+ */
+abstract contract Ownable is Context {
+    address private _owner;
+
+    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
+
+    /**
+     * @dev Initializes the contract setting the deployer as the initial owner.
+     */
+    constructor () internal {
+        address msgSender = _msgSender();
+        _owner = msgSender;
+        emit OwnershipTransferred(address(0), msgSender);
+    }
+
+    /**
+     * @dev Returns the address of the current owner.
+     */
+    function owner() public view virtual returns (address) {
+        return _owner;
+    }
+
+    /**
+     * @dev Throws if called by any account other than the owner.
+     */
+    modifier onlyOwner() {
+        require(owner() == _msgSender(), "Ownable: caller is not the owner");
+        _;
+    }
+
+    /**
+     * @dev Leaves the contract without owner. It will not be possible to call
+     * `onlyOwner` functions anymore. Can only be called by the current owner.
+     *
+     * NOTE: Renouncing ownership will leave the contract without an owner,
+     * thereby removing any functionality that is only available to the owner.
+     */
+    function renounceOwnership() public virtual onlyOwner {
+        emit OwnershipTransferred(_owner, address(0));
+        _owner = address(0);
+    }
+
+    /**
+     * @dev Transfers ownership of the contract to a new account (`newOwner`).
+     * Can only be called by the current owner.
+     */
+    function transferOwnership(address newOwner) public virtual onlyOwner {
+        require(newOwner != address(0), "Ownable: new owner is the zero address");
+        emit OwnershipTransferred(_owner, newOwner);
+        _owner = newOwner;
+    }
+}
+
+
 // File @openzeppelin/contracts/token/ERC20/IERC20.sol@v3.4.0
 
-
+// SPDX-License-Identifier: MIT
 
 pragma solidity >=0.6.0 <0.8.0;
 
@@ -83,7 +182,7 @@ interface IERC20 {
 
 // File @openzeppelin/contracts/math/SafeMath.sol@v3.4.0
 
-
+// SPDX-License-Identifier: MIT
 
 pragma solidity >=0.6.0 <0.8.0;
 
@@ -301,7 +400,7 @@ library SafeMath {
 
 // File contracts/utils/DecimalMath.sol
 
-
+// SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.6.9;
 
 /// @dev Implements simple fixed point math add, sub, mul and div operations.
@@ -356,7 +455,7 @@ library DecimalMath {
 
 // File contracts/utils/Decimal.sol
 
-
+// SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.6.9;
 
 
@@ -439,7 +538,7 @@ library Decimal {
 
 // File @openzeppelin/contracts/math/SignedSafeMath.sol@v3.4.0
 
-
+// SPDX-License-Identifier: MIT
 
 pragma solidity >=0.6.0 <0.8.0;
 
@@ -535,7 +634,7 @@ library SignedSafeMath {
 
 // File contracts/utils/SignedDecimalMath.sol
 
-
+// SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.6.9;
 
 /// @dev Implements simple signed fixed point math add, sub, mul and div operations.
@@ -589,7 +688,7 @@ library SignedDecimalMath {
 
 // File contracts/utils/SignedDecimal.sol
 
-
+// SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.6.9;
 
 
@@ -671,352 +770,9 @@ library SignedDecimal {
 }
 
 
-// File contracts/interface/IAmm.sol
-
-
-pragma solidity 0.6.9;
-
-
-
-
-interface IAmm {
-    /**
-     * @notice asset direction, used in getInputPrice, getOutputPrice, swapInput and swapOutput
-     * @param ADD_TO_AMM add asset to Amm
-     * @param REMOVE_FROM_AMM remove asset from Amm
-     */
-    enum Dir { ADD_TO_AMM, REMOVE_FROM_AMM }
-
-    struct LiquidityChangedSnapshot {
-        SignedDecimal.signedDecimal cumulativeNotional;
-        // the base/quote reserve of amm right before liquidity changed
-        Decimal.decimal quoteAssetReserve;
-        Decimal.decimal baseAssetReserve;
-        // total position size owned by amm after last snapshot taken
-        // `totalPositionSize` = currentBaseAssetReserve - lastLiquidityChangedHistoryItem.baseAssetReserve + prevTotalPositionSize
-        SignedDecimal.signedDecimal totalPositionSize;
-    }
-
-    function reserveSnapshots(uint256) external view returns (ReserveSnapshot memory);
-
-    struct ReserveSnapshot {
-          Decimal.decimal quoteAssetReserve;
-          Decimal.decimal baseAssetReserve;
-          uint256 timestamp;
-          uint256 blockNumber;
-      }
-
-    function swapInput(
-        Dir _dir,
-        Decimal.decimal calldata _quoteAssetAmount,
-        Decimal.decimal calldata _baseAssetAmountLimit
-    ) external returns (Decimal.decimal memory);
-
-    function swapOutput(
-        Dir _dir,
-        Decimal.decimal calldata _baseAssetAmount,
-        Decimal.decimal calldata _quoteAssetAmountLimit,
-        bool _skipFluctuationCheck
-    ) external returns (Decimal.decimal memory);
-
-    function migrateLiquidity(Decimal.decimal calldata _liquidityMultiplier, Decimal.decimal calldata _priceLimitRatio)
-        external;
-
-    function shutdown() external;
-
-    function settleFunding() external returns (SignedDecimal.signedDecimal memory);
-
-    function calcFee(Decimal.decimal calldata _quoteAssetAmount)
-        external
-        view
-        returns (Decimal.decimal memory, Decimal.decimal memory);
-
-    //
-    // VIEW
-    //
-
-    function calcBaseAssetAfterLiquidityMigration(
-        SignedDecimal.signedDecimal memory _baseAssetAmount,
-        Decimal.decimal memory _fromQuoteReserve,
-        Decimal.decimal memory _fromBaseReserve
-    ) external view returns (SignedDecimal.signedDecimal memory);
-
-    function getInputTwap(Dir _dir, Decimal.decimal calldata _quoteAssetAmount)
-        external
-        view
-        returns (Decimal.decimal memory);
-
-    function getOutputTwap(Dir _dir, Decimal.decimal calldata _baseAssetAmount)
-        external
-        view
-        returns (Decimal.decimal memory);
-
-    function getInputPrice(Dir _dir, Decimal.decimal calldata _quoteAssetAmount)
-        external
-        view
-        returns (Decimal.decimal memory);
-
-    function getOutputPrice(Dir _dir, Decimal.decimal calldata _baseAssetAmount)
-        external
-        view
-        returns (Decimal.decimal memory);
-
-    function getInputPriceWithReserves(
-        Dir _dir,
-        Decimal.decimal memory _quoteAssetAmount,
-        Decimal.decimal memory _quoteAssetPoolAmount,
-        Decimal.decimal memory _baseAssetPoolAmount
-    ) external pure returns (Decimal.decimal memory);
-
-    function getOutputPriceWithReserves(
-        Dir _dir,
-        Decimal.decimal memory _baseAssetAmount,
-        Decimal.decimal memory _quoteAssetPoolAmount,
-        Decimal.decimal memory _baseAssetPoolAmount
-    ) external pure returns (Decimal.decimal memory);
-
-    function getSpotPrice() external view returns (Decimal.decimal memory);
-
-    function getLiquidityHistoryLength() external view returns (uint256);
-
-    // overridden by state variable
-    function quoteAsset() external view returns (IERC20);
-
-    function open() external view returns (bool);
-
-    // can not be overridden by state variable due to type `Deciaml.decimal`
-    function getSettlementPrice() external view returns (Decimal.decimal memory);
-
-    function getBaseAssetDeltaThisFundingPeriod() external view returns (SignedDecimal.signedDecimal memory);
-
-    function getCumulativeNotional() external view returns (SignedDecimal.signedDecimal memory);
-
-    function getMaxHoldingBaseAsset() external view returns (Decimal.decimal memory);
-
-    function getOpenInterestNotionalCap() external view returns (Decimal.decimal memory);
-
-    enum TwapCalcOption { RESERVE_ASSET, INPUT_ASSET }
-    enum QuoteAssetDir { QUOTE_IN, QUOTE_OUT }
-
-    struct TwapInputAsset {
-          Dir dir;
-          Decimal.decimal assetAmount;
-          QuoteAssetDir inOrOut;
-      }
-
-    struct TwapPriceCalcParams {
-          TwapCalcOption opt;
-          uint256 snapshotIndex;
-          TwapInputAsset asset;
-      }
-
-      function getSnapshotLen() external view returns (uint256);
-
-    function getPriceWithSpecificSnapshot(TwapPriceCalcParams memory params)
-        external
-        view
-        returns (Decimal.decimal memory);
-
-    function getLiquidityChangedSnapshots(uint256 i) external view returns (LiquidityChangedSnapshot memory);
-}
-
-
-// File contracts/interface/IClearingHouse.sol
-
-
-pragma solidity 0.6.9;
-
-
-
-
-interface IClearingHouse {
-    enum Side { BUY, SELL }
-
-    struct Position {
-        SignedDecimal.signedDecimal size;
-        Decimal.decimal margin;
-        Decimal.decimal openNotional;
-        SignedDecimal.signedDecimal lastUpdatedCumulativePremiumFraction;
-        uint256 liquidityHistoryIndex;
-        uint256 blockNumber;
-    }
-
-    function openPosition(
-        IAmm _amm,
-        Side _side,
-        Decimal.decimal calldata _quoteAssetAmount,
-        Decimal.decimal calldata _leverage,
-        Decimal.decimal calldata _baseAssetAmountLimit
-    ) external;
-
-    function closePosition(
-      IAmm _amm,
-      Decimal.decimal calldata _quoteAssetAmountLimit
-    ) external;
-
-    function getPosition(IAmm _amm, address _trader) external view returns (Position memory);
-
-    function getUnadjustedPosition(IAmm _amm, address _trader) external view returns (Position memory);
-}
-
-
-// File contracts/interface/IInsuranceFund.sol
-
-
-pragma solidity 0.6.9;
-
-
-
-
-interface IInsuranceFund {
-    function withdraw(IERC20 _quoteToken, Decimal.decimal calldata _amount) external;
-
-    function isExistedAmm(IAmm _amm) external view returns (bool);
-
-    function getAllAmms() external view returns (IAmm[] memory);
-}
-
-
-// File contracts/interface/ISmartWallet.sol
-
-
-pragma solidity 0.6.9;
-
-
-
-
-interface ISmartWallet {
-
-  function executeCall(
-    address target,
-    bytes calldata callData
-  ) external returns (bytes memory);
-
-
-  function initialize(address _lob, address _trader) external;
-
-  function executeMarketOrder(
-    IAmm _asset,
-    SignedDecimal.signedDecimal memory _orderSize,
-    Decimal.decimal memory _collateral,
-    Decimal.decimal memory _leverage,
-    Decimal.decimal memory _slippage
-  ) external;
-
-  function executeClosePosition(
-    IAmm _asset,
-    Decimal.decimal memory _slippage
-  ) external;
-
-  function executeOrder(
-    uint order_id
-  ) external;
-
-}
-
-
-// File @openzeppelin/contracts/utils/Context.sol@v3.4.0
-
-
-
-pragma solidity >=0.6.0 <0.8.0;
-
-/*
- * @dev Provides information about the current execution context, including the
- * sender of the transaction and its data. While these are generally available
- * via msg.sender and msg.data, they should not be accessed in such a direct
- * manner, since when dealing with GSN meta-transactions the account sending and
- * paying for execution may not be the actual sender (as far as an application
- * is concerned).
- *
- * This contract is only required for intermediate, library-like contracts.
- */
-abstract contract Context {
-    function _msgSender() internal view virtual returns (address payable) {
-        return msg.sender;
-    }
-
-    function _msgData() internal view virtual returns (bytes memory) {
-        this; // silence state mutability warning without generating bytecode - see https://github.com/ethereum/solidity/issues/2691
-        return msg.data;
-    }
-}
-
-
-// File @openzeppelin/contracts/access/Ownable.sol@v3.4.0
-
-
-
-pragma solidity >=0.6.0 <0.8.0;
-
-/**
- * @dev Contract module which provides a basic access control mechanism, where
- * there is an account (an owner) that can be granted exclusive access to
- * specific functions.
- *
- * By default, the owner account will be the one that deploys the contract. This
- * can later be changed with {transferOwnership}.
- *
- * This module is used through inheritance. It will make available the modifier
- * `onlyOwner`, which can be applied to your functions to restrict their use to
- * the owner.
- */
-abstract contract Ownable is Context {
-    address private _owner;
-
-    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
-
-    /**
-     * @dev Initializes the contract setting the deployer as the initial owner.
-     */
-    constructor () internal {
-        address msgSender = _msgSender();
-        _owner = msgSender;
-        emit OwnershipTransferred(address(0), msgSender);
-    }
-
-    /**
-     * @dev Returns the address of the current owner.
-     */
-    function owner() public view virtual returns (address) {
-        return _owner;
-    }
-
-    /**
-     * @dev Throws if called by any account other than the owner.
-     */
-    modifier onlyOwner() {
-        require(owner() == _msgSender(), "Ownable: caller is not the owner");
-        _;
-    }
-
-    /**
-     * @dev Leaves the contract without owner. It will not be possible to call
-     * `onlyOwner` functions anymore. Can only be called by the current owner.
-     *
-     * NOTE: Renouncing ownership will leave the contract without an owner,
-     * thereby removing any functionality that is only available to the owner.
-     */
-    function renounceOwnership() public virtual onlyOwner {
-        emit OwnershipTransferred(_owner, address(0));
-        _owner = address(0);
-    }
-
-    /**
-     * @dev Transfers ownership of the contract to a new account (`newOwner`).
-     * Can only be called by the current owner.
-     */
-    function transferOwnership(address newOwner) public virtual onlyOwner {
-        require(newOwner != address(0), "Ownable: new owner is the zero address");
-        emit OwnershipTransferred(_owner, newOwner);
-        _owner = newOwner;
-    }
-}
-
-
 // File contracts/utils/DecimalERC20.sol
 
-
+// SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.6.9;
 
 
@@ -1168,14 +924,221 @@ abstract contract DecimalERC20 {
 }
 
 
+// File contracts/interface/IAmm.sol
+
+// SPDX-License-Identifier: GPL-3.0-or-later
+pragma solidity 0.6.9;
+pragma experimental ABIEncoderV2;
+
+
+
+interface IAmm {
+    /**
+     * @notice asset direction, used in getInputPrice, getOutputPrice, swapInput and swapOutput
+     * @param ADD_TO_AMM add asset to Amm
+     * @param REMOVE_FROM_AMM remove asset from Amm
+     */
+    enum Dir { ADD_TO_AMM, REMOVE_FROM_AMM }
+
+    struct LiquidityChangedSnapshot {
+        SignedDecimal.signedDecimal cumulativeNotional;
+        // the base/quote reserve of amm right before liquidity changed
+        Decimal.decimal quoteAssetReserve;
+        Decimal.decimal baseAssetReserve;
+        // total position size owned by amm after last snapshot taken
+        // `totalPositionSize` = currentBaseAssetReserve - lastLiquidityChangedHistoryItem.baseAssetReserve + prevTotalPositionSize
+        SignedDecimal.signedDecimal totalPositionSize;
+    }
+
+    function reserveSnapshots(uint256) external view returns (ReserveSnapshot memory);
+
+    struct ReserveSnapshot {
+          Decimal.decimal quoteAssetReserve;
+          Decimal.decimal baseAssetReserve;
+          uint256 timestamp;
+          uint256 blockNumber;
+      }
+
+    function swapInput(
+        Dir _dir,
+        Decimal.decimal calldata _quoteAssetAmount,
+        Decimal.decimal calldata _baseAssetAmountLimit
+    ) external returns (Decimal.decimal memory);
+
+    function swapOutput(
+        Dir _dir,
+        Decimal.decimal calldata _baseAssetAmount,
+        Decimal.decimal calldata _quoteAssetAmountLimit,
+        bool _skipFluctuationCheck
+    ) external returns (Decimal.decimal memory);
+
+    function migrateLiquidity(Decimal.decimal calldata _liquidityMultiplier, Decimal.decimal calldata _priceLimitRatio)
+        external;
+
+    function shutdown() external;
+
+    function settleFunding() external returns (SignedDecimal.signedDecimal memory);
+
+    function calcFee(Decimal.decimal calldata _quoteAssetAmount)
+        external
+        view
+        returns (Decimal.decimal memory, Decimal.decimal memory);
+
+    //
+    // VIEW
+    //
+
+    function calcBaseAssetAfterLiquidityMigration(
+        SignedDecimal.signedDecimal memory _baseAssetAmount,
+        Decimal.decimal memory _fromQuoteReserve,
+        Decimal.decimal memory _fromBaseReserve
+    ) external view returns (SignedDecimal.signedDecimal memory);
+
+    function getInputTwap(Dir _dir, Decimal.decimal calldata _quoteAssetAmount)
+        external
+        view
+        returns (Decimal.decimal memory);
+
+    function getOutputTwap(Dir _dir, Decimal.decimal calldata _baseAssetAmount)
+        external
+        view
+        returns (Decimal.decimal memory);
+
+    function getInputPrice(Dir _dir, Decimal.decimal calldata _quoteAssetAmount)
+        external
+        view
+        returns (Decimal.decimal memory);
+
+    function getOutputPrice(Dir _dir, Decimal.decimal calldata _baseAssetAmount)
+        external
+        view
+        returns (Decimal.decimal memory);
+
+    function getInputPriceWithReserves(
+        Dir _dir,
+        Decimal.decimal memory _quoteAssetAmount,
+        Decimal.decimal memory _quoteAssetPoolAmount,
+        Decimal.decimal memory _baseAssetPoolAmount
+    ) external pure returns (Decimal.decimal memory);
+
+    function getOutputPriceWithReserves(
+        Dir _dir,
+        Decimal.decimal memory _baseAssetAmount,
+        Decimal.decimal memory _quoteAssetPoolAmount,
+        Decimal.decimal memory _baseAssetPoolAmount
+    ) external pure returns (Decimal.decimal memory);
+
+    function getSpotPrice() external view returns (Decimal.decimal memory);
+
+    function getLiquidityHistoryLength() external view returns (uint256);
+
+    // overridden by state variable
+    function quoteAsset() external view returns (IERC20);
+
+    function open() external view returns (bool);
+
+    // can not be overridden by state variable due to type `Deciaml.decimal`
+    function getSettlementPrice() external view returns (Decimal.decimal memory);
+
+    function getBaseAssetDeltaThisFundingPeriod() external view returns (SignedDecimal.signedDecimal memory);
+
+    function getCumulativeNotional() external view returns (SignedDecimal.signedDecimal memory);
+
+    function getMaxHoldingBaseAsset() external view returns (Decimal.decimal memory);
+
+    function getOpenInterestNotionalCap() external view returns (Decimal.decimal memory);
+
+    enum TwapCalcOption { RESERVE_ASSET, INPUT_ASSET }
+    enum QuoteAssetDir { QUOTE_IN, QUOTE_OUT }
+
+    struct TwapInputAsset {
+          Dir dir;
+          Decimal.decimal assetAmount;
+          QuoteAssetDir inOrOut;
+      }
+
+    struct TwapPriceCalcParams {
+          TwapCalcOption opt;
+          uint256 snapshotIndex;
+          TwapInputAsset asset;
+      }
+
+      function getSnapshotLen() external view returns (uint256);
+
+    function getPriceWithSpecificSnapshot(TwapPriceCalcParams memory params)
+        external
+        view
+        returns (Decimal.decimal memory);
+
+    function getLiquidityChangedSnapshots(uint256 i) external view returns (LiquidityChangedSnapshot memory);
+}
+
+
+// File contracts/interface/IInsuranceFund.sol
+
+// SPDX-License-Identifier: GPL-3.0-or-later
+pragma solidity 0.6.9;
+pragma experimental ABIEncoderV2;
+
+
+
+interface IInsuranceFund {
+    function withdraw(IERC20 _quoteToken, Decimal.decimal calldata _amount) external;
+
+    function isExistedAmm(IAmm _amm) external view returns (bool);
+
+    function getAllAmms() external view returns (IAmm[] memory);
+}
+
+
+// File contracts/interface/ISmartWallet.sol
+
+// SPDX-License-Identifier: MIT
+pragma solidity 0.6.9;
+pragma experimental ABIEncoderV2;
+
+
+
+interface ISmartWallet {
+
+  function executeCall(
+    address target,
+    bytes calldata callData
+  ) external returns (bytes memory);
+
+
+  function initialize(address _lob, address _trader) external;
+
+  function executeMarketOrder(
+    IAmm _asset,
+    SignedDecimal.signedDecimal memory _orderSize,
+    Decimal.decimal memory _collateral,
+    Decimal.decimal memory _leverage,
+    Decimal.decimal memory _slippage
+  ) external;
+
+  function executeClosePosition(
+    IAmm _asset,
+    Decimal.decimal memory _slippage
+  ) external;
+
+  function executeOrder(
+    uint order_id
+  ) external;
+
+}
+
+
 // File contracts/interface/ISmartWalletFactory.sol
 
-
+// SPDX-License-Identifier: MIT
 pragma solidity 0.6.9;
 
 interface ISmartWalletFactory {
 
-  function getSmartWallet(address) external returns (address);
+  function getSmartWallet(
+    address
+  ) external returns (address);
 
 }
 
@@ -1184,7 +1147,7 @@ interface ISmartWalletFactory {
 
 //SPDX-License-Identifier: MIT
 pragma solidity 0.6.9;
-
+pragma experimental ABIEncoderV2;
 
 
 
@@ -1956,7 +1919,7 @@ contract LimitOrderBook is Ownable, DecimalERC20{
 
 // File @openzeppelin/contracts/utils/Address.sol@v3.4.0
 
-
+// SPDX-License-Identifier: MIT
 
 pragma solidity >=0.6.2 <0.8.0;
 
@@ -2149,7 +2112,7 @@ library Address {
 
 // File @openzeppelin/contracts/token/ERC20/SafeERC20.sol@v3.4.0
 
-
+// SPDX-License-Identifier: MIT
 
 pragma solidity >=0.6.0 <0.8.0;
 
@@ -2226,7 +2189,7 @@ library SafeERC20 {
 
 // File @openzeppelin/contracts/proxy/Initializable.sol@v3.4.0
 
-
+// SPDX-License-Identifier: MIT
 
 // solhint-disable-next-line compiler-version
 pragma solidity >=0.4.24 <0.8.0;
@@ -2283,7 +2246,7 @@ abstract contract Initializable {
 
 // File @openzeppelin/contracts/utils/Pausable.sol@v3.4.0
 
-
+// SPDX-License-Identifier: MIT
 
 pragma solidity >=0.6.0 <0.8.0;
 
@@ -2373,12 +2336,51 @@ abstract contract Pausable is Context {
 }
 
 
-// File contracts/SmartWallet.sol
+// File contracts/interface/IClearingHouse.sol
 
-
+// SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.6.9;
 pragma experimental ABIEncoderV2;
 
+
+
+interface IClearingHouse {
+    enum Side { BUY, SELL }
+
+    struct Position {
+        SignedDecimal.signedDecimal size;
+        Decimal.decimal margin;
+        Decimal.decimal openNotional;
+        SignedDecimal.signedDecimal lastUpdatedCumulativePremiumFraction;
+        uint256 liquidityHistoryIndex;
+        uint256 blockNumber;
+    }
+
+    function openPosition(
+        IAmm _amm,
+        Side _side,
+        Decimal.decimal calldata _quoteAssetAmount,
+        Decimal.decimal calldata _leverage,
+        Decimal.decimal calldata _baseAssetAmountLimit
+    ) external;
+
+    function closePosition(
+      IAmm _amm,
+      Decimal.decimal calldata _quoteAssetAmountLimit
+    ) external;
+
+    function getPosition(IAmm _amm, address _trader) external view returns (Position memory);
+
+    function getUnadjustedPosition(IAmm _amm, address _trader) external view returns (Position memory);
+}
+
+
+// File contracts/SmartWallet.sol
+
+//SPDX-License-Identifier: MIT
+
+pragma solidity 0.6.9;
+pragma experimental ABIEncoderV2;
 
 
 

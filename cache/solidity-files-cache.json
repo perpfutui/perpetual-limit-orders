@@ -1,816 +1,6 @@
 {
   "_format": "hh-sol-cache-2",
   "files": {
-    "/Users/abdullaalkamil/Coding/PERP/node_modules/hardhat/console.sol": {
-      "lastModificationDate": 1615310675383,
-      "contentHash": "cc4777addd464ea56fa35b1c45df0591",
-      "sourceName": "hardhat/console.sol",
-      "solcConfig": {
-        "version": "0.6.9",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 2000
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [],
-      "versionPragmas": [
-        ">=0.4.22 <0.9.0"
-      ],
-      "artifacts": [
-        "console"
-      ]
-    },
-    "/Users/abdullaalkamil/Coding/PERP/node_modules/@openzeppelin/contracts/utils/Create2.sol": {
-      "lastModificationDate": 1612377914858,
-      "contentHash": "17a4b4fc2d10b81889d9d34036656a34",
-      "sourceName": "@openzeppelin/contracts/utils/Create2.sol",
-      "solcConfig": {
-        "version": "0.6.9",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 1000
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [],
-      "versionPragmas": [
-        ">=0.6.0 <0.8.0"
-      ],
-      "artifacts": [
-        "Create2"
-      ]
-    },
-    "/Users/abdullaalkamil/Coding/perpetual-limit-orders/contracts/interface/IAmm.sol": {
-      "lastModificationDate": 1616247467001,
-      "contentHash": "4b5effe0ca95890b8a57604eec582ba3",
-      "sourceName": "contracts/interface/IAmm.sol",
-      "solcConfig": {
-        "version": "0.6.9",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 2000
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "@openzeppelin/contracts/token/ERC20/IERC20.sol",
-        "../utils/Decimal.sol",
-        "../utils/SignedDecimal.sol"
-      ],
-      "versionPragmas": [
-        "0.6.9"
-      ],
-      "artifacts": [
-        "IAmm"
-      ]
-    },
-    "/Users/abdullaalkamil/Coding/perpetual-limit-orders/node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol": {
-      "lastModificationDate": 1616247532392,
-      "contentHash": "e0a41531d159d3a32f84b7a3ecf9fabb",
-      "sourceName": "@openzeppelin/contracts/token/ERC20/IERC20.sol",
-      "solcConfig": {
-        "version": "0.6.9",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 2000
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [],
-      "versionPragmas": [
-        ">=0.6.0 <0.8.0"
-      ],
-      "artifacts": [
-        "IERC20"
-      ]
-    },
-    "/Users/abdullaalkamil/Coding/perpetual-limit-orders/contracts/utils/Decimal.sol": {
-      "lastModificationDate": 1616247467001,
-      "contentHash": "9e6837caed6e7287fda4e30560514827",
-      "sourceName": "contracts/utils/Decimal.sol",
-      "solcConfig": {
-        "version": "0.6.9",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 2000
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "@openzeppelin/contracts/math/SafeMath.sol",
-        "./DecimalMath.sol"
-      ],
-      "versionPragmas": [
-        "0.6.9"
-      ],
-      "artifacts": [
-        "Decimal"
-      ]
-    },
-    "/Users/abdullaalkamil/Coding/perpetual-limit-orders/contracts/utils/SignedDecimal.sol": {
-      "lastModificationDate": 1616247467001,
-      "contentHash": "52840eed55da9b8149cdbfe121021dbe",
-      "sourceName": "contracts/utils/SignedDecimal.sol",
-      "solcConfig": {
-        "version": "0.6.9",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 2000
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "@openzeppelin/contracts/math/SignedSafeMath.sol",
-        "./SignedDecimalMath.sol",
-        "./Decimal.sol"
-      ],
-      "versionPragmas": [
-        "0.6.9"
-      ],
-      "artifacts": [
-        "SignedDecimal"
-      ]
-    },
-    "/Users/abdullaalkamil/Coding/perpetual-limit-orders/node_modules/@openzeppelin/contracts/math/SafeMath.sol": {
-      "lastModificationDate": 1616247532428,
-      "contentHash": "e03e12206057e809eb76c5f681170c32",
-      "sourceName": "@openzeppelin/contracts/math/SafeMath.sol",
-      "solcConfig": {
-        "version": "0.6.9",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 2000
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [],
-      "versionPragmas": [
-        ">=0.6.0 <0.8.0"
-      ],
-      "artifacts": [
-        "SafeMath"
-      ]
-    },
-    "/Users/abdullaalkamil/Coding/perpetual-limit-orders/contracts/utils/DecimalMath.sol": {
-      "lastModificationDate": 1616247467001,
-      "contentHash": "c3de72102784d321c66fedee232f588a",
-      "sourceName": "contracts/utils/DecimalMath.sol",
-      "solcConfig": {
-        "version": "0.6.9",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 2000
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "@openzeppelin/contracts/math/SafeMath.sol"
-      ],
-      "versionPragmas": [
-        "0.6.9"
-      ],
-      "artifacts": [
-        "DecimalMath"
-      ]
-    },
-    "/Users/abdullaalkamil/Coding/perpetual-limit-orders/node_modules/@openzeppelin/contracts/math/SignedSafeMath.sol": {
-      "lastModificationDate": 1616247532429,
-      "contentHash": "159169e078460f380436878421b73431",
-      "sourceName": "@openzeppelin/contracts/math/SignedSafeMath.sol",
-      "solcConfig": {
-        "version": "0.6.9",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 2000
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [],
-      "versionPragmas": [
-        ">=0.6.0 <0.8.0"
-      ],
-      "artifacts": [
-        "SignedSafeMath"
-      ]
-    },
-    "/Users/abdullaalkamil/Coding/perpetual-limit-orders/contracts/utils/SignedDecimalMath.sol": {
-      "lastModificationDate": 1616247467001,
-      "contentHash": "61c6a2a7561d82225a67fa64bffa9d9f",
-      "sourceName": "contracts/utils/SignedDecimalMath.sol",
-      "solcConfig": {
-        "version": "0.6.9",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 2000
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "@openzeppelin/contracts/math/SignedSafeMath.sol"
-      ],
-      "versionPragmas": [
-        "0.6.9"
-      ],
-      "artifacts": [
-        "SignedDecimalMath"
-      ]
-    },
-    "/Users/abdullaalkamil/Coding/perpetual-limit-orders/contracts/SmartWallet.sol": {
-      "lastModificationDate": 1616356239855,
-      "contentHash": "ace5d3adf5d1067ff19d57cdbdf0ef76",
-      "sourceName": "contracts/SmartWallet.sol",
-      "solcConfig": {
-        "version": "0.6.9",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 2000
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "./LimitOrderBook.sol",
-        "@openzeppelin/contracts/token/ERC20/IERC20.sol",
-        "@openzeppelin/contracts/utils/Address.sol",
-        "@openzeppelin/contracts/token/ERC20/SafeERC20.sol",
-        "@openzeppelin/contracts/proxy/Initializable.sol",
-        "@openzeppelin/contracts/access/Ownable.sol",
-        "./utils/Decimal.sol",
-        "./utils/SignedDecimal.sol",
-        "./utils/DecimalERC20.sol",
-        "./interface/IAmm.sol",
-        "./interface/IClearingHouse.sol",
-        "./interface/ISmartWallet.sol"
-      ],
-      "versionPragmas": [
-        "0.6.9"
-      ],
-      "artifacts": [
-        "SmartWallet",
-        "SmartWalletFactory"
-      ]
-    },
-    "/Users/abdullaalkamil/Coding/perpetual-limit-orders/contracts/LimitOrderBook.sol": {
-      "lastModificationDate": 1616354863467,
-      "contentHash": "8047c2c0a333675dc970e6d917d0fb7a",
-      "sourceName": "contracts/LimitOrderBook.sol",
-      "solcConfig": {
-        "version": "0.6.9",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 2000
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "./SmartWallet.sol",
-        "@openzeppelin/contracts/access/Ownable.sol",
-        "@openzeppelin/contracts/token/ERC20/IERC20.sol",
-        "./utils/Decimal.sol",
-        "./utils/SignedDecimal.sol",
-        "./utils/DecimalERC20.sol",
-        "./interface/IAmm.sol",
-        "./interface/IInsuranceFund.sol"
-      ],
-      "versionPragmas": [
-        "0.6.9"
-      ],
-      "artifacts": [
-        "LimitOrderBook"
-      ]
-    },
-    "/Users/abdullaalkamil/Coding/perpetual-limit-orders/node_modules/@openzeppelin/contracts/access/Ownable.sol": {
-      "lastModificationDate": 1616247532416,
-      "contentHash": "6748815a5b45c4aeeda56819f41190e0",
-      "sourceName": "@openzeppelin/contracts/access/Ownable.sol",
-      "solcConfig": {
-        "version": "0.6.9",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 2000
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "../utils/Context.sol"
-      ],
-      "versionPragmas": [
-        ">=0.6.0 <0.8.0"
-      ],
-      "artifacts": [
-        "Ownable"
-      ]
-    },
-    "/Users/abdullaalkamil/Coding/perpetual-limit-orders/node_modules/@openzeppelin/contracts/utils/Address.sol": {
-      "lastModificationDate": 1616247532183,
-      "contentHash": "7aa46886ff5abe7515496208a5e2ce5a",
-      "sourceName": "@openzeppelin/contracts/utils/Address.sol",
-      "solcConfig": {
-        "version": "0.6.9",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 2000
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [],
-      "versionPragmas": [
-        ">=0.6.2 <0.8.0"
-      ],
-      "artifacts": [
-        "Address"
-      ]
-    },
-    "/Users/abdullaalkamil/Coding/perpetual-limit-orders/node_modules/@openzeppelin/contracts/token/ERC20/SafeERC20.sol": {
-      "lastModificationDate": 1616247532426,
-      "contentHash": "33e22842646d746e5c4124c2fdc051aa",
-      "sourceName": "@openzeppelin/contracts/token/ERC20/SafeERC20.sol",
-      "solcConfig": {
-        "version": "0.6.9",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 2000
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "./IERC20.sol",
-        "../../math/SafeMath.sol",
-        "../../utils/Address.sol"
-      ],
-      "versionPragmas": [
-        ">=0.6.0 <0.8.0"
-      ],
-      "artifacts": [
-        "SafeERC20"
-      ]
-    },
-    "/Users/abdullaalkamil/Coding/perpetual-limit-orders/node_modules/hardhat/console.sol": {
-      "lastModificationDate": 1616247532747,
-      "contentHash": "cc4777addd464ea56fa35b1c45df0591",
-      "sourceName": "hardhat/console.sol",
-      "solcConfig": {
-        "version": "0.6.9",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 2000
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [],
-      "versionPragmas": [
-        ">=0.4.22 <0.9.0"
-      ],
-      "artifacts": [
-        "console"
-      ]
-    },
-    "/Users/abdullaalkamil/Coding/perpetual-limit-orders/contracts/interface/IClearingHouse.sol": {
-      "lastModificationDate": 1616247467001,
-      "contentHash": "031d1b6f9cd4b2d5273a52a3e5e3fb78",
-      "sourceName": "contracts/interface/IClearingHouse.sol",
-      "solcConfig": {
-        "version": "0.6.9",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 2000
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "../utils/Decimal.sol",
-        "../utils/SignedDecimal.sol",
-        "./IAmm.sol"
-      ],
-      "versionPragmas": [
-        "0.6.9"
-      ],
-      "artifacts": [
-        "IClearingHouse"
-      ]
-    },
-    "/Users/abdullaalkamil/Coding/perpetual-limit-orders/contracts/utils/DecimalERC20.sol": {
-      "lastModificationDate": 1616247467001,
-      "contentHash": "82b6613a560b8f6ffbde2f74b723301a",
-      "sourceName": "contracts/utils/DecimalERC20.sol",
-      "solcConfig": {
-        "version": "0.6.9",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 2000
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "@openzeppelin/contracts/token/ERC20/IERC20.sol",
-        "@openzeppelin/contracts/math/SafeMath.sol",
-        "./Decimal.sol"
-      ],
-      "versionPragmas": [
-        "0.6.9"
-      ],
-      "artifacts": [
-        "DecimalERC20"
-      ]
-    },
-    "/Users/abdullaalkamil/Coding/perpetual-limit-orders/contracts/interface/IInsuranceFund.sol": {
-      "lastModificationDate": 1616247467001,
-      "contentHash": "c8dfb3d46345e1851c880067b66777eb",
-      "sourceName": "contracts/interface/IInsuranceFund.sol",
-      "solcConfig": {
-        "version": "0.6.9",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 2000
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "@openzeppelin/contracts/token/ERC20/IERC20.sol",
-        "../utils/Decimal.sol",
-        "./IAmm.sol"
-      ],
-      "versionPragmas": [
-        "0.6.9"
-      ],
-      "artifacts": [
-        "IInsuranceFund"
-      ]
-    },
-    "/Users/abdullaalkamil/Coding/perpetual-limit-orders/node_modules/@openzeppelin/contracts/utils/Context.sol": {
-      "lastModificationDate": 1616247532200,
-      "contentHash": "2adbd82f6d055a4751566d4671512b03",
-      "sourceName": "@openzeppelin/contracts/utils/Context.sol",
-      "solcConfig": {
-        "version": "0.6.9",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 2000
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [],
-      "versionPragmas": [
-        ">=0.6.0 <0.8.0"
-      ],
-      "artifacts": [
-        "Context"
-      ]
-    },
-    "/Users/abdullaalkamil/Coding/perpetual-limit-orders/node_modules/@openzeppelin/contracts/proxy/Initializable.sol": {
-      "lastModificationDate": 1616247532404,
-      "contentHash": "1efacd801320f8f9413700ddbcf00647",
-      "sourceName": "@openzeppelin/contracts/proxy/Initializable.sol",
-      "solcConfig": {
-        "version": "0.6.9",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 2000
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "../utils/Address.sol"
-      ],
-      "versionPragmas": [
-        ">=0.4.24 <0.8.0"
-      ],
-      "artifacts": [
-        "Initializable"
-      ]
-    },
-    "/Users/abdullaalkamil/Coding/perpetual-limit-orders/contracts/interface/ISmartWallet.sol": {
-      "lastModificationDate": 1616353969778,
-      "contentHash": "0beb75fb6a14dbc919b164b50be4bdce",
-      "sourceName": "contracts/interface/ISmartWallet.sol",
-      "solcConfig": {
-        "version": "0.6.9",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 2000
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "./IAmm.sol",
-        "../utils/Decimal.sol",
-        "../utils/SignedDecimal.sol"
-      ],
-      "versionPragmas": [
-        "0.6.9"
-      ],
-      "artifacts": [
-        "ISmartWallet"
-      ]
-    },
     "/Users/abdullaalkamil/Coding/PERP/contracts/interface/IAmm.sol": {
       "lastModificationDate": 1613913083346,
       "contentHash": "4b5effe0ca95890b8a57604eec582ba3",
@@ -828,12 +18,20 @@
                 "abi",
                 "evm.bytecode",
                 "evm.deployedBytecode",
-                "evm.methodIdentifiers"
+                "evm.methodIdentifiers",
+                "metadata",
+                "devdoc",
+                "userdoc",
+                "storageLayout",
+                "evm.gasEstimates"
               ],
               "": [
                 "ast"
               ]
             }
+          },
+          "metadata": {
+            "useLiteralContent": true
           }
         }
       },
@@ -866,12 +64,20 @@
                 "abi",
                 "evm.bytecode",
                 "evm.deployedBytecode",
-                "evm.methodIdentifiers"
+                "evm.methodIdentifiers",
+                "metadata",
+                "devdoc",
+                "userdoc",
+                "storageLayout",
+                "evm.gasEstimates"
               ],
               "": [
                 "ast"
               ]
             }
+          },
+          "metadata": {
+            "useLiteralContent": true
           }
         }
       },
@@ -900,12 +106,20 @@
                 "abi",
                 "evm.bytecode",
                 "evm.deployedBytecode",
-                "evm.methodIdentifiers"
+                "evm.methodIdentifiers",
+                "metadata",
+                "devdoc",
+                "userdoc",
+                "storageLayout",
+                "evm.gasEstimates"
               ],
               "": [
                 "ast"
               ]
             }
+          },
+          "metadata": {
+            "useLiteralContent": true
           }
         }
       },
@@ -937,12 +151,20 @@
                 "abi",
                 "evm.bytecode",
                 "evm.deployedBytecode",
-                "evm.methodIdentifiers"
+                "evm.methodIdentifiers",
+                "metadata",
+                "devdoc",
+                "userdoc",
+                "storageLayout",
+                "evm.gasEstimates"
               ],
               "": [
                 "ast"
               ]
             }
+          },
+          "metadata": {
+            "useLiteralContent": true
           }
         }
       },
@@ -975,12 +197,20 @@
                 "abi",
                 "evm.bytecode",
                 "evm.deployedBytecode",
-                "evm.methodIdentifiers"
+                "evm.methodIdentifiers",
+                "metadata",
+                "devdoc",
+                "userdoc",
+                "storageLayout",
+                "evm.gasEstimates"
               ],
               "": [
                 "ast"
               ]
             }
+          },
+          "metadata": {
+            "useLiteralContent": true
           }
         }
       },
@@ -1009,12 +239,20 @@
                 "abi",
                 "evm.bytecode",
                 "evm.deployedBytecode",
-                "evm.methodIdentifiers"
+                "evm.methodIdentifiers",
+                "metadata",
+                "devdoc",
+                "userdoc",
+                "storageLayout",
+                "evm.gasEstimates"
               ],
               "": [
                 "ast"
               ]
             }
+          },
+          "metadata": {
+            "useLiteralContent": true
           }
         }
       },
@@ -1045,12 +283,20 @@
                 "abi",
                 "evm.bytecode",
                 "evm.deployedBytecode",
-                "evm.methodIdentifiers"
+                "evm.methodIdentifiers",
+                "metadata",
+                "devdoc",
+                "userdoc",
+                "storageLayout",
+                "evm.gasEstimates"
               ],
               "": [
                 "ast"
               ]
             }
+          },
+          "metadata": {
+            "useLiteralContent": true
           }
         }
       },
@@ -1079,12 +325,20 @@
                 "abi",
                 "evm.bytecode",
                 "evm.deployedBytecode",
-                "evm.methodIdentifiers"
+                "evm.methodIdentifiers",
+                "metadata",
+                "devdoc",
+                "userdoc",
+                "storageLayout",
+                "evm.gasEstimates"
               ],
               "": [
                 "ast"
               ]
             }
+          },
+          "metadata": {
+            "useLiteralContent": true
           }
         }
       },
@@ -1099,8 +353,8 @@
       ]
     },
     "/Users/abdullaalkamil/Coding/PERP/contracts/SmartWallet.sol": {
-      "lastModificationDate": 1616627489426,
-      "contentHash": "1cea81a6c862232561cd18f5780f0fbe",
+      "lastModificationDate": 1616705354972,
+      "contentHash": "0be2f1dd2d72b220c4a4ef33b221f0a9",
       "sourceName": "contracts/SmartWallet.sol",
       "solcConfig": {
         "version": "0.6.9",
@@ -1115,12 +369,20 @@
                 "abi",
                 "evm.bytecode",
                 "evm.deployedBytecode",
-                "evm.methodIdentifiers"
+                "evm.methodIdentifiers",
+                "metadata",
+                "devdoc",
+                "userdoc",
+                "storageLayout",
+                "evm.gasEstimates"
               ],
               "": [
                 "ast"
               ]
             }
+          },
+          "metadata": {
+            "useLiteralContent": true
           }
         }
       },
@@ -1137,8 +399,7 @@
         "./utils/DecimalERC20.sol",
         "./interface/IAmm.sol",
         "./interface/IClearingHouse.sol",
-        "./interface/ISmartWallet.sol",
-        "./interface/ISmartWalletFactory.sol"
+        "./interface/ISmartWallet.sol"
       ],
       "versionPragmas": [
         "0.6.9"
@@ -1149,7 +410,7 @@
       ]
     },
     "/Users/abdullaalkamil/Coding/PERP/contracts/LimitOrderBook.sol": {
-      "lastModificationDate": 1616625038380,
+      "lastModificationDate": 1616705313121,
       "contentHash": "e8d561e483ab680502134a35bb14f249",
       "sourceName": "contracts/LimitOrderBook.sol",
       "solcConfig": {
@@ -1165,12 +426,20 @@
                 "abi",
                 "evm.bytecode",
                 "evm.deployedBytecode",
-                "evm.methodIdentifiers"
+                "evm.methodIdentifiers",
+                "metadata",
+                "devdoc",
+                "userdoc",
+                "storageLayout",
+                "evm.gasEstimates"
               ],
               "": [
                 "ast"
               ]
             }
+          },
+          "metadata": {
+            "useLiteralContent": true
           }
         }
       },
@@ -1209,12 +478,20 @@
                 "abi",
                 "evm.bytecode",
                 "evm.deployedBytecode",
-                "evm.methodIdentifiers"
+                "evm.methodIdentifiers",
+                "metadata",
+                "devdoc",
+                "userdoc",
+                "storageLayout",
+                "evm.gasEstimates"
               ],
               "": [
                 "ast"
               ]
             }
+          },
+          "metadata": {
+            "useLiteralContent": true
           }
         }
       },
@@ -1243,12 +520,20 @@
                 "abi",
                 "evm.bytecode",
                 "evm.deployedBytecode",
-                "evm.methodIdentifiers"
+                "evm.methodIdentifiers",
+                "metadata",
+                "devdoc",
+                "userdoc",
+                "storageLayout",
+                "evm.gasEstimates"
               ],
               "": [
                 "ast"
               ]
             }
+          },
+          "metadata": {
+            "useLiteralContent": true
           }
         }
       },
@@ -1281,12 +566,20 @@
                 "abi",
                 "evm.bytecode",
                 "evm.deployedBytecode",
-                "evm.methodIdentifiers"
+                "evm.methodIdentifiers",
+                "metadata",
+                "devdoc",
+                "userdoc",
+                "storageLayout",
+                "evm.gasEstimates"
               ],
               "": [
                 "ast"
               ]
             }
+          },
+          "metadata": {
+            "useLiteralContent": true
           }
         }
       },
@@ -1317,12 +610,20 @@
                 "abi",
                 "evm.bytecode",
                 "evm.deployedBytecode",
-                "evm.methodIdentifiers"
+                "evm.methodIdentifiers",
+                "metadata",
+                "devdoc",
+                "userdoc",
+                "storageLayout",
+                "evm.gasEstimates"
               ],
               "": [
                 "ast"
               ]
             }
+          },
+          "metadata": {
+            "useLiteralContent": true
           }
         }
       },
@@ -1353,12 +654,20 @@
                 "abi",
                 "evm.bytecode",
                 "evm.deployedBytecode",
-                "evm.methodIdentifiers"
+                "evm.methodIdentifiers",
+                "metadata",
+                "devdoc",
+                "userdoc",
+                "storageLayout",
+                "evm.gasEstimates"
               ],
               "": [
                 "ast"
               ]
             }
+          },
+          "metadata": {
+            "useLiteralContent": true
           }
         }
       },
@@ -1389,12 +698,20 @@
                 "abi",
                 "evm.bytecode",
                 "evm.deployedBytecode",
-                "evm.methodIdentifiers"
+                "evm.methodIdentifiers",
+                "metadata",
+                "devdoc",
+                "userdoc",
+                "storageLayout",
+                "evm.gasEstimates"
               ],
               "": [
                 "ast"
               ]
             }
+          },
+          "metadata": {
+            "useLiteralContent": true
           }
         }
       },
@@ -1427,12 +744,20 @@
                 "abi",
                 "evm.bytecode",
                 "evm.deployedBytecode",
-                "evm.methodIdentifiers"
+                "evm.methodIdentifiers",
+                "metadata",
+                "devdoc",
+                "userdoc",
+                "storageLayout",
+                "evm.gasEstimates"
               ],
               "": [
                 "ast"
               ]
             }
+          },
+          "metadata": {
+            "useLiteralContent": true
           }
         }
       },
@@ -1465,12 +790,20 @@
                 "abi",
                 "evm.bytecode",
                 "evm.deployedBytecode",
-                "evm.methodIdentifiers"
+                "evm.methodIdentifiers",
+                "metadata",
+                "devdoc",
+                "userdoc",
+                "storageLayout",
+                "evm.gasEstimates"
               ],
               "": [
                 "ast"
               ]
             }
+          },
+          "metadata": {
+            "useLiteralContent": true
           }
         }
       },
@@ -1503,12 +836,20 @@
                 "abi",
                 "evm.bytecode",
                 "evm.deployedBytecode",
-                "evm.methodIdentifiers"
+                "evm.methodIdentifiers",
+                "metadata",
+                "devdoc",
+                "userdoc",
+                "storageLayout",
+                "evm.gasEstimates"
               ],
               "": [
                 "ast"
               ]
             }
+          },
+          "metadata": {
+            "useLiteralContent": true
           }
         }
       },
@@ -1525,8 +866,8 @@
       ]
     },
     "/Users/abdullaalkamil/Coding/PERP/contracts/interface/ISmartWalletFactory.sol": {
-      "lastModificationDate": 1616624981945,
-      "contentHash": "a375d04a6569f4beee1cabc90d524489",
+      "lastModificationDate": 1616632600852,
+      "contentHash": "f3780d6aed7d04d192c54066875d57c9",
       "sourceName": "contracts/interface/ISmartWalletFactory.sol",
       "solcConfig": {
         "version": "0.6.9",
@@ -1541,12 +882,20 @@
                 "abi",
                 "evm.bytecode",
                 "evm.deployedBytecode",
-                "evm.methodIdentifiers"
+                "evm.methodIdentifiers",
+                "metadata",
+                "devdoc",
+                "userdoc",
+                "storageLayout",
+                "evm.gasEstimates"
               ],
               "": [
                 "ast"
               ]
             }
+          },
+          "metadata": {
+            "useLiteralContent": true
           }
         }
       },
@@ -1575,12 +924,20 @@
                 "abi",
                 "evm.bytecode",
                 "evm.deployedBytecode",
-                "evm.methodIdentifiers"
+                "evm.methodIdentifiers",
+                "metadata",
+                "devdoc",
+                "userdoc",
+                "storageLayout",
+                "evm.gasEstimates"
               ],
               "": [
                 "ast"
               ]
             }
+          },
+          "metadata": {
+            "useLiteralContent": true
           }
         }
       },

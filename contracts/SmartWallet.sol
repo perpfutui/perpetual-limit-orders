@@ -19,7 +19,6 @@ import { DecimalERC20 } from "./utils/DecimalERC20.sol";
 import { IAmm } from "./interface/IAmm.sol";
 import { IClearingHouse } from "./interface/IClearingHouse.sol";
 import { ISmartWallet } from "./interface/ISmartWallet.sol";
-import { ISmartWalletFactory } from "./interface/ISmartWalletFactory.sol";
 
 contract SmartWallet is DecimalERC20, Initializable, ISmartWallet, Pausable {
 

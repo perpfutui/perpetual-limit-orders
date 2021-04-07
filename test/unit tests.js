@@ -155,7 +155,7 @@ abiDecoder.addABI(AMM_ABI)
     })
 
   })
-/*
+
   describe("Creating/Submitting orders", function() {
 
     describe("MARKET ORDERS", function() {
@@ -237,7 +237,7 @@ abiDecoder.addABI(AMM_ABI)
 
       it("Should fail to execute that order", async function() {
         await expect(lob.execute(index)).to.be
-          .revertedWith('Price has not hit limit price')
+          .revertedWith('Invalid limit order condition')
       })
 
       it("Updating order to adjust price", async function() {
@@ -425,7 +425,7 @@ abiDecoder.addABI(AMM_ABI)
 
       it("Should fail to execute that order", async function() {
         await expect(lob.execute(index)).to.be
-          .revertedWith('Price has not hit stop price')
+          .revertedWith('Invalid stop order condition')
       })
 
       it("Updating order to adjust price", async function() {
@@ -472,7 +472,7 @@ abiDecoder.addABI(AMM_ABI)
     })
 
   })
-*/
+
 
   describe("Checking reduceOnly orders", function() {
 

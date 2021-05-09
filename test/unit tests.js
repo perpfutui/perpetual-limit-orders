@@ -521,4 +521,163 @@ abiDecoder.addABI(AMM_ABI)
 
   })
 
+
+  describe("Checking modify/remove orders and events", function() {
+
+    describe("Limit Order", function() {
+      it("Creating limit order", async function() {
+        var cur_price = await BTC_AMM.getSpotPrice() //51773
+        index = await lob.getNumberOrders()
+        var limit_price = cur_price.d.sub(ethers.utils.parseUnits('1000',18))
+        var size = ethers.utils.parseUnits('0.01',18)
+        var collateral = ethers.utils.parseUnits('1',18)
+        var tipFee = MINIMUM_FEE
+        var reduceOnly = false
+        var leverage = ethers.utils.parseUnits('1',18)
+        var expiry = 0
+        var slippage = ethers.utils.parseUnits('0.2',18)
+        await expect(lob.connect(Bob).addLimitOrder(
+          BTC_Address,
+          {d: limit_price},
+          {d: size},
+          {d: collateral},
+          {d: leverage},
+          {d: slippage},
+          {d: tipFee},
+          reduceOnly,
+          expiry
+        )).to.emit(lob,'OrderCreated')
+         .withArgs(Bob.address, index)
+      })
+      it("Modifying that order", async function() {
+      var cur_price = await BTC_AMM.getSpotPrice() //51773
+      var new_limit_price = cur_price.d.sub(ethers.utils.parseUnits('5000',18))
+      var stop_price = ethers.utils.parseUnits('0',18)
+      var size = ethers.utils.parseUnits('0.01',18)
+      var collateral = ethers.utils.parseUnits('1',18)
+      var reduceOnly = false
+      var leverage = ethers.utils.parseUnits('1',18)
+      var expiry = 0
+      var slippage = ethers.utils.parseUnits('0.2',18)
+      await expect(lob.connect(Bob).modifyOrder(
+        index,
+        {d: stop_price},
+        {d: new_limit_price},
+        {d: size},
+        {d: collateral},
+        {d: leverage},
+        {d: slippage},
+        reduceOnly,
+        expiry
+      )).to.emit(lob,'OrderChanged')
+       .withArgs(Bob.address, index)
+      const order = await lob.getLimitOrder(index)
+      expect(order.limitPrice.d).to.equal(new_limit_price)
+    })
+      it("Should revert if calling modifyTrailingOrder()", async function() {
+      var cur_price = await BTC_AMM.getSpotPrice() //51773
+      var new_limit_price = cur_price.d.sub(ethers.utils.parseUnits('5000',18))
+      var stop_price = ethers.utils.parseUnits('0',18)
+      var size = ethers.utils.parseUnits('0.01',18)
+      var collateral = ethers.utils.parseUnits('1',18)
+      var reduceOnly = false
+      var leverage = ethers.utils.parseUnits('1',18)
+      var expiry = 0
+      var slippage = ethers.utils.parseUnits('0.2',18)
+      await expect(lob.connect(Bob).modifyTrailingOrder(
+        index,
+        {d: stop_price},
+        {d: new_limit_price},
+        {d: size},
+        {d: collateral},
+        {d: leverage},
+        {d: slippage},
+        reduceOnly,
+        expiry
+      )).to.be.revertedWith('Can only modify trailing orders')
+    })
+      it("Cancel order", async function() {
+      await expect(lob.connect(Bob).deleteOrder(
+        index
+      )).to.emit(lob,'OrderCancelled')
+    })
+    })
+
+    describe("Trailing Stop", function() {
+      it("Creating trailing stop", async function() {
+        index = await lob.getNumberOrders()
+        var trail = ethers.utils.parseUnits('1000',18)
+        var size = ethers.utils.parseUnits('0.01',18)
+        var collateral = ethers.utils.parseUnits('1',18)
+        var leverage = ethers.utils.parseUnits('1',18)
+        var tipFee = MINIMUM_FEE
+        var reduceOnly = false
+        var expiry = 0
+        await expect(lob.connect(Bob).addTrailingStopMarketOrderAbs(
+          BTC_Address,
+          {d: trail},
+          {d: size},
+          {d: collateral},
+          {d: leverage},
+          {d: tipFee},
+          reduceOnly,
+          expiry
+        )).to.emit(lob,'TrailingOrderCreated')
+      })
+      it("Modifying that order", async function() {
+        var trail = ethers.utils.parseUnits('2000',18)
+        var gap = ethers.utils.parseUnits('0',18)
+        var size = ethers.utils.parseUnits('0.01',18)
+        var collateral = ethers.utils.parseUnits('1',18)
+        var leverage = ethers.utils.parseUnits('1',18)
+        var slippage = ethers.utils.parseUnits('0',18)
+        var tipFee = MINIMUM_FEE
+        var reduceOnly = false
+        var expiry = 0
+        await expect(lob.connect(Bob).modifyTrailingOrder(
+          index,
+          {d: trail},
+          {d: gap},
+          {d: size},
+          {d: collateral},
+          {d: leverage},
+          {d: slippage},
+          reduceOnly,
+          expiry
+        )).to.emit(lob,'TrailingOrderChanged')
+        const order = await lob.getTrailingData(index)
+        expect(order.trail.d).to.equal(trail)
+      })
+      it("Should revert if calling modifyOrder()", async function() {
+        var cur_price = await BTC_AMM.getSpotPrice() //51773
+        var new_limit_price = cur_price.d.sub(ethers.utils.parseUnits('5000',18))
+        var stop_price = ethers.utils.parseUnits('0',18)
+        var size = ethers.utils.parseUnits('0.01',18)
+        var collateral = ethers.utils.parseUnits('1',18)
+        var reduceOnly = false
+        var leverage = ethers.utils.parseUnits('1',18)
+        var expiry = 0
+        var slippage = ethers.utils.parseUnits('0.2',18)
+        await expect(lob.connect(Bob).modifyOrder(
+          index,
+          {d: stop_price},
+          {d: new_limit_price},
+          {d: size},
+          {d: collateral},
+          {d: leverage},
+          {d: slippage},
+          reduceOnly,
+          expiry
+        )).to.be.revertedWith("Can only modify stop/limit orders")
+      })
+      it("Cancel order", async function() {
+        await expect(lob.connect(Bob).deleteOrder(
+          index
+        )).to.emit(lob,'OrderCancelled')
+          .to.emit(lob,'TrailingOrderCancelled')
+      })
+    })
+
+  })
+
 })

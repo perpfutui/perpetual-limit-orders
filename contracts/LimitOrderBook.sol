@@ -26,9 +26,13 @@ contract LimitOrderBook is Ownable, DecimalERC20{
   event OrderCreated(address indexed trader, uint order_id);
   event OrderFilled(address indexed trader, uint order_id);
   event OrderChanged(address indexed trader, uint order_id);
+  event OrderCancelled(address indexed trader, uint order_id);
 
   event TrailingOrderCreated(uint order_id, uint snapshotIndex);
   event TrailingOrderFilled(uint order_id);
+  event TrailingOrderChanged(uint order_id);
+  event TrailingOrderCancelled(uint order_id);
+  event ContractPoked(uint order_id, uint reserve_index);
 
   /*
    * ENUMS
@@ -539,6 +543,7 @@ contract LimitOrderBook is Ownable, DecimalERC20{
       _updateTrailingPrice(order_id);
       //Emit event
       emit OrderChanged(orders[order_id].trader, order_id);
+      emit TrailingOrderChanged(order_id);
     }
 
   /*
@@ -547,7 +552,13 @@ contract LimitOrderBook is Ownable, DecimalERC20{
   function deleteOrder(
     uint order_id
   ) external onlyMyOrder(order_id) onlyValidOrder(order_id){
-    emit OrderChanged(orders[order_id].trader, order_id);
+    LimitOrder memory order = orders[order_id];
+    if((order.orderType == OrderType.TRAILINGSTOPMARKET ||
+        order.orderType == OrderType.TRAILINGSTOPLIMIT)) {
+          emit TrailingOrderCancelled(order_id);
+          delete trailingOrders[order_id];
+      }
+    emit OrderCancelled(order.trader, order_id);
     delete orders[order_id];
   }
 
@@ -667,6 +678,7 @@ contract LimitOrderBook is Ownable, DecimalERC20{
     trailingOrders[order_id].snapshotLastUpdated = _reserveIndex;
     trailingOrders[order_id].lastUpdatedKeeper = msg.sender;
     _updateTrailingPrice(order_id);
+    emit ContractPoked(order_id, _reserveIndex);
   }
 
   /*

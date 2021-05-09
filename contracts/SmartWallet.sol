@@ -25,7 +25,6 @@ contract SmartWallet is DecimalERC20, Initializable, ISmartWallet, Pausable {
   // Store addresses of smart contracts that we will be interacting with
   LimitOrderBook public OrderBook;
   SmartWalletFactory public factory;
-  address constant USDC = 0xDDAfbb505ad214D7b80b1f830fcCc89B60fb7A83;
   address constant CLEARINGHOUSE = 0x5d9593586b4B5edBd23E7Eba8d88FD8F09D83EBd;
 
   address private owner;
@@ -140,7 +139,8 @@ contract SmartWallet is DecimalERC20, Initializable, ISmartWallet, Pausable {
       .calcFee(_collateral.mulD(_leverage));
     Decimal.decimal memory totalCost = _collateral.addD(toll).addD(spread);
 
-    IERC20(USDC).safeIncreaseAllowance(CLEARINGHOUSE, _toUint(IERC20(USDC), totalCost));
+    IERC20 quoteAsset = _asset.quoteAsset();
+    _approve(quoteAsset, CLEARINGHOUSE, totalCost);
 
     //Establish how much leverage will be needed for that order based on the
     //amount of collateral and the maximum leverage the user was happy with.
@@ -231,7 +231,9 @@ contract SmartWallet is DecimalERC20, Initializable, ISmartWallet, Pausable {
     (Decimal.decimal memory toll, Decimal.decimal memory spread) = _asset
       .calcFee(_quoteAsset);
     Decimal.decimal memory totalCost = toll.addD(spread);
-    IERC20(USDC).safeIncreaseAllowance(CLEARINGHOUSE, _toUint(IERC20(USDC), totalCost));
+
+    IERC20 quoteAsset = _asset.quoteAsset();
+    _approve(quoteAsset, CLEARINGHOUSE, totalCost);
 
     IClearingHouse(CLEARINGHOUSE).closePosition(
       _asset,

@@ -649,7 +649,7 @@ contract LimitOrderBook is Ownable, DecimalERC20{
   function pokeContract(
     uint order_id,
     uint _reserveIndex
-  ) public {
+  ) external onlyValidOrder(order_id){
     //Can only poke for orders that are trailing orders
     OrderType _thisOrderType = orders[order_id].orderType;
     require(_thisOrderType == OrderType.TRAILINGSTOPMARKET ||
@@ -773,6 +773,9 @@ contract LimitOrderBook is Ownable, DecimalERC20{
 
   modifier onlyValidOrder(uint order_id) {
     require(order_id < orders.length, 'Invalid ID');
+    LimitOrder memory order = orders[order_id];
+    require(order.stillValid, 'No longer valid');
+    require(((order.expiry == 0 ) || (block.timestamp<order.expiry)), 'Order expired');
     _;
   }
 

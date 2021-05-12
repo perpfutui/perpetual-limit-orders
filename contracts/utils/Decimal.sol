@@ -25,7 +25,7 @@ library Decimal {
     }
 
     function modD(decimal memory x, decimal memory y) internal pure returns (decimal memory) {
-        return decimal(x.d.mul(DecimalMath.unit(18)) % y.d);
+        return decimal(x.d % y.d);
     }
 
     function cmp(decimal memory x, decimal memory y) internal pure returns (int8) {

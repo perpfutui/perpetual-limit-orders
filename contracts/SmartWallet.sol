@@ -44,15 +44,17 @@ contract SmartWallet is DecimalERC20, Initializable, ISmartWallet, Pausable {
    *    if this is not a valid smart contract)
    * @param callData the data bytes of the function and parameters to execute
    *    Can use encodeFunctionData() from ethers.js
+   * @param value the ether value to attach to the function call (can be 0)
    */
 
   function executeCall(
     address target,
-    bytes calldata callData
-  ) external override onlyOwner() returns (bytes memory) {
+    bytes calldata callData,
+    uint256 value
+  ) external payable override onlyOwner() returns (bytes memory) {
     require(target.isContract(), 'call to non-contract');
     require(factory.isWhitelisted(target), 'Invalid target contract');
-    return target.functionCall(callData);
+    return target.functionCallWithValue(callData, value);
   }
 
   function initialize(address _lob, address _trader) initializer external override{

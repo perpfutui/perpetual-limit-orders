@@ -10,8 +10,9 @@ interface ISmartWallet {
 
   function executeCall(
     address target,
-    bytes calldata callData
-  ) external returns (bytes memory);
+    bytes calldata callData,
+    uint256 value
+  ) external payable returns (bytes memory);
 
 
   function initialize(address _lob, address _trader) external;

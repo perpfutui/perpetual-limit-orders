@@ -119,7 +119,7 @@ abiDecoder.addABI(AMM_ABI)
       var fn = CHInterface.encodeFunctionData('addMargin(address,(uint256))',
       ['0x0f346e19F01471C02485DF1758cfd3d624E399B4',
       {d: ethers.utils.parseUnits('1',18)}])
-      await expect(AliceSWC.connect(Bob).executeCall(ClearingHouse_Address, fn))
+      await expect(AliceSWC.connect(Bob).executeCall(ClearingHouse_Address, fn, 0))
         .to.be.revertedWith('Ownable: caller is not the owner')
     })
 
@@ -127,7 +127,7 @@ abiDecoder.addABI(AMM_ABI)
       var fn = CHInterface.encodeFunctionData('addMargin(address,(uint256))',
       ['0x0f346e19F01471C02485DF1758cfd3d624E399B4',
       {d: ethers.utils.parseUnits('1',18)}])
-      await expect(AliceSWC.connect(Alice).executeCall(Bob.address, fn))
+      await expect(AliceSWC.connect(Alice).executeCall(Bob.address, fn, 0))
         .to.be.revertedWith('call to non-contract')
     })
 
@@ -149,7 +149,7 @@ abiDecoder.addABI(AMM_ABI)
 
     it("Approve BOB to spend USDC on LOB", async function() {
       var fn = USDCInterface.encodeFunctionData('approve(address, uint256)',[lob.address, '1000000000'])
-      await BobSWC.connect(Bob).executeCall(USDC_Address, fn)
+      await BobSWC.connect(Bob).executeCall(USDC_Address, fn, 0)
       expect(await usdc.allowance(BobSW,lob.address)).to.equal('1000000000')
 
     })

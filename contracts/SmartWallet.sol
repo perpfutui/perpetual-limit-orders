@@ -36,9 +36,8 @@ contract SmartWallet is DecimalERC20, Initializable, ISmartWallet, Pausable {
 
   /*
    * @notice allows the owner of the smart wallet to execute any transaction
-   *  on an external smart contract. There are no restrictions on the contracts
-   *  that the user can interact with so needs to make sure that they do not
-   *  interact with any malicious contracts.
+   *  on an external smart contract. The external smart contract must be whitelisted
+   *  otherwise this function will revert
    *  This utilises functions from OpenZeppelin's Address.sol
    * @param target the address of the smart contract to interact with (will revert
    *    if this is not a valid smart contract)
